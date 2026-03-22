@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Login — SpaceLogg</title>
+<link rel="stylesheet" href="/css/main.css"/>
+<link rel="stylesheet" href="/css/mobile-fixes.css"/>
+<style>
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--charcoal);padding:1rem;}
+.login-card{background:#fff;border-radius:var(--radius-lg);padding:2.5rem;width:100%;max-width:400px;}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:2rem;}
+.logomark{width:34px;height:34px;background:var(--amber);border-radius:9px;display:flex;align-items:center;justify-content:center;}
+.wordmark{font-family:'DM Serif Display',serif;font-size:22px;color:var(--charcoal);}
+.wordmark span{color:var(--amber);}
+.admin-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:2px;}
+h1{font-family:'DM Serif Display',serif;font-size:28px;color:var(--charcoal);margin-bottom:.5rem;}
+p{font-size:14px;color:var(--text-secondary);margin-bottom:1.5rem;}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none;}
+.alert-error{background:var(--red-light);color:var(--red);}
+</style>
+</head>
+<body>
+<div class="login-card">
+  <div class="logo">
+    <div class="logomark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" stroke="#1C1A16" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#1C1A16"/><path d="M12 15L12 22" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/><path d="M8 21Q12 18.5 16 21" stroke="#1C1A16" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
+    <div><div class="wordmark">Space<span>Logg</span></div><div class="admin-label">Admin Portal</div></div>
+  </div>
+  <h1>Admin sign in</h1>
+  <p>This portal is for administrators only.</p>
+  <div class="alert alert-error" id="err"></div>
+  <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="email" type="email" placeholder="admin@example.com" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+  <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+  <button class="btn btn-primary btn-full" onclick="doLogin()">Sign in to admin</button>
+  <div style="margin-top:1.5rem;text-align:center;"><a href="/" style="font-size:13px;color:var(--text-muted);text-decoration:none;">← Back to SpaceLogg</a></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/js/app.js"></script>
+<script>
+// Redirect if already logged in as admin
+if (Auth.loggedIn() && Auth.isAdmin()) window.location.href = '/admin/';
+
+async function doLogin() {
+  const err = document.getElementById('err');
+  err.style.display = 'none';
+  try {
+    const { token, user } = await apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: document.getElementById('email').value, password: document.getElementById('pw').value })
+    });
+    if (user.role !== 'admin') { err.style.display='block'; err.textContent='Access denied. Admin accounts only.'; return; }
+    Auth.setToken(token); Auth.setUser(user);
+    window.location.href = '/admin/';
+  } catch (e) { err.style.display='block'; err.textContent=e.message; }
+}
+</script>
+</body>
+</html>
