@@ -4,87 +4,210 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin Dashboard — SpaceLogg</title>
 <link rel="stylesheet" href="/css/main.css"/>
-<link rel="stylesheet" href="/css/mobile-fixes.css"/>
 <style>
 body{padding-top:64px;}
-.admin-wrap{max-width:1100px;margin:0 auto;padding:2.5rem 2.5rem 5rem;}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:2.5rem;}
+.admin-wrap{max-width:1100px;margin:0 auto;padding:2rem 2rem 5rem;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:2rem;}
 .stat-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
-.stat-card-num{font-family:'DM Serif Display',serif;font-size:36px;color:var(--charcoal);line-height:1;}
-.stat-card-num.warn{color:var(--amber);}
+.stat-num{font-family:'DM Serif Display',serif;font-size:34px;color:var(--charcoal);line-height:1;}
+.stat-num.amber{color:var(--amber);}
+.stat-num.green{color:var(--green);}
+.stat-num.red{color:var(--red);}
 .stat-label{font-size:12px;color:var(--text-muted);margin-top:4px;}
-.admin-panel{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem;}
-.panel-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:0.5px solid var(--border);}
+.panel{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem;}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:0.5px solid var(--border);flex-wrap:wrap;gap:.75rem;}
 .panel-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--charcoal);}
-.admin-table{width:100%;border-collapse:collapse;}
-.admin-table th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);padding:.75rem 1.5rem;border-bottom:0.5px solid var(--border);font-weight:500;}
-.admin-table td{padding:.875rem 1.5rem;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--text-secondary);vertical-align:middle;}
-.admin-table tr:last-child td{border-bottom:none;}
-.admin-table tr:hover td{background:var(--parchment-light);}
-.pending-row{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:0.5px solid var(--border);gap:1rem;}
+.atable{width:100%;border-collapse:collapse;}
+.atable th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);padding:.75rem 1.25rem;border-bottom:0.5px solid var(--border);font-weight:500;white-space:nowrap;}
+.atable td{padding:.875rem 1.25rem;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--text-secondary);vertical-align:middle;}
+.atable tr:last-child td{border-bottom:none;}
+.atable tr:hover td{background:var(--parchment-light);}
+.pending-row{display:flex;align-items:flex-start;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:0.5px solid var(--border);gap:1rem;}
 .pending-row:last-child{border-bottom:none;}
-.pending-name{font-size:14px;font-weight:500;color:var(--charcoal);}
-.pending-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.pending-name{font-size:14px;font-weight:500;color:var(--charcoal);margin-bottom:3px;}
+.pending-meta{font-size:12px;color:var(--text-muted);}
+.row-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
+
+/* FORM SECTION */
+.form-section{padding:1.5rem;}
+.form-2col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:600px){.form-2col{grid-template-columns:1fr;}}
+.amenity-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.amenity-check{display:none;}
+.amenity-lbl{padding:6px 12px;border-radius:20px;border:0.5px solid var(--border-strong);font-size:13px;cursor:pointer;background:#fff;color:var(--text-secondary);transition:all 0.15s;display:inline-block;}
+.amenity-check:checked+.amenity-lbl{background:var(--charcoal);color:var(--parchment);border-color:var(--charcoal);}
 </style>
 </head>
 <body>
-<nav>
+<nav style="background:rgba(28,26,22,0.97);">
   <a href="/" class="nav-logo">
     <div class="nav-logomark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" stroke="#1C1A16" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#1C1A16"/><path d="M12 15L12 22" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/><path d="M8 21Q12 18.5 16 21" stroke="#1C1A16" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
-    <div class="nav-wordmark">Space<span>Logg</span></div>
+    <div class="nav-wordmark" style="color:#fff;">Space<span>Logg</span></div>
   </a>
   <div class="nav-right">
     <div class="nav-links">
-      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);font-weight:500;">Admin Portal</span>
-      <a href="/dashboard.html">View site</a>
+      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);font-weight:500;">Admin</span>
+      <a href="/dashboard.html" style="color:rgba(255,255,255,0.5);font-size:13px;">View site</a>
     </div>
-    <div id="nav-user-area" style="display:flex;align-items:center;gap:8px;">
-      <span id="admin-name" style="font-size:13px;color:var(--text-secondary);"></span>
-      <button onclick="logout()" class="btn btn-outline btn-sm">Sign out</button>
+    <div id="nav-user-area" style="display:flex;align-items:center;gap:10px;">
+      <span id="admin-name" style="font-size:13px;color:rgba(255,255,255,0.5);"></span>
+      <button onclick="logout()" class="btn btn-outline btn-sm" style="color:rgba(255,255,255,0.7);border-color:rgba(255,255,255,0.2);">Sign out</button>
     </div>
   </div>
-  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
 </nav>
-<div class="nav-drawer" id="nav-drawer">
-  <a href="/dashboard.html">View site</a>
-  <button onclick="logout()" class="btn btn-outline btn-full">Sign out</button>
-</div>
 
 <div class="admin-wrap">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
-    <div><div class="section-eyebrow">Admin</div><h1 class="section-title">Dashboard</h1></div>
+  <div style="margin-bottom:2rem;">
+    <div class="section-eyebrow">Admin Portal</div>
+    <h1 class="section-title">Dashboard</h1>
   </div>
 
+  <!-- STATS -->
   <div class="stats-grid" id="stats-grid">
-    <div class="stat-card"><div class="stat-card-num">—</div><div class="stat-label">Loading…</div></div>
+    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Loading…</div></div>
   </div>
 
+  <!-- TABS -->
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('pending',this)">Pending approval</button>
-    <button class="tab-btn" onclick="switchTab('spaces',this)">All spaces</button>
+    <button class="tab-btn active" onclick="switchTab('spaces-add',this)">➕ Add Space</button>
+    <button class="tab-btn" onclick="switchTab('spaces-all',this)">All Spaces</button>
+    <button class="tab-btn" onclick="switchTab('bookings',this)">Bookings</button>
     <button class="tab-btn" onclick="switchTab('users',this)">Users</button>
+    <button class="tab-btn" onclick="switchTab('admins',this)">Admin Accounts</button>
   </div>
 
-  <div class="tab-pane active" id="tab-pending">
-    <div class="admin-panel"><div class="panel-header"><span class="panel-title">Pending spaces</span></div><div id="pending-list"></div></div>
-  </div>
-
-  <div class="tab-pane" id="tab-spaces">
-    <div class="admin-panel">
-      <div class="panel-header"><span class="panel-title">All approved spaces</span></div>
-      <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Space</th><th>Category</th><th>City</th><th>Rating</th><th>Actions</th></tr></thead><tbody id="spaces-body"></tbody></table></div>
+  <!-- ADD SPACE TAB -->
+  <div class="tab-pane active" id="tab-spaces-add">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Add a new space</span></div>
+      <div class="form-section">
+        <form id="add-space-form">
+          <div class="form-2col">
+            <div class="form-group"><label class="form-label">Space name <span style="color:var(--red)">*</span></label><input class="form-input" name="name" required placeholder="e.g. The Hub Ibadan"/></div>
+            <div class="form-group"><label class="form-label">Category <span style="color:var(--red)">*</span></label>
+              <select class="form-select" name="category" required>
+                <option value="">Select…</option>
+                <option value="coworking">Coworking Space</option>
+                <option value="cafe">Café</option>
+                <option value="library">Library</option>
+                <option value="hotel">Hotel Lounge</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-2col">
+            <div class="form-group"><label class="form-label">City <span style="color:var(--red)">*</span></label><input class="form-input" name="city" required placeholder="e.g. Ibadan"/></div>
+            <div class="form-group"><label class="form-label">Address <span style="color:var(--red)">*</span></label><input class="form-input" name="address" required placeholder="Full street address"/></div>
+          </div>
+          <div class="form-2col">
+            <div class="form-group"><label class="form-label">Latitude</label><input class="form-input" name="lat" type="number" step="any" placeholder="e.g. 7.3775"/><div class="form-hint">Right-click on Google Maps → copy coordinates</div></div>
+            <div class="form-group"><label class="form-label">Longitude</label><input class="form-input" name="lng" type="number" step="any" placeholder="e.g. 3.9470"/></div>
+          </div>
+          <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" name="description" placeholder="Describe the space, atmosphere, and facilities…" style="min-height:90px;"></textarea></div>
+          <div class="form-2col">
+            <div class="form-group"><label class="form-label">Price</label><input class="form-input" name="price" placeholder="e.g. ₦2,500 or Free"/></div>
+            <div class="form-group"><label class="form-label">Per</label>
+              <select class="form-select" name="price_unit">
+                <option value="/day">Per day</option>
+                <option value="/hour">Per hour</option>
+                <option value="/month">Per month</option>
+                <option value="/coffee">Per coffee</option>
+                <option value="">N/A (Free)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Amenities</label>
+            <div class="amenity-grid" id="amenity-grid"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Opening hours</label>
+            <div id="hours-grid" style="display:grid;gap:8px;"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Photos (up to 6 · max 5MB each)</label>
+            <input type="file" id="space-imgs" name="images" accept="image/*" multiple class="form-input" style="padding:8px;" onchange="updateImgCount(this)"/>
+            <div class="form-hint" id="img-count-label">No photos selected</div>
+          </div>
+          <div class="alert alert-error" id="add-error"></div>
+          <div class="alert alert-success" id="add-success"></div>
+          <button type="submit" class="btn btn-amber" id="add-btn">Add space to SpaceLogg →</button>
+        </form>
+      </div>
     </div>
   </div>
 
-  <div class="tab-pane" id="tab-users">
-    <div class="admin-panel">
+  <!-- ALL SPACES TAB -->
+  <div class="tab-pane" id="tab-spaces-all">
+    <div class="panel">
       <div class="panel-header">
-        <span class="panel-title">Users</span>
-        <input class="form-input" id="user-search" placeholder="Search by name or email…" style="width:220px;padding:6px 12px;font-size:13px;" oninput="searchUsers(this.value)"/>
+        <span class="panel-title">All spaces</span>
+        <input class="form-input" id="space-search" placeholder="Search spaces…" style="width:200px;padding:7px 12px;font-size:13px;" oninput="searchSpaces(this.value)"/>
       </div>
-      <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="users-body"></tbody></table></div>
+      <div style="overflow-x:auto;">
+        <table class="atable"><thead><tr><th>Name</th><th>Category</th><th>City</th><th>Rating</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="spaces-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKINGS TAB -->
+  <div class="tab-pane" id="tab-bookings">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">All bookings</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="form-select" id="booking-filter" style="width:150px;padding:7px 12px;font-size:13px;" onchange="loadBookings()">
+            <option value="">All statuses</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="atable"><thead><tr><th>Space</th><th>Guest</th><th>Date</th><th>Time</th><th>Guests</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="bookings-body"></tbody></table>
+      </div>
+      <div id="bookings-empty" style="display:none;" class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">No bookings yet</div><div class="empty-sub">Bookings will appear here once users start booking spaces.</div></div>
+    </div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div class="tab-pane" id="tab-users">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">All users</span>
+        <input class="form-input" id="user-search" placeholder="Search users…" style="width:200px;padding:7px 12px;font-size:13px;" oninput="searchUsers(this.value)"/>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="atable"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="users-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN ACCOUNTS TAB -->
+  <div class="tab-pane" id="tab-admins">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Admin accounts</span></div>
+      <div style="overflow-x:auto;">
+        <table class="atable"><thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="admins-body"></tbody></table>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:1.5rem;">
+      <div class="panel-header"><span class="panel-title">Create new admin account</span></div>
+      <div class="form-section">
+        <form id="create-admin-form">
+          <div class="form-2col">
+            <div class="form-group"><label class="form-label">Full name</label><input class="form-input" id="new-admin-name" placeholder="Admin name" required/></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="new-admin-email" type="email" placeholder="admin@example.com" required/></div>
+          </div>
+          <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="new-admin-pw" type="password" placeholder="At least 6 characters" required/></div>
+          <div class="alert alert-error" id="admin-create-error"></div>
+          <div class="alert alert-success" id="admin-create-success"></div>
+          <button type="submit" class="btn btn-primary">Create admin account</button>
+        </form>
+      </div>
     </div>
   </div>
 </div>
@@ -92,99 +215,231 @@ body{padding-top:64px;}
 <div class="toast" id="toast"></div>
 <script src="/js/app.js"></script>
 <script>
-let userSearchTimer;
+const AMENITIES = ['Fast WiFi','Air Con','Power Outlets','Printing','Meeting Rooms','Café/Bar','Parking','Lockers','Standing Desks','Outdoor Seating','Quiet Zone','Phone Booths','Events Space','24/7 Access','Coffee Service'];
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
 function init() {
   requireAdminAccess();
   const user = Auth.getUser();
-  document.getElementById('admin-name').textContent = user?.name || '';
+  if (user) document.getElementById('admin-name').textContent = user.name;
+  buildAmenities();
+  buildHours();
   loadStats();
-  loadPending();
+  loadAllSpaces();
+  setupForms();
+}
+
+function buildAmenities() {
+  document.getElementById('amenity-grid').innerHTML = AMENITIES.map((a,i) =>
+    `<span><input type="checkbox" class="amenity-check" id="am${i}" value="${a}"><label class="amenity-lbl" for="am${i}">${a}</label></span>`
+  ).join('');
+}
+
+function buildHours() {
+  document.getElementById('hours-grid').innerHTML = DAYS.map(d =>
+    `<div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:8px;align-items:center;">
+      <span style="font-size:13px;font-weight:500;color:var(--text-secondary);">${d}</span>
+      <input class="form-input" data-day="${d}" data-type="open" placeholder="9:00 AM" style="font-size:13px;padding:8px 10px;"/>
+      <input class="form-input" data-day="${d}" data-type="close" placeholder="6:00 PM" style="font-size:13px;padding:8px 10px;"/>
+    </div>`
+  ).join('');
+}
+
+function updateImgCount(input) {
+  const n = input.files.length;
+  document.getElementById('img-count-label').textContent = n ? `${n} photo${n>1?'s':''} selected` : 'No photos selected';
 }
 
 async function loadStats() {
-  const s = await apiFetch('/admin/stats');
-  document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card"><div class="stat-card-num">${s.totalSpaces}</div><div class="stat-label">Live spaces</div></div>
-    <div class="stat-card"><div class="stat-card-num warn">${s.pendingSpaces}</div><div class="stat-label">Pending review</div></div>
-    <div class="stat-card"><div class="stat-card-num">${s.totalUsers}</div><div class="stat-label">Users</div></div>
-    <div class="stat-card"><div class="stat-card-num">${s.totalReviews}</div><div class="stat-label">Reviews</div></div>
-    <div class="stat-card"><div class="stat-card-num">${s.savedCount}</div><div class="stat-label">Saves</div></div>`;
+  try {
+    const s = await apiFetch('/admin/stats');
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-num green">${s.totalSpaces}</div><div class="stat-label">Live spaces</div></div>
+      <div class="stat-card"><div class="stat-num amber">${s.pendingSpaces}</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card"><div class="stat-num">${s.totalUsers}</div><div class="stat-label">Users</div></div>
+      <div class="stat-card"><div class="stat-num">${s.totalReviews}</div><div class="stat-label">Reviews</div></div>
+      <div class="stat-card"><div class="stat-num">${s.totalBookings||0}</div><div class="stat-label">Bookings</div></div>
+      <div class="stat-card"><div class="stat-num">${s.savedCount}</div><div class="stat-label">Saves</div></div>`;
+  } catch(e) { console.error(e); }
 }
 
-async function loadPending() {
-  const { spaces } = await apiFetch('/admin/spaces?status=pending');
-  const list = document.getElementById('pending-list');
-  if (!spaces.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">All caught up!</div><div class="empty-sub">No spaces pending review.</div></div>'; return; }
-  list.innerHTML = spaces.map(s=>`
-    <div class="pending-row" id="pr-${s.id}">
-      <div><div class="pending-name">${s.name}</div><div class="pending-meta">${catLabel(s.category)} · ${s.address}, ${s.city}${s.owner_name?` · by ${s.owner_name}`:''}</div></div>
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button class="btn btn-green btn-sm" onclick="approveSpace(${s.id},'approved')">Approve</button>
-        <button class="btn btn-danger btn-sm" onclick="approveSpace(${s.id},'rejected')">Reject</button>
-      </div>
-    </div>`).join('');
-}
-
-async function loadAllSpaces() {
-  const { spaces } = await apiFetch('/admin/spaces?status=approved&limit=100');
-  document.getElementById('spaces-body').innerHTML = spaces.map(s=>`
+async function loadAllSpaces(q='') {
+  const { spaces } = await apiFetch('/admin/spaces?status=approved&limit=100'+(q?`&q=${encodeURIComponent(q)}`:''));
+  document.getElementById('spaces-body').innerHTML = spaces.length ? spaces.map(s => `
     <tr>
-      <td style="font-weight:500;color:var(--charcoal)">${s.name}</td>
+      <td style="font-weight:500;color:var(--charcoal);max-width:180px;">${s.name}</td>
       <td><span class="status-badge" style="background:${catColorLight(s.category)};color:${catColorDark(s.category)}">${catLabel(s.category)}</span></td>
       <td>${s.city}</td>
-      <td>★ ${s.rating}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteSpace(${s.id})">Delete</button></td>
-    </tr>`).join('');
+      <td>★ ${s.rating||'—'} (${s.review_count||0})</td>
+      <td><span class="status-badge status-${s.status}">${s.status}</span></td>
+      <td><div style="display:flex;gap:6px;"><button class="btn btn-danger btn-sm" onclick="deleteSpace(${s.id},'${s.name}')">Delete</button></div></td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No spaces yet. Add one using the Add Space tab.</td></tr>';
 }
 
-async function loadUsers(q='') {
-  const { users } = await apiFetch('/admin/users'+(q?`?q=${encodeURIComponent(q)}`:''));
-  document.getElementById('users-body').innerHTML = users.map(u=>`
+let spaceSearchTimer;
+function searchSpaces(q) { clearTimeout(spaceSearchTimer); spaceSearchTimer=setTimeout(()=>loadAllSpaces(q),300); }
+
+async function deleteSpace(id, name) {
+  if (!confirm(`Delete "${name}" permanently?`)) return;
+  await apiFetch(`/admin/spaces/${id}`, { method:'DELETE' });
+  toast('Space deleted','success');
+  loadAllSpaces(); loadStats();
+}
+
+async function loadBookings() {
+  const filter = document.getElementById('booking-filter').value;
+  const { bookings } = await apiFetch('/admin/bookings'+(filter?`?status=${filter}`:''));
+  const tbody = document.getElementById('bookings-body');
+  const empty = document.getElementById('bookings-empty');
+  if (!bookings.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = bookings.map(b => `
     <tr>
-      <td style="font-weight:500;color:var(--charcoal)">${u.name}</td>
-      <td>${u.email}</td>
-      <td><span class="status-badge ${u.role==='admin'?'status-approved':'status-pending'}">${u.role}</span></td>
-      <td>${new Date(u.created_at).toLocaleDateString()}</td>
-      <td style="display:flex;gap:6px;">
-        <button class="btn btn-outline btn-sm" onclick="toggleRole(${u.id},'${u.role}')">${u.role==='admin'?'Remove admin':'Make admin'}</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">Delete</button>
+      <td style="font-weight:500;color:var(--charcoal);">${b.space_name}</td>
+      <td><div style="font-weight:500;font-size:13px;">${b.user_name}</div><div style="font-size:11px;color:var(--text-muted);">${b.user_email}</div></td>
+      <td style="white-space:nowrap;">${b.date}</td>
+      <td style="white-space:nowrap;">${b.start_time} – ${b.end_time}</td>
+      <td>${b.guests}</td>
+      <td><span class="status-badge status-${b.status==='confirmed'?'approved':'rejected'}">${b.status}</span></td>
+      <td>
+        ${b.status==='confirmed'?`<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>`:'—'}
       </td>
     </tr>`).join('');
 }
 
+async function cancelBooking(id) {
+  if (!confirm('Cancel this booking?')) return;
+  await apiFetch(`/bookings/${id}/cancel`, { method:'PATCH' });
+  toast('Booking cancelled','success');
+  loadBookings(); loadStats();
+}
+
+async function loadUsers(q='') {
+  const { users } = await apiFetch('/admin/users'+(q?`?q=${encodeURIComponent(q)}`:''));
+  document.getElementById('users-body').innerHTML = users.filter(u=>u.role!=='admin').map(u => `
+    <tr>
+      <td style="font-weight:500;color:var(--charcoal);">${u.name}</td>
+      <td>${u.email}</td>
+      <td><span class="status-badge status-pending">user</span></td>
+      <td>${new Date(u.created_at).toLocaleDateString()}</td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="promoteToAdmin(${u.id},'${u.name}')">Make admin</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id},'${u.name}')">Delete</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+let userSearchTimer;
 function searchUsers(q) { clearTimeout(userSearchTimer); userSearchTimer=setTimeout(()=>loadUsers(q),300); }
 
-function switchTab(tab, el) {
-  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active'); el.classList.add('active');
-  if (tab==='spaces') loadAllSpaces();
-  if (tab==='users')  loadUsers();
+async function loadAdmins() {
+  const { users } = await apiFetch('/admin/users');
+  document.getElementById('admins-body').innerHTML = users.filter(u=>u.role==='admin').map(u => `
+    <tr>
+      <td style="font-weight:500;color:var(--charcoal);">${u.name}</td>
+      <td>${u.email}</td>
+      <td>${new Date(u.created_at).toLocaleDateString()}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeAdmin(${u.id},'${u.name}')">Remove admin</button></td>
+    </tr>`).join('');
 }
 
-async function approveSpace(id, status) {
-  await apiFetch(`/admin/spaces/${id}/approve`,{method:'PATCH',body:JSON.stringify({status})});
-  document.getElementById('pr-'+id)?.remove();
-  loadStats();
-  toast(`Space ${status} ✓`,'success');
+async function promoteToAdmin(id, name) {
+  if (!confirm(`Make ${name} an admin?`)) return;
+  await apiFetch(`/admin/users/${id}`, { method:'PATCH', body: JSON.stringify({ role:'admin' }) });
+  toast(`${name} is now an admin`, 'success');
+  loadUsers(); loadAdmins();
 }
-async function deleteSpace(id) {
-  if(!confirm('Delete this space permanently?')) return;
-  await apiFetch(`/admin/spaces/${id}`,{method:'DELETE'});
-  loadAllSpaces(); loadStats();
-  toast('Space deleted','success');
+
+async function removeAdmin(id, name) {
+  const me = Auth.getUser();
+  if (id == me.id) { toast("You can't remove your own admin access", 'error'); return; }
+  if (!confirm(`Remove admin access from ${name}?`)) return;
+  await apiFetch(`/admin/users/${id}`, { method:'PATCH', body: JSON.stringify({ role:'user' }) });
+  toast(`${name} is no longer an admin`, 'success');
+  loadAdmins(); loadUsers();
 }
-async function toggleRole(id, current) {
-  const role = current==='admin'?'user':'admin';
-  await apiFetch(`/admin/users/${id}`,{method:'PATCH',body:JSON.stringify({role})});
-  loadUsers(); toast(`Role updated to ${role}`,'success');
-}
-async function deleteUser(id) {
-  if(!confirm('Delete this user permanently?')) return;
-  await apiFetch(`/admin/users/${id}`,{method:'DELETE'});
+
+async function deleteUser(id, name) {
+  if (!confirm(`Delete user ${name} permanently?`)) return;
+  await apiFetch(`/admin/users/${id}`, { method:'DELETE' });
+  toast('User deleted', 'success');
   loadUsers(); loadStats();
-  toast('User deleted','success');
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if (el) el.classList.add('active');
+  if (tab==='spaces-all') loadAllSpaces();
+  if (tab==='bookings')   loadBookings();
+  if (tab==='users')      loadUsers();
+  if (tab==='admins')     loadAdmins();
+}
+
+function setupForms() {
+  // Add space form
+  document.getElementById('add-space-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('add-btn');
+    const errEl = document.getElementById('add-error');
+    const okEl  = document.getElementById('add-success');
+    errEl.style.display='none'; okEl.style.display='none';
+    btn.textContent='Adding…'; btn.disabled=true;
+    try {
+      const fd = new FormData();
+      ['name','category','city','address','lat','lng','description','price','price_unit'].forEach(f => {
+        const v = this[f]?.value; if (v) fd.append(f, v);
+      });
+      const amenities = Array.from(document.querySelectorAll('#amenity-grid input:checked')).map(c=>c.value);
+      fd.append('amenities', JSON.stringify(amenities));
+      const hours = {};
+      document.querySelectorAll('[data-type="open"]').forEach(inp => {
+        const day   = inp.getAttribute('data-day');
+        const close = document.querySelector(`[data-day="${day}"][data-type="close"]`).value;
+        if (inp.value && close) hours[day] = `${inp.value} – ${close}`;
+      });
+      fd.append('hours', JSON.stringify(hours));
+      Array.from(document.getElementById('space-imgs').files).forEach(f => fd.append('images', f));
+      const headers = {};
+      const token = Auth.getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res  = await fetch('/api/spaces', { method:'POST', headers, body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      okEl.style.display='block'; okEl.textContent=`"${data.space.name}" added successfully! ✓`;
+      this.reset();
+      document.querySelectorAll('#amenity-grid input').forEach(c=>c.checked=false);
+      document.querySelectorAll('[data-type]').forEach(i=>i.value='');
+      document.getElementById('img-count-label').textContent='No photos selected';
+      loadStats();
+    } catch(err) { errEl.style.display='block'; errEl.textContent=err.message; }
+    finally { btn.textContent='Add space to SpaceLogg →'; btn.disabled=false; }
+  });
+
+  // Create admin form
+  document.getElementById('create-admin-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('admin-create-error');
+    const okEl  = document.getElementById('admin-create-success');
+    errEl.style.display='none'; okEl.style.display='none';
+    try {
+      const name     = document.getElementById('new-admin-name').value;
+      const email    = document.getElementById('new-admin-email').value;
+      const password = document.getElementById('new-admin-pw').value;
+      // Register user then promote
+      const { token, user } = await apiFetch('/auth/register', { method:'POST', body: JSON.stringify({ name, email, password }) });
+      // Promote to admin
+      await apiFetch(`/admin/users/${user.id}`, { method:'PATCH', body: JSON.stringify({ role:'admin' }) });
+      okEl.style.display='block'; okEl.textContent=`Admin account created for ${email} ✓`;
+      this.reset();
+      loadAdmins();
+    } catch(err) { errEl.style.display='block'; errEl.textContent=err.message; }
+  });
 }
 
 init();
