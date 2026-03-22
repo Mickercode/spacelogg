@@ -1,0 +1,354 @@
+/* ═══════════════════════════════════════
+   MOBILE CRITICAL FIXES
+   - Search bar fully visible
+   - Booking button reachable
+   - Scroll working on dashboard
+═══════════════════════════════════════ */
+
+/* ── SEARCH BAR ── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 8px 8px 8px 14px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 12px rgba(28,26,22,0.08);
+  width: 100%;
+  box-sizing: border-box;
+}
+.search-input {
+  flex: 1;
+  min-width: 0; /* prevents overflow */
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text-primary);
+  margin-left: 8px;
+}
+.search-btn {
+  flex-shrink: 0;
+  background: var(--charcoal);
+  color: var(--parchment);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.search-btn:hover { background: var(--amber); color: var(--charcoal); }
+
+/* ── DASHBOARD LAYOUT ── */
+@media (max-width: 900px) {
+  /* Stack map above, cards below — both scroll naturally */
+  .dash-layout {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 64px);
+  }
+
+  /* Map: fixed height, not sticky */
+  .dash-map {
+    position: relative;
+    top: 0;
+    height: 42vw;
+    min-height: 220px;
+    max-height: 320px;
+    width: 100%;
+    flex-shrink: 0;
+    order: 1; /* map first */
+  }
+
+  /* Sidebar scrolls freely below the map */
+  .dash-sidebar {
+    order: 2;
+    height: auto;
+    overflow: visible; /* let the page scroll, not the sidebar */
+    border-right: none;
+    border-top: 0.5px solid var(--border);
+    flex: 1;
+  }
+
+  /* Toolbar padding on mobile */
+  .toolbar, .dash-toolbar {
+    padding: 1rem 1rem 0;
+  }
+
+  /* Space cards list */
+  .spaces-list {
+    padding: 0 1rem 5rem; /* bottom padding so last card clears nav */
+  }
+
+  /* Filter tabs — horizontal scroll, no wrap */
+  .filter-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    padding-bottom: 4px;
+    margin-bottom: 1rem;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab { flex-shrink: 0; }
+}
+
+/* ── SPACE CARDS on mobile ── */
+@media (max-width: 900px) {
+  .space-card {
+    margin-bottom: 0.875rem;
+  }
+
+  /* Card image slightly smaller on mobile */
+  .card-img {
+    height: 140px;
+  }
+}
+
+/* ── MODALS — full sheet on mobile ── */
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal, .space-modal {
+    max-width: 100% !important;
+    width: 100%;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92vh !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Drag handle indicator */
+  .modal::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--border-strong);
+    border-radius: 2px;
+    margin: 12px auto 4px;
+  }
+
+  /* Booking modal footer — stack on small screens */
+  .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .modal-footer .modal-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .modal-footer .modal-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+  .modal-footer .btn-amber {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    font-size: 15px;
+  }
+}
+
+/* ── BOOKING MODAL — always reachable ── */
+@media (max-width: 640px) {
+  /* Booking confirm button prominent and sticky at bottom */
+  #booking-modal .modal {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #booking-modal .modal > form,
+  #booking-modal .modal > div {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  /* Large tap targets for time selects */
+  #bk-start, #bk-end, #bk-date, #bk-guests {
+    font-size: 16px; /* prevents iOS zoom on focus */
+    padding: 12px 14px;
+    height: 48px;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    font-size: 16px; /* prevents iOS auto-zoom */
+  }
+}
+
+/* ── NAV ── */
+@media (max-width: 768px) {
+  nav {
+    padding: 0 1rem;
+    height: 60px;
+  }
+
+  .nav-wordmark {
+    font-size: 20px;
+  }
+
+  /* Hamburger properly sized */
+  .nav-hamburger {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ── PREVENT HORIZONTAL SCROLL ── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── HERO on mobile ── */
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .hero-left {
+    padding: 5rem 1.25rem 2.5rem;
+    order: 1;
+  }
+  .hero-right {
+    order: 2;
+    height: 56vw;
+    min-height: 240px;
+    max-height: 360px;
+  }
+  .hero-title {
+    font-size: clamp(36px, 9vw, 56px);
+    letter-spacing: -1px;
+  }
+  .hero-sub {
+    font-size: 15px;
+  }
+  .hero-stats {
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+  .stat-num {
+    font-size: 26px;
+  }
+}
+
+/* ── FORMS ── */
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: .875rem;
+  }
+
+  /* List space form */
+  .list-wrap {
+    padding: 1.5rem 1rem 5rem;
+  }
+
+  /* Step indicator — smaller on mobile */
+  .step-circle {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+  .step-name {
+    font-size: 10px;
+  }
+}
+
+/* ── PROFILE PAGE ── */
+@media (max-width: 640px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    padding: 1.5rem 1rem;
+  }
+  .profile-header > button {
+    margin-left: 0 !important;
+    width: 100%;
+    justify-content: center;
+  }
+  .saved-grid {
+    grid-template-columns: 1fr;
+  }
+  .tab-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+/* ── OWNER PAGE ── */
+@media (max-width: 640px) {
+  .stats-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .listing-card-header {
+    flex-direction: column;
+  }
+  .listing-card-img {
+    width: 100%;
+    height: 160px;
+  }
+  .listing-card-actions {
+    flex-wrap: wrap;
+  }
+}
+
+/* ── ADMIN ── */
+@media (max-width: 640px) {
+  .admin-wrap {
+    padding: 1.5rem 1rem 4rem;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .admin-table {
+    font-size: 12px;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── FOOTER ── */
+@media (max-width: 640px) {
+  footer {
+    flex-direction: column;
+    padding: 2rem 1.25rem 1.5rem;
+    gap: 1rem;
+  }
+  .footer-links {
+    flex-wrap: wrap;
+    gap: .75rem;
+  }
+  .footer-copy {
+    text-align: left;
+  }
+}
+
+/* ── RESULTS COUNT ── */
+.results-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 0 1rem .5rem;
+}

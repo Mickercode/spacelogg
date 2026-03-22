@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Profile — SpaceLogg</title>
+<link rel="stylesheet" href="/css/main.css"/>
+<link rel="stylesheet" href="/css/mobile-fixes.css"/>
+<style>
+body{padding-top:64px;}
+.profile-header{display:flex;align-items:center;gap:1.5rem;margin-bottom:2.5rem;padding:2rem;background:#fff;border-radius:var(--radius-lg);border:0.5px solid var(--border);}
+.avatar-lg{width:72px;height:72px;border-radius:50%;background:var(--amber-light);border:3px solid var(--amber);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:28px;color:var(--amber-dark);flex-shrink:0;}
+.profile-name{font-family:'DM Serif Display',serif;font-size:26px;color:var(--charcoal);}
+.profile-email{font-size:14px;color:var(--text-muted);}
+.saved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;}
+.listing-row{display:flex;align-items:center;justify-content:space-between;padding:1rem;background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:.75rem;gap:1rem;}
+.listing-name{font-family:'DM Serif Display',serif;font-size:17px;color:var(--charcoal);}
+.listing-meta{font-size:13px;color:var(--text-muted);margin-top:2px;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logomark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" stroke="#1C1A16" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#1C1A16"/><path d="M12 15L12 22" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/><path d="M8 21Q12 18.5 16 21" stroke="#1C1A16" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
+    <div class="nav-wordmark">Space<span>Logg</span></div>
+  </a>
+  <div class="nav-right">
+    <div class="nav-links"><a href="/dashboard.html">Explore</a><a href="/owner.html">My Spaces</a><a href="/list-space.html">List a Space</a></div>
+    <div class="notif-wrap" id="nav-notif-wrap" style="display:none;">
+      <div class="notif-bell" onclick="toggleNotifDropdown()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="notif-badge" id="notif-badge"></span></div>
+      <div class="notif-dropdown" id="notif-dropdown"><div class="notif-header"><span class="notif-title">Notifications</span><button class="notif-mark-all" onclick="markAllRead()">Mark all read</button></div><div class="notif-list" id="notif-list"></div></div>
+    </div>
+    <div id="nav-auth-btns" style="display:flex;gap:8px;"></div>
+    <div id="nav-user-area" style="display:none;align-items:center;gap:8px;"><a href="/profile.html" class="nav-avatar" id="nav-avatar" style="border-color:var(--charcoal);background:var(--charcoal);color:var(--parchment);">U</a></div>
+  </div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <a href="/dashboard.html">Explore</a><a href="/owner.html">My spaces</a><a href="/owner.html">My Spaces</a><a href="/list-space.html">List a Space</a>
+  <div class="drawer-auth" id="drawer-auth-btns">
+          <button onclick="window.location.href='/?login=1'" class="btn btn-outline">Sign in</button>
+          <button onclick="window.location.href='/?login=1'" class="btn btn-primary">Sign up</button>
+        </div>
+        <a href="/profile.html" id="drawer-profile-link" style="display:none;">My profile</a>
+        <button onclick="logout()" id="drawer-logout-btn" style="display:none;">Sign out</button>
+</div>
+
+<div class="page-wrap" style="max-width:860px;">
+  <div class="profile-header">
+    <div class="avatar-lg" id="avatar-lg">U</div>
+    <div>
+      <div class="profile-name" id="pname">—</div>
+      <div class="profile-email" id="pemail">—</div>
+      <div style="margin-top:6px;font-size:13px;color:var(--text-muted);">Member since <span id="psince">—</span></div>
+    </div>
+    <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="logout()">Sign out</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('saved',this)">Saved spaces</button>
+    <button class="tab-btn" onclick="switchTab('listings',this)">My listings</button>
+    <button class="tab-btn" onclick="switchTab('bookings',this)">My bookings</button>
+    <button class="tab-btn" onclick="switchTab('settings',this)">Settings</button>
+  </div>
+  <div class="tab-pane active" id="tab-saved"><div class="saved-grid" id="saved-grid"></div></div>
+  <div class="tab-pane" id="tab-listings">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;"><a href="/list-space.html" class="btn btn-primary btn-sm">+ List a space</a></div>
+    <div id="listings-container"></div>
+  </div>
+  <div class="tab-pane" id="tab-bookings"><div id="bookings-container"></div></div>
+  <div class="tab-pane" id="tab-settings">
+    <div class="form-card" style="max-width:460px;">
+      <h3 style="font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:1.5rem;">Update profile</h3>
+      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="s-name" placeholder="Your name"/></div>
+      <div class="form-group"><label class="form-label">New password</label><input class="form-input" id="s-pw" type="password" placeholder="Leave blank to keep current"/></div>
+      <button class="btn btn-primary" onclick="saveProfile()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div><div class="footer-brand">Space<span>Logg</span></div><div class="footer-tagline">Find your space. Do your work.</div></div>
+  <div class="footer-links"><a href="#">About</a><a href="/list-space.html">List a space</a><a href="#">Privacy</a></div>
+  <div class="footer-copy">© 2025 SpaceLogg. All rights reserved.</div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script src="/js/app.js"></script>
+<script>
+async function init() {
+  requireLogin('/profile.html');
+  const user = Auth.getUser();
+  renderNav();
+  document.getElementById('pname').textContent   = user.name;
+  document.getElementById('pemail').textContent  = user.email;
+  document.getElementById('avatar-lg').textContent = user.name.charAt(0).toUpperCase();
+  document.getElementById('nav-avatar').textContent = user.name.charAt(0).toUpperCase();
+  document.getElementById('psince').textContent  = new Date(user.created_at||Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  document.getElementById('s-name').value = user.name;
+  loadSaved();
+}
+function switchTab(tab,el){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active'); el.classList.add('active');
+  if(tab==='saved')    loadSaved();
+  if(tab==='listings') loadListings();
+  if(tab==='bookings') loadBookings();
+}
+async function loadSaved(){
+  const {saved}=await apiFetch('/users/saved');
+  const grid=document.getElementById('saved-grid');
+  if(!saved.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">♡</div><div class="empty-title">No saved spaces yet</div><div class="empty-sub">Tap ♡ on any space to save it here.</div><a href="/dashboard.html" class="btn btn-primary" style="margin-top:1rem">Explore spaces</a></div>';return;}
+  grid.innerHTML=saved.map(s=>`
+    <a href="/dashboard.html" class="space-card" style="text-decoration:none;display:block;">
+      <div class="card-img" style="background:${catGrad(s.category)};height:110px"><span class="card-cat-badge">${catIcon(s.category)} ${catLabel(s.category)}</span></div>
+      <div class="card-body">
+        <div class="card-name" style="font-size:15px">${s.name}</div>
+        <div class="card-location">${s.address}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-top:8px;">
+          <span style="color:var(--text-secondary)">★ ${s.rating} · <strong>${s.price||'Free'}</strong>${s.price_unit||''}</span>
+          <button class="save-btn saved" onclick="unsave(event,${s.id},this)">♥</button>
+        </div>
+      </div>
+    </a>`).join('');
+}
+async function unsave(e,id,btn){e.preventDefault();e.stopPropagation();await apiFetch(`/users/saved/${id}`,{method:'DELETE'});btn.closest('.space-card').remove();toast('Removed from saved');}
+async function loadListings(){
+  const {listings}=await apiFetch('/users/my-listings');
+  const c=document.getElementById('listings-container');
+  if(!listings.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-title">No listings yet</div><div class="empty-sub">Submit your workspace to reach remote workers.</div><a href="/list-space.html" class="btn btn-primary" style="margin-top:1rem">List a space</a></div>';return;}
+  c.innerHTML=listings.map(s=>`<div class="listing-row"><div><div class="listing-name">${s.name}</div><div class="listing-meta">${catLabel(s.category)} · ${s.address}</div></div><span class="status-badge status-${s.status}">${s.status.charAt(0).toUpperCase()+s.status.slice(1)}</span></div>`).join('');
+}
+async function loadBookings(){
+  const{bookings}=await apiFetch('/bookings');
+  const c=document.getElementById('bookings-container');
+  if(!bookings.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">No bookings yet</div><div class="empty-sub">Book a workspace and it will appear here.</div><a href="/dashboard.html" class="btn btn-primary" style="margin-top:1rem">Explore spaces</a></div>';return;}
+  c.innerHTML=bookings.map(b=>`<div class="listing-row"><div><div class="listing-name">${b.space_name}</div><div class="listing-meta">${b.date} · ${b.start_time}–${b.end_time} · ${b.guests} guest${b.guests>1?'s':''}</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="status-badge status-${b.status==='confirmed'?'approved':b.status==='cancelled'?'rejected':'pending'}">${b.status}</span>${b.status==='confirmed'?`<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>`:''}</div></div>`).join('');
+}
+async function cancelBooking(id){if(!confirm('Cancel this booking?'))return;try{await apiFetch('/bookings/'+id+'/cancel',{method:'PATCH'});toast('Booking cancelled','success');loadBookings();}catch(err){toast(err.message,'error');}}
+
+async function saveProfile(){
+  const body={};
+  const name=document.getElementById('s-name').value; const pw=document.getElementById('s-pw').value;
+  if(name)body.name=name; if(pw)body.password=pw;
+  try{const {user}=await apiFetch('/auth/me',{method:'PATCH',body:JSON.stringify(body)});Auth.setUser(user);document.getElementById('pname').textContent=user.name;document.getElementById('avatar-lg').textContent=user.name.charAt(0).toUpperCase();document.getElementById('s-pw').value='';toast('Profile updated ✓','success');}catch(err){toast(err.message,'error');}
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Dashboard — SpaceLogg</title>
+<link rel="stylesheet" href="/css/main.css"/>
+<link rel="stylesheet" href="/css/mobile-fixes.css"/>
+<style>
+body{padding-top:64px;}
+.admin-wrap{max-width:1100px;margin:0 auto;padding:2.5rem 2.5rem 5rem;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:2.5rem;}
+.stat-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
+.stat-card-num{font-family:'DM Serif Display',serif;font-size:36px;color:var(--charcoal);line-height:1;}
+.stat-card-num.warn{color:var(--amber);}
+.stat-label{font-size:12px;color:var(--text-muted);margin-top:4px;}
+.admin-panel{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem;}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:0.5px solid var(--border);}
+.panel-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--charcoal);}
+.admin-table{width:100%;border-collapse:collapse;}
+.admin-table th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);padding:.75rem 1.5rem;border-bottom:0.5px solid var(--border);font-weight:500;}
+.admin-table td{padding:.875rem 1.5rem;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--text-secondary);vertical-align:middle;}
+.admin-table tr:last-child td{border-bottom:none;}
+.admin-table tr:hover td{background:var(--parchment-light);}
+.pending-row{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:0.5px solid var(--border);gap:1rem;}
+.pending-row:last-child{border-bottom:none;}
+.pending-name{font-size:14px;font-weight:500;color:var(--charcoal);}
+.pending-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logomark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" stroke="#1C1A16" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#1C1A16"/><path d="M12 15L12 22" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/><path d="M8 21Q12 18.5 16 21" stroke="#1C1A16" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
+    <div class="nav-wordmark">Space<span>Logg</span></div>
+  </a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);font-weight:500;">Admin Portal</span>
+      <a href="/dashboard.html">View site</a>
+    </div>
+    <div id="nav-user-area" style="display:flex;align-items:center;gap:8px;">
+      <span id="admin-name" style="font-size:13px;color:var(--text-secondary);"></span>
+      <button onclick="logout()" class="btn btn-outline btn-sm">Sign out</button>
+    </div>
+  </div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <a href="/dashboard.html">View site</a>
+  <button onclick="logout()" class="btn btn-outline btn-full">Sign out</button>
+</div>
+
+<div class="admin-wrap">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
+    <div><div class="section-eyebrow">Admin</div><h1 class="section-title">Dashboard</h1></div>
+  </div>
+
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="stat-card-num">—</div><div class="stat-label">Loading…</div></div>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('pending',this)">Pending approval</button>
+    <button class="tab-btn" onclick="switchTab('spaces',this)">All spaces</button>
+    <button class="tab-btn" onclick="switchTab('users',this)">Users</button>
+  </div>
+
+  <div class="tab-pane active" id="tab-pending">
+    <div class="admin-panel"><div class="panel-header"><span class="panel-title">Pending spaces</span></div><div id="pending-list"></div></div>
+  </div>
+
+  <div class="tab-pane" id="tab-spaces">
+    <div class="admin-panel">
+      <div class="panel-header"><span class="panel-title">All approved spaces</span></div>
+      <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Space</th><th>Category</th><th>City</th><th>Rating</th><th>Actions</th></tr></thead><tbody id="spaces-body"></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="tab-pane" id="tab-users">
+    <div class="admin-panel">
+      <div class="panel-header">
+        <span class="panel-title">Users</span>
+        <input class="form-input" id="user-search" placeholder="Search by name or email…" style="width:220px;padding:6px 12px;font-size:13px;" oninput="searchUsers(this.value)"/>
+      </div>
+      <div style="overflow-x:auto;"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="users-body"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/js/app.js"></script>
+<script>
+let userSearchTimer;
+
+function init() {
+  requireAdminAccess();
+  const user = Auth.getUser();
+  document.getElementById('admin-name').textContent = user?.name || '';
+  loadStats();
+  loadPending();
+}
+
+async function loadStats() {
+  const s = await apiFetch('/admin/stats');
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-card-num">${s.totalSpaces}</div><div class="stat-label">Live spaces</div></div>
+    <div class="stat-card"><div class="stat-card-num warn">${s.pendingSpaces}</div><div class="stat-label">Pending review</div></div>
+    <div class="stat-card"><div class="stat-card-num">${s.totalUsers}</div><div class="stat-label">Users</div></div>
+    <div class="stat-card"><div class="stat-card-num">${s.totalReviews}</div><div class="stat-label">Reviews</div></div>
+    <div class="stat-card"><div class="stat-card-num">${s.savedCount}</div><div class="stat-label">Saves</div></div>`;
+}
+
+async function loadPending() {
+  const { spaces } = await apiFetch('/admin/spaces?status=pending');
+  const list = document.getElementById('pending-list');
+  if (!spaces.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">All caught up!</div><div class="empty-sub">No spaces pending review.</div></div>'; return; }
+  list.innerHTML = spaces.map(s=>`
+    <div class="pending-row" id="pr-${s.id}">
+      <div><div class="pending-name">${s.name}</div><div class="pending-meta">${catLabel(s.category)} · ${s.address}, ${s.city}${s.owner_name?` · by ${s.owner_name}`:''}</div></div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn btn-green btn-sm" onclick="approveSpace(${s.id},'approved')">Approve</button>
+        <button class="btn btn-danger btn-sm" onclick="approveSpace(${s.id},'rejected')">Reject</button>
+      </div>
+    </div>`).join('');
+}
+
+async function loadAllSpaces() {
+  const { spaces } = await apiFetch('/admin/spaces?status=approved&limit=100');
+  document.getElementById('spaces-body').innerHTML = spaces.map(s=>`
+    <tr>
+      <td style="font-weight:500;color:var(--charcoal)">${s.name}</td>
+      <td><span class="status-badge" style="background:${catColorLight(s.category)};color:${catColorDark(s.category)}">${catLabel(s.category)}</span></td>
+      <td>${s.city}</td>
+      <td>★ ${s.rating}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteSpace(${s.id})">Delete</button></td>
+    </tr>`).join('');
+}
+
+async function loadUsers(q='') {
+  const { users } = await apiFetch('/admin/users'+(q?`?q=${encodeURIComponent(q)}`:''));
+  document.getElementById('users-body').innerHTML = users.map(u=>`
+    <tr>
+      <td style="font-weight:500;color:var(--charcoal)">${u.name}</td>
+      <td>${u.email}</td>
+      <td><span class="status-badge ${u.role==='admin'?'status-approved':'status-pending'}">${u.role}</span></td>
+      <td>${new Date(u.created_at).toLocaleDateString()}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="toggleRole(${u.id},'${u.role}')">${u.role==='admin'?'Remove admin':'Make admin'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function searchUsers(q) { clearTimeout(userSearchTimer); userSearchTimer=setTimeout(()=>loadUsers(q),300); }
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active'); el.classList.add('active');
+  if (tab==='spaces') loadAllSpaces();
+  if (tab==='users')  loadUsers();
+}
+
+async function approveSpace(id, status) {
+  await apiFetch(`/admin/spaces/${id}/approve`,{method:'PATCH',body:JSON.stringify({status})});
+  document.getElementById('pr-'+id)?.remove();
+  loadStats();
+  toast(`Space ${status} ✓`,'success');
+}
+async function deleteSpace(id) {
+  if(!confirm('Delete this space permanently?')) return;
+  await apiFetch(`/admin/spaces/${id}`,{method:'DELETE'});
+  loadAllSpaces(); loadStats();
+  toast('Space deleted','success');
+}
+async function toggleRole(id, current) {
+  const role = current==='admin'?'user':'admin';
+  await apiFetch(`/admin/users/${id}`,{method:'PATCH',body:JSON.stringify({role})});
+  loadUsers(); toast(`Role updated to ${role}`,'success');
+}
+async function deleteUser(id) {
+  if(!confirm('Delete this user permanently?')) return;
+  await apiFetch(`/admin/users/${id}`,{method:'DELETE'});
+  loadUsers(); loadStats();
+  toast('User deleted','success');
+}
+
+init();
+</script>
+</body>
+</html>

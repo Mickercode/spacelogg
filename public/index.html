@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SpaceLogg — Find Your Space. Do Your Work.</title>
+<link rel="stylesheet" href="/css/main.css"/>
+<link rel="stylesheet" href="/css/mobile-fixes.css"/>
+<style>
+/* ── HERO ── */
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:0;overflow:hidden;position:relative;background:var(--charcoal);}
+@media(max-width:900px){.hero{grid-template-columns:1fr;min-height:auto;}}
+
+.hero-left{padding:8rem 4rem 6rem 4rem;position:relative;z-index:2;}
+@media(max-width:1100px){.hero-left{padding:8rem 2.5rem 5rem;}}
+@media(max-width:900px){.hero-left{padding:7rem 1.5rem 3rem;}}
+
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(232,137,26,0.15);border:0.5px solid rgba(232,137,26,0.4);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--amber);letter-spacing:1px;text-transform:uppercase;margin-bottom:2rem;animation:fadeUp 0.7s ease both;}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.7)}}
+.hero-title{font-family:'DM Serif Display',serif;font-size:clamp(44px,5.5vw,80px);line-height:1.05;letter-spacing:-1.5px;color:#fff;margin-bottom:1.5rem;animation:fadeUp 0.7s ease 0.1s both;}
+.hero-title em{color:var(--amber);font-style:italic;}
+.hero-sub{font-size:17px;font-weight:300;color:rgba(255,255,255,0.6);line-height:1.7;max-width:480px;margin-bottom:2.5rem;animation:fadeUp 0.7s ease 0.2s both;}
+.hero-actions{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;animation:fadeUp 0.7s ease 0.3s both;}
+.hero-stats{display:flex;gap:2.5rem;margin-top:3.5rem;padding-top:2rem;border-top:0.5px solid rgba(255,255,255,0.1);flex-wrap:wrap;animation:fadeUp 0.7s ease 0.4s both;}
+.hero-stat-num{font-family:'DM Serif Display',serif;font-size:30px;color:#fff;line-height:1;}
+.hero-stat-num span{color:var(--amber);}
+.hero-stat-label{font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px;letter-spacing:0.3px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+
+/* ── IMAGE MOSAIC ── */
+.hero-right{position:relative;height:100vh;overflow:hidden;}
+@media(max-width:900px){.hero-right{height:340px;}}
+
+.mosaic{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);height:100%;gap:3px;padding:3px;}
+.mosaic-item{overflow:hidden;position:relative;border-radius:4px;}
+.mosaic-item:first-child{grid-row:1/3;}
+.mosaic-item img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.08);transition:transform 8s ease;filter:brightness(0.75);}
+.mosaic-item:hover img{transform:scale(1);}
+
+/* Ken Burns animation on each tile */
+.mosaic-item:nth-child(1) img{animation:kb1 12s ease-in-out infinite alternate;}
+.mosaic-item:nth-child(2) img{animation:kb2 10s ease-in-out 1s infinite alternate;}
+.mosaic-item:nth-child(3) img{animation:kb3 14s ease-in-out 2s infinite alternate;}
+.mosaic-item:nth-child(4) img{animation:kb1 11s ease-in-out 0.5s infinite alternate;}
+.mosaic-item:nth-child(5) img{animation:kb2 13s ease-in-out 1.5s infinite alternate;}
+
+@keyframes kb1{from{transform:scale(1.08) translate(0,0)}to{transform:scale(1.02) translate(-2%,-1%)}}
+@keyframes kb2{from{transform:scale(1.1) translate(1%,0)}to{transform:scale(1.03) translate(-1%,2%)}}
+@keyframes kb3{from{transform:scale(1.06) translate(0,1%)}to{transform:scale(1.02) translate(2%,-2%)}}
+
+/* Category label overlay on each tile */
+.mosaic-label{position:absolute;bottom:.75rem;left:.75rem;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);border:0.5px solid rgba(255,255,255,0.15);color:#fff;font-size:11px;font-weight:500;padding:4px 10px;border-radius:12px;letter-spacing:0.3px;}
+
+/* Dark overlay gradient on right side to blend with left */
+.hero-right::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,var(--charcoal) 0%,transparent 15%),linear-gradient(to bottom,rgba(28,26,22,0.3) 0%,transparent 30%);pointer-events:none;z-index:1;}
+
+/* Search bar floating at bottom of hero */
+.hero-search{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);width:min(640px,90vw);z-index:10;animation:fadeUp 0.7s ease 0.5s both;}
+.hero-search-inner{display:flex;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-radius:14px;padding:8px 8px 8px 20px;box-shadow:0 8px 40px rgba(0,0,0,0.3);gap:8px;align-items:center;}
+.hero-search-input{flex:1;border:none;outline:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--charcoal);}
+.hero-search-input::placeholder{color:var(--text-muted);}
+.hero-search-btn{background:var(--amber);color:var(--charcoal);border:none;border-radius:10px;padding:10px 22px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
+.hero-search-btn:hover{background:var(--amber-dark);color:#fff;}
+
+/* ── FEATURES ── */
+.features-strip{background:var(--charcoal);padding:5rem 2.5rem;}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;max-width:1100px;margin:0 auto;}
+.feature-icon{width:44px;height:44px;border-radius:10px;background:rgba(232,137,26,0.15);border:0.5px solid rgba(232,137,26,0.3);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;}
+.feature-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--parchment);margin-bottom:8px;}
+.feature-desc{font-size:14px;font-weight:300;color:#9C8F78;line-height:1.6;}
+
+/* ── HOW ── */
+.how-section{padding:6rem 2.5rem;background:var(--parchment);}
+.steps-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;max-width:900px;margin:3rem auto 0;}
+.step-num{font-family:'DM Serif Display',serif;font-size:48px;color:var(--amber);opacity:0.25;line-height:1;margin-bottom:12px;}
+.step-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--charcoal);margin-bottom:8px;}
+.step-desc{font-size:14px;font-weight:300;color:var(--text-secondary);line-height:1.6;}
+
+/* ── CTA ── */
+.cta-section{padding:6rem 2.5rem;text-align:center;background:var(--parchment-light);position:relative;overflow:hidden;}
+.cta-circle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(232,137,26,0.08) 0%,transparent 65%);}
+.cta-content{position:relative;z-index:1;max-width:600px;margin:0 auto;}
+.cta-title{font-family:'DM Serif Display',serif;font-size:clamp(36px,5vw,56px);color:var(--charcoal);line-height:1.1;letter-spacing:-1px;margin-bottom:1.25rem;}
+.cta-title em{color:var(--amber);font-style:italic;}
+.cta-sub{font-size:16px;font-weight:300;color:var(--text-secondary);margin-bottom:2.5rem;}
+
+/* btn light variants for dark bg */
+.btn-light{background:rgba(255,255,255,0.12);color:#fff;border:0.5px solid rgba(255,255,255,0.25);}
+.btn-light:hover{background:rgba(255,255,255,0.2);color:#fff;}
+</style>
+</head>
+<body>
+
+<nav style="background:rgba(28,26,22,0.85);">
+  <a href="/" class="nav-logo">
+    <div class="nav-logomark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" stroke="#1C1A16" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#1C1A16"/><path d="M12 15L12 22" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/><path d="M8 21Q12 18.5 16 21" stroke="#1C1A16" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
+    <div class="nav-wordmark" style="color:#fff;">Space<span>Logg</span></div>
+  </a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="/dashboard.html" style="color:rgba(255,255,255,0.6)">Explore</a>
+      <a href="/list-space.html" style="color:rgba(255,255,255,0.6)">List a Space</a>
+    </div>
+    <div class="notif-wrap" id="nav-notif-wrap" style="display:none;">
+      <div class="notif-bell" onclick="toggleNotifDropdown()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="notif-badge" id="notif-badge"></span></div>
+      <div class="notif-dropdown" id="notif-dropdown"><div class="notif-header"><span class="notif-title">Notifications</span><button class="notif-mark-all" onclick="markAllRead()">Mark all read</button></div><div class="notif-list" id="notif-list"></div></div>
+    </div>
+    <div id="nav-auth-btns" style="display:flex;gap:8px;">
+      <button onclick="openAuthModal('login')" class="btn btn-light btn-sm">Sign in</button>
+      <button onclick="openAuthModal('register')" class="btn btn-amber btn-sm">Sign up</button>
+    </div>
+    <div id="nav-user-area" style="display:none;align-items:center;gap:8px;">
+      <a href="/profile.html" class="nav-avatar" id="nav-avatar">U</a>
+    </div>
+  </div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <a href="/dashboard.html">Explore</a><a href="/owner.html">My spaces</a><a href="/list-space.html">List a Space</a>
+  <div class="drawer-auth" id="drawer-auth-btns">
+          <button onclick="window.location.href='/?login=1'" class="btn btn-outline">Sign in</button>
+          <button onclick="window.location.href='/?login=1'" class="btn btn-primary">Sign up</button>
+        </div>
+        <a href="/profile.html" id="drawer-profile-link" style="display:none;">My profile</a>
+        <button onclick="logout()" id="drawer-logout-btn" style="display:none;">Sign out</button>
+</div>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <!-- Left: copy -->
+  <div class="hero-left">
+    <div class="hero-eyebrow"><span class="hero-dot"></span>Now available in your city</div>
+    <h1 class="hero-title">Find your<br><em>perfect</em><br>workspace.</h1>
+    <p class="hero-sub">SpaceLogg helps remote workers discover coworking spaces, cafes, libraries, and hotel lounges nearby — all in one place.</p>
+    <div class="hero-actions">
+      <a href="/dashboard.html" class="btn btn-amber" style="font-size:15px;padding:14px 28px;">Explore spaces →</a>
+      <a href="#how" class="btn btn-light" style="font-size:15px;padding:14px 24px;">How it works</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="hero-stat-num" id="hero-count">—</div><div class="hero-stat-label">Spaces listed</div></div>
+      <div><div class="hero-stat-num">12<span>+</span></div><div class="hero-stat-label">Cities covered</div></div>
+      <div><div class="hero-stat-num">4.8<span>★</span></div><div class="hero-stat-label">Avg. rating</div></div>
+    </div>
+  </div>
+
+  <!-- Right: animated image mosaic -->
+  <div class="hero-right">
+    <div class="mosaic">
+      <!-- Tall left tile -->
+      <div class="mosaic-item">
+        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80" alt="Coworking space"/>
+        <span class="mosaic-label">🖥 Coworking</span>
+      </div>
+      <!-- Top right -->
+      <div class="mosaic-item">
+        <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&q=80" alt="Café workspace"/>
+        <span class="mosaic-label">☕ Café</span>
+      </div>
+      <!-- Middle right -->
+      <div class="mosaic-item">
+        <img src="https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=600&q=80" alt="Library"/>
+        <span class="mosaic-label">📚 Library</span>
+      </div>
+      <!-- Bottom left of right col -->
+      <div class="mosaic-item">
+        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80" alt="Team workspace"/>
+        <span class="mosaic-label">🖥 Coworking</span>
+      </div>
+      <!-- Bottom right -->
+      <div class="mosaic-item">
+        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80" alt="Hotel lounge"/>
+        <span class="mosaic-label">🏨 Hotel Lounge</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating search bar -->
+  <div class="hero-search">
+    <div class="hero-search-inner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;opacity:0.4"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5L22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input class="hero-search-input" id="hero-search" placeholder="Search coworking spaces, cafés, libraries near you…" onkeydown="if(event.key==='Enter')goSearch()"/>
+      <button class="hero-search-btn" onclick="goSearch()">Find spaces</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features-strip">
+  <div class="features-grid">
+    <div><div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#E8891A" stroke-width="2"/><path d="M16.5 16.5L22 22" stroke="#E8891A" stroke-width="2" stroke-linecap="round"/></svg></div><div class="feature-title">Instant Discovery</div><div class="feature-desc">Search by category, location, or amenity. Find the right workspace in seconds.</div></div>
+    <div><div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5z" stroke="#E8891A" stroke-width="2" stroke-linejoin="round"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5" stroke="#E8891A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="feature-title">4 Categories</div><div class="feature-desc">Coworking, cafes, libraries, hotel lounges — verified and reviewed.</div></div>
+    <div><div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 22s-8-5.5-8-11a8 8 0 1116 0c0 5.5-8 11-8 11z" stroke="#E8891A" stroke-width="2"/><circle cx="12" cy="11" r="3" stroke="#E8891A" stroke-width="2"/></svg></div><div class="feature-title">Location-first</div><div class="feature-desc">Distance, availability, and hours — all upfront, no guessing.</div></div>
+    <div><div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" stroke="#E8891A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="feature-title">Rated & Reviewed</div><div class="feature-desc">Know the wifi speed and vibe before you go. Real reviews from real workers.</div></div>
+  </div>
+</section>
+
+<!-- ── HOW ── -->
+<section class="how-section" id="how">
+  <div style="text-align:center;max-width:500px;margin:0 auto;"><div class="section-eyebrow">How it works</div><h2 class="section-title">Three steps to your next workspace</h2></div>
+  <div class="steps-row">
+    <div><div class="step-num">01</div><div class="step-title">Search nearby</div><div class="step-desc">Enter your location or allow SpaceLogg to find spaces around you.</div></div>
+    <div><div class="step-num">02</div><div class="step-title">Filter by type</div><div class="step-desc">Choose from coworking, cafes, libraries or hotel lounges based on your style.</div></div>
+    <div><div class="step-num">03</div><div class="step-title">Book & go work</div><div class="step-desc">Check hours, amenities, book your spot and get things done.</div></div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+  <div class="cta-circle"></div>
+  <div class="cta-content">
+    <div class="section-eyebrow">Your next workspace is nearby</div>
+    <h2 class="cta-title">Stop working from<br><em>nowhere.</em></h2>
+    <p class="cta-sub">Join thousands of remote workers who've found their perfect space with SpaceLogg.</p>
+    <a href="/dashboard.html" class="btn btn-primary" style="font-size:16px;padding:16px 36px;">Find spaces near me →</a>
+  </div>
+</section>
+
+<footer>
+  <div><div class="footer-brand">Space<span>Logg</span></div><div class="footer-tagline">Find your space. Do your work.</div></div>
+  <div class="footer-links"><a href="#">About</a><a href="/list-space.html">List a space</a><a href="#">Privacy</a><a href="#">Contact</a></div>
+  <div class="footer-copy">© 2025 SpaceLogg. All rights reserved.</div>
+</footer>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal" onclick="if(event.target.id==='auth-modal')closeAuthModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAuthModal()">✕</button>
+    <div style="font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:1.25rem;">Welcome to SpaceLogg</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login-btn" onclick="switchAuthTab('login')">Sign in</button>
+      <button class="auth-tab" id="tab-register-btn" onclick="switchAuthTab('register')">Sign up</button>
+    </div>
+    <div class="alert alert-error" id="auth-error"></div>
+    <div class="alert alert-success" id="auth-success"></div>
+    <div id="auth-login">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="login-email" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="login-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/><span class="forgot-link" onclick="switchAuthTab('forgot')">Forgot password?</span></div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">Sign in</button>
+    </div>
+    <div id="auth-register" style="display:none;">
+      <div class="form-group"><label class="form-label">Full name</label><input class="form-input" id="reg-name" placeholder="Your name"/></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="reg-email" type="email" placeholder="you@example.com"/></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="reg-pw" type="password" placeholder="At least 6 characters"/></div>
+      <button class="btn btn-amber btn-full" onclick="doRegister()">Create account</button>
+    </div>
+    <div id="auth-forgot" style="display:none;">
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:1rem;">Enter your email and we'll send a reset link.</p>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="forgot-email" type="email" placeholder="you@example.com"/></div>
+      <button class="btn btn-primary btn-full" onclick="doForgot()">Send reset link</button>
+      <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="switchAuthTab('login')">← Back to sign in</button>
+    </div>
+    <div id="auth-reset" style="display:none;">
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:1rem;">Enter your new password.</p>
+      <div class="form-group"><label class="form-label">New password</label><input class="form-input" id="reset-pw" type="password" placeholder="At least 6 characters"/></div>
+      <button class="btn btn-primary btn-full" onclick="doReset()">Reset password</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="/js/app.js"></script>
+<script>
+let resetToken = null;
+
+function goSearch() {
+  const q = document.getElementById('hero-search').value.trim();
+  window.location.href = '/dashboard.html' + (q ? `?q=${encodeURIComponent(q)}` : '');
+}
+
+async function init() {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('reset')) { resetToken=p.get('reset'); history.replaceState({},'','/'); showResetForm(); document.getElementById('auth-modal').classList.add('open'); }
+  if (p.get('login') || p.get('register')) openAuthModal(p.get('register')?'register':'login');
+  renderNav();
+  try { const { total } = await apiFetch('/spaces?limit=1'); document.getElementById('hero-count').innerHTML=`${total}<span>+</span>`; } catch {}
+}
+
+function openAuthModal(tab='login'){ document.getElementById('auth-modal').classList.add('open'); document.getElementById('auth-error').style.display='none'; document.getElementById('auth-success').style.display='none'; if(tab==='reset'){showResetForm();return;} switchAuthTab(tab); }
+function closeAuthModal(){ document.getElementById('auth-modal').classList.remove('open'); }
+function switchAuthTab(tab){ ['login','register','forgot','reset'].forEach(t=>document.getElementById('auth-'+t).style.display=t===tab?'block':'none'); document.getElementById('tab-login-btn').classList.toggle('active',tab==='login'); document.getElementById('tab-register-btn').classList.toggle('active',tab==='register'); document.getElementById('auth-error').style.display='none'; document.getElementById('auth-success').style.display='none'; }
+function showResetForm(){ ['login','register','forgot'].forEach(t=>document.getElementById('auth-'+t).style.display='none'); document.getElementById('auth-reset').style.display='block'; document.getElementById('tab-login-btn').classList.remove('active'); document.getElementById('tab-register-btn').classList.remove('active'); }
+function showErr(m){ const e=document.getElementById('auth-error'); e.style.display='block'; e.textContent=m; }
+function showOk(m){ const e=document.getElementById('auth-success'); e.style.display='block'; e.textContent=m; }
+async function doLogin(){ try{ const{token,user}=await apiFetch('/auth/login',{method:'POST',body:JSON.stringify({email:document.getElementById('login-email').value,password:document.getElementById('login-pw').value})}); Auth.setToken(token); Auth.setUser(user); closeAuthModal(); renderNav(); const next=new URLSearchParams(window.location.search).get('next'); if(next)window.location.href=next; else toast('Welcome back, '+user.name.split(' ')[0]+'! 👋','success'); }catch(err){showErr(err.message);} }
+async function doRegister(){ try{ const{token,user}=await apiFetch('/auth/register',{method:'POST',body:JSON.stringify({name:document.getElementById('reg-name').value,email:document.getElementById('reg-email').value,password:document.getElementById('reg-pw').value})}); Auth.setToken(token); Auth.setUser(user); closeAuthModal(); renderNav(); toast('Welcome to SpaceLogg! 🎉','success'); }catch(err){showErr(err.message);} }
+async function doForgot(){ try{ await apiFetch('/auth/forgot-password',{method:'POST',body:JSON.stringify({email:document.getElementById('forgot-email').value})}); showOk('Reset link sent! Check your email.'); }catch(err){showErr(err.message);} }
+async function doReset(){ try{ const{token,user}=await apiFetch('/auth/reset-password',{method:'POST',body:JSON.stringify({token:resetToken,password:document.getElementById('reset-pw').value})}); Auth.setToken(token); Auth.setUser(user); resetToken=null; closeAuthModal(); renderNav(); toast('Password reset! Welcome back.','success'); }catch(err){showErr(err.message);} }
+init();
+</script>
+</body>
+</html>

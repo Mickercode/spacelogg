@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Owner Dashboard — SpaceLogg</title>
+<link rel="stylesheet" href="/css/main.css"/>
+<link rel="stylesheet" href="/css/mobile-fixes.css"/>
+<style>
+body{padding-top:64px;}
+.owner-wrap{max-width:1000px;margin:0 auto;padding:2.5rem 2rem 5rem;}
+.owner-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2.5rem;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:2.5rem;}
+.stat-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
+.stat-card-num{font-family:'DM Serif Display',serif;font-size:34px;color:var(--charcoal);line-height:1;}
+.stat-card-num.amber{color:var(--amber);}
+.stat-card-num.green{color:var(--green);}
+.stat-card-label{font-size:12px;color:var(--text-muted);margin-top:4px;}
+
+/* Listing cards */
+.listing-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.25rem;}
+.listing-card-header{display:flex;gap:1.25rem;padding:1.25rem;align-items:flex-start;}
+.listing-card-img{width:100px;height:80px;border-radius:10px;flex-shrink:0;background:var(--parchment);overflow:hidden;}
+.listing-card-img img{width:100%;height:100%;object-fit:cover;}
+.listing-card-name{font-family:'DM Serif Display',serif;font-size:19px;color:var(--charcoal);margin-bottom:4px;}
+.listing-card-meta{font-size:13px;color:var(--text-muted);}
+.listing-card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.listing-card-body{border-top:0.5px solid var(--border);padding:1rem 1.25rem;}
+.bookings-mini{display:flex;flex-direction:column;gap:6px;}
+.booking-mini-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:0.5px solid var(--border);}
+.booking-mini-row:last-child{border-bottom:none;}
+
+/* Edit modal */
+.edit-modal{max-width:600px;max-height:88vh;overflow-y:auto;}
+.edit-img-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.edit-img-thumb{width:72px;height:72px;border-radius:8px;overflow:hidden;position:relative;}
+.edit-img-thumb img{width:100%;height:100%;object-fit:cover;}
+.edit-img-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.65);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
+
+@media(max-width:600px){
+  .listing-card-header{flex-direction:column;}
+  .listing-card-img{width:100%;height:140px;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logomark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" stroke="#1C1A16" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#1C1A16"/><path d="M12 15L12 22" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/><path d="M8 21Q12 18.5 16 21" stroke="#1C1A16" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
+    <div class="nav-wordmark">Space<span>Logg</span></div>
+  </a>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="/dashboard.html">Explore</a>
+      <a href="/owner.html" style="color:var(--amber);font-weight:500;">My spaces</a>
+    </div>
+    <div class="notif-wrap" id="nav-notif-wrap" style="display:none;">
+      <div class="notif-bell" onclick="toggleNotifDropdown()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="notif-badge" id="notif-badge"></span></div>
+      <div class="notif-dropdown" id="notif-dropdown"><div class="notif-header"><span class="notif-title">Notifications</span><button class="notif-mark-all" onclick="markAllRead()">Mark all read</button></div><div class="notif-list" id="notif-list"></div></div>
+    </div>
+    <div id="nav-user-area" style="display:none;align-items:center;gap:8px;">
+      <a href="/profile.html" class="nav-avatar" id="nav-avatar">U</a>
+    </div>
+  </div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="nav-drawer" id="nav-drawer">
+  <a href="/dashboard.html">Explore</a><a href="/owner.html">My spaces</a><a href="/list-space.html">List a Space</a>
+  <div class="drawer-auth" id="drawer-auth-btns">
+          <button onclick="window.location.href='/?login=1'" class="btn btn-outline">Sign in</button>
+          <button onclick="window.location.href='/?login=1'" class="btn btn-primary">Sign up</button>
+        </div>
+        <a href="/profile.html" id="drawer-profile-link" style="display:none;">My profile</a>
+        <button onclick="logout()" id="drawer-logout-btn" style="display:none;">Sign out</button>
+</div>
+
+<div class="owner-wrap">
+  <div class="owner-header">
+    <div>
+      <div class="section-eyebrow">Owner portal</div>
+      <h1 class="section-title">My spaces</h1>
+    </div>
+    <a href="/list-space.html" class="btn btn-primary">+ List a new space</a>
+  </div>
+
+  <div class="stats-row" id="owner-stats">
+    <div class="stat-card"><div class="stat-card-num">—</div><div class="stat-card-label">Loading…</div></div>
+  </div>
+
+  <div id="listings-area">
+    <div style="text-align:center;padding:3rem;color:var(--text-muted);font-size:14px;">Loading your spaces…</div>
+  </div>
+</div>
+
+<footer>
+  <div><div class="footer-brand">Space<span>Logg</span></div><div class="footer-tagline">Find your space. Do your work.</div></div>
+  <div class="footer-links"><a href="/dashboard.html">Explore</a><a href="/list-space.html">List a space</a><a href="/profile.html">Profile</a></div>
+  <div class="footer-copy">© 2025 SpaceLogg. All rights reserved.</div>
+</footer>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="if(event.target.id==='edit-modal')closeEdit()">
+  <div class="modal edit-modal" id="edit-modal-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/js/app.js"></script>
+<script>
+let allListings = [];
+
+async function init() {
+  requireLogin('/owner.html');
+  renderNav();
+  await loadListings();
+}
+
+async function loadListings() {
+  const { listings } = await apiFetch('/users/my-listings');
+  allListings = listings;
+
+  // Stats
+  const approved = listings.filter(l => l.status === 'approved').length;
+  const pending  = listings.filter(l => l.status === 'pending').length;
+  const avgRating = listings.length
+    ? (listings.reduce((s,l) => s + (l.rating||0), 0) / listings.length).toFixed(1)
+    : '—';
+
+  document.getElementById('owner-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-card-num green">${approved}</div><div class="stat-card-label">Live spaces</div></div>
+    <div class="stat-card"><div class="stat-card-num amber">${pending}</div><div class="stat-card-label">Pending review</div></div>
+    <div class="stat-card"><div class="stat-card-num">${listings.length}</div><div class="stat-card-label">Total listings</div></div>
+    <div class="stat-card"><div class="stat-card-num">${avgRating}<span style="font-size:18px;color:var(--amber)">★</span></div><div class="stat-card-label">Avg. rating</div></div>`;
+
+  if (!listings.length) {
+    document.getElementById('listings-area').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🏢</div>
+        <div class="empty-title">No spaces yet</div>
+        <div class="empty-sub">List your first workspace and start reaching remote workers.</div>
+        <a href="/list-space.html" class="btn btn-primary" style="margin-top:1rem">List a space →</a>
+      </div>`;
+    return;
+  }
+
+  // Render listing cards
+  const area = document.getElementById('listings-area');
+  area.innerHTML = '';
+  for (const l of listings) {
+    const card = document.createElement('div');
+    card.className = 'listing-card';
+    card.id = `lcard-${l.id}`;
+    const imgUrl = l.images?.[0] || '';
+    card.innerHTML = `
+      <div class="listing-card-header">
+        <div class="listing-card-img">
+          ${imgUrl ? `<img src="${imgUrl}" alt="${l.name}"/>` : `<div style="width:100%;height:100%;background:${catGrad(l.category)};display:flex;align-items:center;justify-content:center;font-size:24px;">${catIcon(l.category)}</div>`}
+        </div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+            <div class="listing-card-name">${l.name}</div>
+            <span class="status-badge status-${l.status}">${l.status.charAt(0).toUpperCase()+l.status.slice(1)}</span>
+          </div>
+          <div class="listing-card-meta">${catLabel(l.category)} · ${l.address}, ${l.city}</div>
+          <div class="listing-card-meta" style="margin-top:2px;">★ ${l.rating||'No ratings yet'} · ${l.review_count||0} reviews · ${l.price||'Free'}${l.price_unit||''}</div>
+          <div class="listing-card-actions">
+            <button class="btn btn-outline btn-sm" onclick="openEdit(${l.id})">✏ Edit</button>
+            ${l.status === 'approved' ? `<button class="btn btn-ghost btn-sm" onclick="loadSpaceBookings(${l.id}, this)">📅 Bookings</button>` : ''}
+            <button class="btn btn-danger btn-sm" onclick="deleteListing(${l.id})">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div class="listing-card-body" id="bookings-${l.id}" style="display:none;"></div>`;
+    area.appendChild(card);
+  }
+}
+
+async function loadSpaceBookings(spaceId, btn) {
+  const el = document.getElementById(`bookings-${spaceId}`);
+  if (el.style.display !== 'none') { el.style.display = 'none'; btn.textContent = '📅 Bookings'; return; }
+  btn.textContent = '⏳ Loading…';
+  try {
+    const { bookings } = await apiFetch(`/bookings/my-space/${spaceId}`);
+    if (!bookings.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text-muted);padding:4px 0;">No bookings yet for this space.</div>';
+    } else {
+      const upcoming = bookings.filter(b => b.date >= new Date().toISOString().split('T')[0] && b.status !== 'cancelled');
+      const past     = bookings.filter(b => b.date < new Date().toISOString().split('T')[0] || b.status === 'cancelled');
+      el.innerHTML = `
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);font-weight:500;margin-bottom:10px;">
+          Bookings (${bookings.length} total · ${upcoming.length} upcoming)
+        </div>
+        <div class="bookings-mini">
+          ${bookings.slice(0,10).map(b => `
+            <div class="booking-mini-row">
+              <div>
+                <span style="font-weight:500;color:var(--charcoal);">${b.user_name}</span>
+                <span style="color:var(--text-muted);margin-left:8px;">${b.date} · ${b.start_time}–${b.end_time}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:12px;color:var(--text-muted);">${b.guests} guest${b.guests>1?'s':''}</span>
+                <span class="status-badge status-${b.status==='confirmed'?'approved':'rejected'}">${b.status}</span>
+              </div>
+            </div>`).join('')}
+          ${bookings.length > 10 ? `<div style="font-size:12px;color:var(--text-muted);padding:4px 0;">+${bookings.length-10} more bookings</div>` : ''}
+        </div>`;
+    }
+    el.style.display = 'block';
+    btn.textContent = '📅 Hide bookings';
+  } catch { btn.textContent = '📅 Bookings'; toast('Could not load bookings', 'error'); }
+}
+
+async function deleteListing(id) {
+  if (!confirm('Delete this space permanently? This cannot be undone.')) return;
+  try {
+    await apiFetch(`/spaces/${id}`, { method:'DELETE' });
+    document.getElementById(`lcard-${id}`)?.remove();
+    toast('Space deleted', 'success');
+    loadListings();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+function openEdit(id) {
+  const l = allListings.find(x => x.id === id);
+  if (!l) return;
+  const AMENITIES = ['Fast WiFi','Air Con','Power Outlets','Printing','Meeting Rooms','Café/Bar','Parking','Lockers','Standing Desks','Outdoor Seating','Quiet Zone','Phone Booths','Events Space','24/7 Access','Coffee Service'];
+
+  document.getElementById('edit-modal-body').innerHTML = `
+    <button class="modal-close" onclick="closeEdit()">✕</button>
+    <div style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:1.5rem;">Edit: ${l.name}</div>
+    <form id="edit-form">
+      <div class="form-group"><label class="form-label">Space name</label><input class="form-input" name="name" value="${l.name}"/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Category</label>
+          <select class="form-select" name="category">
+            ${['coworking','cafe','library','hotel'].map(c=>`<option value="${c}" ${l.category===c?'selected':''}>${catLabel(c)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">City</label><input class="form-input" name="city" value="${l.city}"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Address</label><input class="form-input" name="address" value="${l.address}"/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Latitude</label><input class="form-input" name="lat" type="number" step="any" value="${l.lat||''}"/></div>
+        <div class="form-group"><label class="form-label">Longitude</label><input class="form-input" name="lng" type="number" step="any" value="${l.lng||''}"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" name="description">${l.description||''}</textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Price</label><input class="form-input" name="price" value="${l.price||''}"/></div>
+        <div class="form-group"><label class="form-label">Per</label>
+          <select class="form-select" name="price_unit">
+            ${['/day','/hour','/month','/coffee',''].map(u=>`<option value="${u}" ${l.price_unit===u?'selected':''}>${u||'N/A (Free)'}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amenities</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+          ${AMENITIES.map((a,i) => `<span>
+            <input type="checkbox" id="ea-${i}" value="${a}" ${l.amenities?.includes(a)?'checked':''} style="display:none">
+            <label for="ea-${i}" style="padding:6px 12px;border-radius:20px;border:0.5px solid var(--border-strong);font-size:13px;cursor:pointer;background:${l.amenities?.includes(a)?'var(--charcoal)':'#fff'};color:${l.amenities?.includes(a)?'var(--parchment)':'var(--text-secondary)'};display:inline-block;transition:all 0.15s;"
+              onclick="this.style.background=document.getElementById('ea-${i}').checked?'#fff':'var(--charcoal)';this.style.color=document.getElementById('ea-${i}').checked?'var(--text-secondary)':'var(--parchment)'"
+            >${a}</label></span>`).join('')}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Current photos</label>
+        <div class="edit-img-strip" id="edit-imgs">
+          ${(l.images||[]).map((img,i) => `
+            <div class="edit-img-thumb" id="ei-${i}">
+              <img src="${img}"/>
+              <button type="button" class="edit-img-remove" onclick="removeEditImg(${i})">✕</button>
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:10px;"><label style="font-size:12px;color:var(--text-muted);">Add new photos</label>
+          <input type="file" id="edit-new-imgs" accept="image/*" multiple class="form-input" style="margin-top:4px;padding:6px;"/>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:1rem;border-top:0.5px solid var(--border);margin-top:1rem;">
+        <button type="button" class="btn btn-outline" onclick="closeEdit()">Cancel</button>
+        <button type="submit" class="btn btn-amber" id="edit-submit-btn">Save changes</button>
+      </div>
+    </form>`;
+
+  document.getElementById('edit-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Remove image tracking
+  window._removedImgIndexes = [];
+
+  document.getElementById('edit-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('edit-submit-btn');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    try {
+      const fd = new FormData();
+      ['name','category','city','address','lat','lng','description','price','price_unit'].forEach(f => {
+        if (this[f]?.value !== undefined) fd.append(f, this[f].value);
+      });
+      // Amenities
+      const checked = Array.from(this.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
+      fd.append('amenities', JSON.stringify(checked));
+      // New images
+      const newImgs = document.getElementById('edit-new-imgs').files;
+      Array.from(newImgs).forEach(f => fd.append('images', f));
+      // Updated existing images (minus removed)
+      const kept = (l.images||[]).filter((_,i) => !window._removedImgIndexes.includes(i));
+      fd.append('kept_images', JSON.stringify(kept));
+
+      const headers = {};
+      const token = Auth.getToken();
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(`/api/spaces/${l.id}`, { method:'PATCH', headers, body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      closeEdit();
+      toast('Space updated! ✓', 'success');
+      loadListings();
+    } catch (err) { toast(err.message, 'error'); }
+    finally { btn.textContent = 'Save changes'; btn.disabled = false; }
+  });
+}
+
+function removeEditImg(idx) {
+  document.getElementById(`ei-${idx}`)?.remove();
+  window._removedImgIndexes = window._removedImgIndexes || [];
+  window._removedImgIndexes.push(idx);
+}
+
+function closeEdit() {
+  document.getElementById('edit-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+init();
+</script>
+</body>
+</html>
