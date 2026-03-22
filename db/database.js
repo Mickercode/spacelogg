@@ -33,7 +33,7 @@ db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS spaces (
     id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
     category TEXT NOT NULL, description TEXT,
-    address TEXT NOT NULL, city TEXT NOT NULL DEFAULT 'Ibadan',
+    address TEXT NOT NULL, city TEXT NOT NULL DEFAULT '',
     lat REAL, lng REAL, price TEXT, price_unit TEXT,
     rating REAL DEFAULT 0, review_count INTEGER DEFAULT 0,
     amenities TEXT DEFAULT '[]', hours TEXT DEFAULT '{}', images TEXT DEFAULT '[]',
@@ -96,12 +96,12 @@ db.serialize(() => {
       (name,category,description,address,city,lat,lng,price,price_unit,rating,review_count,amenities,hours,status)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'approved')`);
     [
-      ['The Hub Ibadan','coworking','A premium coworking space in the heart of Ibadan. High-speed fibre, ergonomic chairs, and a quiet focused environment.','Ring Road, Ibadan','Ibadan',7.3775,3.9470,'₦2,500','/day',4.9,128,'["Fast WiFi","Air Con","Printing","Meeting Rooms","Café","Lockers"]','{"Mon–Fri":"7am – 10pm","Saturday":"8am – 8pm","Sunday":"Closed"}'],
-      ['Brew & Work Café','cafe','A warm artisan café with strong WiFi and great coffee. Popular with freelancers for its relaxed atmosphere.','UI Road, Ibadan','Ibadan',7.4022,3.9022,'₦500','/coffee',4.7,84,'["WiFi","Power Outlets","Coffee","Pastries","Quiet Zone"]','{"Mon–Fri":"7am – 9pm","Saturday":"8am – 9pm","Sunday":"9am – 6pm"}'],
-      ['Ibadan City Library','library','The city\'s main public library — fully renovated with modern study facilities and reliable internet.','Secretariat Rd, Ibadan','Ibadan',7.3964,3.9167,'Free','',4.5,61,'["WiFi","Quiet Space","Study Rooms","AC","Printing"]','{"Mon–Fri":"8am – 6pm","Saturday":"9am – 4pm","Sunday":"Closed"}'],
-      ['Premier Business Lounge','hotel','A refined hotel business lounge available to non-guests by day pass.','Mokola Hill, Ibadan','Ibadan',7.3990,3.9010,'₦1,500','/day',4.6,47,'["High-Speed WiFi","AC","Coffee Service","Printing","Quiet"]','{"Mon–Sun":"6am – 11pm"}'],
-      ['Roamers Co','coworking','Ibadan\'s most modern coworking space. Private pods, communal tables, café bar, and networking events.','Bodija Market Rd, Ibadan','Ibadan',7.4180,3.9020,'₦3,000','/day',4.8,96,'["Fibre WiFi","Standing Desks","Locker","Café Bar","Events Space"]','{"Mon–Fri":"6am – 11pm","Saturday":"8am – 9pm","Sunday":"10am – 6pm"}'],
-      ['Grounds Café','cafe','A specialty coffee shop loved by the creative community. Great natural light and ample power sockets.','Agodi GRA, Ibadan','Ibadan',7.4100,3.9300,'₦800','/coffee',4.6,72,'["Fast WiFi","Power Points","Specialty Coffee","Food","Outdoor Seating"]','{"Mon–Fri":"7am – 8pm","Saturday":"8am – 8pm","Sunday":"10am – 5pm"}'],
+      ['The Loft Workspace','coworking','A premium coworking space with high-speed fibre, ergonomic chairs, and a quiet focused environment.','14 Marina Street','Lagos',6.4541,3.3947,'₦2,500','/day',4.9,128,'["Fast WiFi","Air Con","Printing","Meeting Rooms","Café","Lockers"]','{"Mon–Fri":"7am – 10pm","Saturday":"8am – 8pm","Sunday":"Closed"}'],
+      ['Brew & Work Café','cafe','A warm artisan café with strong WiFi and great coffee. Popular with freelancers for its relaxed atmosphere.','22 Wuse Zone 4','Abuja',9.0574,7.4898,'₦500','/coffee',4.7,84,'["WiFi","Power Outlets","Coffee","Pastries","Quiet Zone"]','{"Mon–Fri":"7am – 9pm","Saturday":"8am – 9pm","Sunday":"9am – 6pm"}'],
+      ['Central Public Library','library','A fully renovated public library with modern study facilities and reliable internet.','5 Independence Ave','Accra',5.5502,-0.2174,'Free','',4.5,61,'["WiFi","Quiet Space","Study Rooms","AC","Printing"]','{"Mon–Fri":"8am – 6pm","Saturday":"9am – 4pm","Sunday":"Closed"}'],
+      ['Skyline Business Lounge','hotel','A refined hotel business lounge available to non-guests by day pass.','Nairobi CBD','Nairobi',-1.2863,36.8172,'$15','/day',4.6,47,'["High-Speed WiFi","AC","Coffee Service","Printing","Quiet"]','{"Mon–Sun":"6am – 11pm"}'],
+      ['Roamers Co','coworking','A modern coworking space with private pods, communal tables, café bar, and networking events.','31 Victoria Island','Lagos',6.4281,3.4219,'₦3,000','/day',4.8,96,'["Fibre WiFi","Standing Desks","Locker","Café Bar","Events Space"]','{"Mon–Fri":"6am – 11pm","Saturday":"8am – 9pm","Sunday":"10am – 6pm"}'],
+      ['Grounds Café','cafe','A specialty coffee shop loved by the creative community. Great natural light and ample power sockets.','8 Oxford Street','London',51.5155,-0.1410,'£5','/coffee',4.6,72,'["Fast WiFi","Power Points","Specialty Coffee","Food","Outdoor Seating"]','{"Mon–Fri":"7am – 8pm","Saturday":"8am – 8pm","Sunday":"10am – 5pm"}'],
     ].forEach(r => ins.run(...r));
     ins.finalize();
     console.log('✅ Database seeded with sample spaces');

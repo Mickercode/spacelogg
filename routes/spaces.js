@@ -52,7 +52,7 @@ router.post('/', requireAuth, requireAdmin, upload.array('images',6), async (req
     const { lastID } = await db.runAsync(
       `INSERT INTO spaces (name,category,description,address,city,lat,lng,price,price_unit,amenities,hours,images,owner_id,status)
        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'approved')`,
-      [name, category, description||'', address, city||'Ibadan',
+      [name, category, description||'', address, city||'',
        lat?Number(lat):null, lng?Number(lng):null,
        price||'', price_unit||'',
        amenities||'[]', hours||'{}',
