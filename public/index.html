@@ -9,6 +9,12 @@
 <link rel="apple-touch-icon" href="/branding/spacelogg-icon-256.png"/>
 <link rel="stylesheet" href="/css/main.css"/>
 <style>
+/* GOOGLE AUTH */
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:1.5px solid #E2D9CC;border-radius:10px;padding:11px 20px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:#1C1A16;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s;margin-bottom:16px;}
+.btn-google:hover{border-color:#C4B9A8;box-shadow:0 2px 8px rgba(28,26,22,0.08);}
+.auth-divider{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;border-top:1px solid #EDE5D8;}
+.auth-divider span{font-size:12px;color:#9C8F78;white-space:nowrap;}
 /* HERO */
 .hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:0;overflow:hidden;position:relative;background:var(--charcoal);}
 .hero-left{padding:8rem 4rem 6rem 4rem;position:relative;z-index:2;}
@@ -333,11 +339,15 @@
     <div class="alert alert-error" id="auth-error"></div>
     <div class="alert alert-success" id="auth-success"></div>
     <div id="auth-login">
+      <button class="btn-google" onclick="signInWithGoogle()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M47.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h13.2c-.6 3-2.3 5.5-4.8 7.2v6h7.7c4.5-4.2 7.4-10.3 7.4-17.5z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.2 1.5-5 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-10H2.6v6.2C6.6 42.6 14.7 48 24 48z"/><path fill="#FBBC05" d="M10.5 28.5c-.5-1.5-.8-3.2-.8-4.5s.3-3 .8-4.5v-6.2H2.6C.9 16.8 0 20.3 0 24s.9 7.2 2.6 10.2l7.9-5.7z"/><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.5 0 24 0 14.7 0 6.6 5.4 2.6 13.8l7.9 5.7C12.4 13.7 17.7 9.5 24 9.5z"/></svg>Continue with Google</button>
+      <div class="auth-divider"><span>or sign in with email</span></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="login-email" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()"/></div>
       <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="login-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/><span class="forgot-link" onclick="switchAuthTab('forgot')">Forgot password?</span></div>
       <button class="btn btn-primary btn-full" onclick="doLogin()">Sign in</button>
     </div>
     <div id="auth-register" style="display:none;">
+      <button class="btn-google" onclick="signInWithGoogle()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M47.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h13.2c-.6 3-2.3 5.5-4.8 7.2v6h7.7c4.5-4.2 7.4-10.3 7.4-17.5z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.2 1.5-5 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-10H2.6v6.2C6.6 42.6 14.7 48 24 48z"/><path fill="#FBBC05" d="M10.5 28.5c-.5-1.5-.8-3.2-.8-4.5s.3-3 .8-4.5v-6.2H2.6C.9 16.8 0 20.3 0 24s.9 7.2 2.6 10.2l7.9-5.7z"/><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.5 0 24 0 14.7 0 6.6 5.4 2.6 13.8l7.9 5.7C12.4 13.7 17.7 9.5 24 9.5z"/></svg>Continue with Google</button>
+      <div class="auth-divider"><span>or sign up with email</span></div>
       <div class="form-group"><label class="form-label">Full name</label><input class="form-input" id="reg-name" placeholder="Your name"/></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="reg-email" type="email" placeholder="you@example.com"/></div>
       <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="reg-pw" type="password" placeholder="At least 6 characters"/></div>
@@ -359,6 +369,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="/js/app.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 let resetToken = null;
 function goSearch() {
@@ -370,6 +381,7 @@ async function init() {
   if (p.get('reset')) { resetToken=p.get('reset'); history.replaceState({},'','/'); showResetForm(); document.getElementById('auth-modal').classList.add('open'); }
   if (p.get('login')||p.get('register')) openAuthModal(p.get('register')?'register':'login');
   renderNav();
+  initGoogle();
   try { const{total}=await apiFetch('/spaces?limit=1'); document.getElementById('hero-count').innerHTML=`${total}<span>+</span>`; } catch {}
 }
 function openAuthModal(tab='login'){ document.getElementById('auth-modal').classList.add('open'); document.getElementById('auth-error').style.display='none'; document.getElementById('auth-success').style.display='none'; if(tab==='reset'){showResetForm();return;} switchAuthTab(tab); }
@@ -378,6 +390,26 @@ function switchAuthTab(tab){ ['login','register','forgot','reset'].forEach(t=>do
 function showResetForm(){ ['login','register','forgot'].forEach(t=>document.getElementById('auth-'+t).style.display='none'); document.getElementById('auth-reset').style.display='block'; }
 function showErr(m){ const e=document.getElementById('auth-error'); e.style.display='block'; e.textContent=m; }
 function showOk(m){ const e=document.getElementById('auth-success'); e.style.display='block'; e.textContent=m; }
+let _googleClientId = null;
+async function initGoogle() {
+  try {
+    const cfg = await apiFetch('/auth/config');
+    if (!cfg.googleClientId) return;
+    _googleClientId = cfg.googleClientId;
+    google.accounts.id.initialize({ client_id: _googleClientId, callback: handleGoogleCredential });
+  } catch {}
+}
+async function handleGoogleCredential(response) {
+  try {
+    const { token, user } = await apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ credential: response.credential }) });
+    Auth.setToken(token); Auth.setUser(user); closeAuthModal(); renderNav();
+    toast('Welcome, ' + user.name.split(' ')[0] + '! 👋', 'success');
+  } catch(err) { showErr(err.message); }
+}
+function signInWithGoogle() {
+  if (!_googleClientId) { showErr('Google sign-in is not configured.'); return; }
+  google.accounts.id.prompt();
+}
 async function doLogin(){ try{ const{token,user}=await apiFetch('/auth/login',{method:'POST',body:JSON.stringify({email:document.getElementById('login-email').value,password:document.getElementById('login-pw').value})}); Auth.setToken(token); Auth.setUser(user); closeAuthModal(); renderNav(); toast('Welcome back, '+user.name.split(' ')[0]+'! 👋','success'); }catch(err){showErr(err.message);} }
 async function doRegister(){ try{ const{token,user}=await apiFetch('/auth/register',{method:'POST',body:JSON.stringify({name:document.getElementById('reg-name').value,email:document.getElementById('reg-email').value,password:document.getElementById('reg-pw').value})}); Auth.setToken(token); Auth.setUser(user); closeAuthModal(); renderNav(); toast('Welcome to SpaceLogg! 🎉','success'); }catch(err){showErr(err.message);} }
 async function doForgot(){ try{ await apiFetch('/auth/forgot-password',{method:'POST',body:JSON.stringify({email:document.getElementById('forgot-email').value})}); showOk('Reset link sent! Check your email.'); }catch(err){showErr(err.message);} }

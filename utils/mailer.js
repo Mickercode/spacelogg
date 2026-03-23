@@ -36,38 +36,91 @@ async function sendEmail({ to, subject, html, text }) {
 
 function emailTemplate({ title, body, ctaText, ctaUrl }) {
   const appUrl = process.env.APP_URL || 'http://localhost:3000';
+  const iconUrl = `${appUrl}/branding/spacelogg-icon-128.png`;
   return `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"/>
-<style>
-  body{font-family:sans-serif;background:#F5EDD8;margin:0;padding:20px;}
-  .wrap{max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;}
-  .header{background:#1C1A16;padding:24px 32px;}
-  .logo{font-family:Georgia,serif;font-size:22px;color:#F5EDD8;text-decoration:none;}
-  .logo span{color:#E8891A;}
-  .body{padding:32px;}
-  h1{font-family:Georgia,serif;font-size:26px;color:#1C1A16;margin:0 0 16px;}
-  p{font-size:15px;color:#6B6456;line-height:1.65;margin:0 0 16px;}
-  .cta{display:inline-block;background:#E8891A;color:#1C1A16;text-decoration:none;padding:13px 28px;border-radius:10px;font-weight:600;font-size:15px;margin-top:8px;}
-  .footer{background:#F5EDD8;padding:20px 32px;font-size:12px;color:#9C8F78;text-align:center;}
-  a{color:#E8891A;}
-</style>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${title}</title>
 </head>
-<body>
-<div class="wrap">
-  <div class="header"><a href="${appUrl}" class="logo">Space<span>Logg</span></a></div>
-  <div class="body">
-    <h1>${title}</h1>
-    ${body}
-    ${ctaText && ctaUrl ? `<br/><a href="${ctaUrl}" class="cta">${ctaText}</a>` : ''}
-  </div>
-  <div class="footer">
-    © 2025 SpaceLogg · <a href="${appUrl}">${appUrl.replace('https://','')}</a><br/>
-    You're receiving this because you have an account on SpaceLogg.
-  </div>
-</div>
+<body style="margin:0;padding:0;background:#F5EDD8;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5EDD8;min-height:100vh;">
+  <tr><td align="center" style="padding:48px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:540px;">
+
+      <tr><td align="center" style="padding-bottom:20px;">
+        <img src="${iconUrl}" alt="SpaceLogg" width="56" height="56" style="border-radius:14px;display:block;"/>
+      </td></tr>
+
+      <tr><td style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 2px 24px rgba(28,26,22,0.08);">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td style="background:#1C1A16;padding:24px 40px;">
+            <span style="font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#F5EDD8;">Space<span style="color:#E8891A;">Logg</span></span>
+          </td></tr>
+          <tr><td style="background:#E8891A;height:3px;line-height:3px;font-size:1px;">&nbsp;</td></tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td style="padding:40px 40px 32px;">
+            <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:26px;color:#1C1A16;margin:0 0 20px;line-height:1.25;font-weight:normal;">${title}</h1>
+            ${body}
+            ${ctaText && ctaUrl ? `
+            <table cellpadding="0" cellspacing="0" border="0" style="margin-top:28px;">
+              <tr><td style="background:#E8891A;border-radius:12px;">
+                <a href="${ctaUrl}" style="display:inline-block;padding:14px 32px;color:#1C1A16;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:600;font-size:15px;">${ctaText} &rarr;</a>
+              </td></tr>
+            </table>` : ''}
+          </td></tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr><td style="padding:0 40px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr><td style="border-top:1px solid #F0E8D8;padding-top:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#9C8F78;line-height:1.8;">
+                &copy; 2025 SpaceLogg &middot; <a href="${appUrl}" style="color:#E8891A;text-decoration:none;">spacelogg.com</a><br/>
+                You&rsquo;re receiving this because you have an account on SpaceLogg.
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
 </body>
 </html>`;
 }
 
-module.exports = { sendEmail, emailTemplate };
+function welcomeEmail(name) {
+  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+  const firstName = name.split(' ')[0];
+  return emailTemplate({
+    title: `Welcome aboard, ${firstName}!`,
+    body: `
+      <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#6B6456;line-height:1.7;margin:0 0 20px;">
+        You've joined a growing community of remote workers, freelancers, and digital nomads who use SpaceLogg to find their perfect workspace.
+      </p>
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr><td style="background:#FDF8F0;border-radius:12px;padding:14px 18px;border-left:3px solid #E8891A;">
+          <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#1C1A16;margin:0;font-weight:500;">&#9749; &nbsp;Browse cafés, coworking spaces, libraries &amp; hotel lounges</p>
+        </td></tr>
+        <tr><td style="height:8px;"></td></tr>
+        <tr><td style="background:#FDF8F0;border-radius:12px;padding:14px 18px;border-left:3px solid #E8891A;">
+          <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#1C1A16;margin:0;font-weight:500;">&#128205; &nbsp;Explore spaces on an interactive map &amp; book your spot</p>
+        </td></tr>
+        <tr><td style="height:8px;"></td></tr>
+        <tr><td style="background:#FDF8F0;border-radius:12px;padding:14px 18px;border-left:3px solid #E8891A;">
+          <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:#1C1A16;margin:0;font-weight:500;">&#11088; &nbsp;Save favourites and share reviews with the community</p>
+        </td></tr>
+      </table>
+      <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#6B6456;line-height:1.7;margin:20px 0 0;">
+        Ready to find your next workspace?
+      </p>
+    `,
+    ctaText: 'Start Exploring',
+    ctaUrl: `${appUrl}/dashboard.html`
+  });
+}
+
+module.exports = { sendEmail, emailTemplate, welcomeEmail };

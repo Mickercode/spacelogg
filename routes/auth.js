@@ -4,7 +4,7 @@ const jwt     = require('jsonwebtoken');
 const crypto  = require('crypto');
 const db      = require('../db/database');
 const { requireAuth } = require('../middleware/auth');
-const { sendEmail }   = require('../utils/mailer');
+const { sendEmail, emailTemplate, welcomeEmail } = require('../utils/mailer');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'spacelogg_dev_secret';
@@ -25,6 +25,7 @@ router.post('/register', async (req, res) => {
     const user = await db.getAsync('SELECT id, name, email, role, created_at FROM users WHERE id = ?', [lastID]);
     await db.runAsync(`INSERT INTO notifications (user_id, type, title, message) VALUES (?, 'welcome', ?, ?)`,
       [user.id, 'Welcome to SpaceLogg! 🎉', `Hi ${user.name.split(' ')[0]}! Start exploring workspaces near you.`]);
+    sendEmail({ to: user.email, subject: 'Welcome to SpaceLogg!', html: welcomeEmail(user.name) }).catch(() => {});
     res.status(201).json({ token: makeToken(user), user });
   } catch (err) { console.error(err); res.status(500).json({ error: 'Registration failed' }); }
 });
@@ -73,7 +74,13 @@ router.post('/forgot-password', async (req, res) => {
     await db.runAsync('INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)', [user.id, token, expires]);
     const resetUrl = `${process.env.APP_URL || 'http://localhost:3000'}/?reset=${token}`;
     await sendEmail({ to: user.email, subject: 'Reset your SpaceLogg password',
-      html: `<p>Hi ${user.name},</p><p>Click to reset your password (valid 1 hour):</p><p><a href="${resetUrl}">${resetUrl}</a></p>` });
+      html: emailTemplate({
+        title: 'Reset your password',
+        body: `<p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#6B6456;line-height:1.7;margin:0 0 8px;">Hi ${user.name.split(' ')[0]},</p><p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#6B6456;line-height:1.7;margin:0 0 8px;">We received a request to reset your SpaceLogg password. Click the button below — this link is valid for <strong>1 hour</strong>.</p><p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;color:#9C8F78;line-height:1.7;margin:0;">If you didn't request this, you can safely ignore this email.</p>`,
+        ctaText: 'Reset Password',
+        ctaUrl: resetUrl
+      })
+    });
     res.json({ message: 'If that email exists, a reset link has been sent.' });
   } catch (err) { console.error(err); res.status(500).json({ error: 'Could not send reset email' }); }
 });
@@ -91,6 +98,43 @@ router.post('/reset-password', async (req, res) => {
     const user = await db.getAsync('SELECT id, name, email, role, created_at FROM users WHERE id = ?', [reset.user_id]);
     res.json({ token: makeToken(user), user, message: 'Password reset successfully' });
   } catch (err) { console.error(err); res.status(500).json({ error: 'Reset failed' }); }
+});
+
+router.get('/config', (req, res) => {
+  res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || null });
+});
+
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ error: 'No credential provided' });
+    if (!process.env.GOOGLE_CLIENT_ID) return res.status(503).json({ error: 'Google sign-in not configured' });
+
+    const { OAuth2Client } = require('google-auth-library');
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({ idToken: credential, audience: process.env.GOOGLE_CLIENT_ID });
+    const { email, name, picture } = ticket.getPayload();
+
+    let user = await db.getAsync('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
+    if (!user) {
+      const randomPw = crypto.randomBytes(32).toString('hex');
+      const hash = await bcrypt.hash(randomPw, 10);
+      const { lastID } = await db.runAsync(
+        'INSERT INTO users (name, email, password, avatar) VALUES (?, ?, ?, ?)',
+        [name, email.toLowerCase(), hash, picture || '']
+      );
+      user = await db.getAsync('SELECT * FROM users WHERE id = ?', [lastID]);
+      await db.runAsync(`INSERT INTO notifications (user_id, type, title, message) VALUES (?, 'welcome', ?, ?)`,
+        [user.id, 'Welcome to SpaceLogg! 🎉', `Hi ${name.split(' ')[0]}! Start exploring workspaces near you.`]);
+      sendEmail({ to: user.email, subject: 'Welcome to SpaceLogg!', html: welcomeEmail(user.name) }).catch(() => {});
+    }
+
+    const { password: _, ...safeUser } = user;
+    res.json({ token: makeToken(safeUser), user: safeUser });
+  } catch (err) {
+    console.error('Google auth error:', err.message);
+    res.status(401).json({ error: 'Google sign-in failed' });
+  }
 });
 
 module.exports = router;

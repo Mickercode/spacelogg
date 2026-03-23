@@ -1,0 +1,23 @@
+# Environment variables - NEVER commit real keys
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite
+db/*.db
+
+# Dependencies
+node_modules/
+
+# Uploads
+public/uploads/*
+!public/uploads/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
