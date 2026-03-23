@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="400" height="120">
+  <!-- Logomark -->
+  <rect x="0" y="8" width="44" height="44" rx="11" fill="#E8891A"/>
+  <circle cx="22" cy="26" r="9" fill="none" stroke="#1C1A16" stroke-width="2.5"/>
+  <circle cx="22" cy="26" r="3.5" fill="#1C1A16"/>
+  <line x1="22" y1="35" x2="22" y2="47" stroke="#1C1A16" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M15 46 Q22 42 29 46" fill="none" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/>
+  <!-- Wordmark -->
+  <text x="54" y="37" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="400" fill="#1C1A16" letter-spacing="-0.5">Space</text>
+  <text x="130" y="37" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="400" fill="#E8891A" letter-spacing="-0.5">Logg</text>
+</svg>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>SpaceLogg Brand Guidelines</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:#F5EDD8;color:#1C1A16;}
+.page{max-width:900px;margin:0 auto;padding:3rem 2rem 6rem;}
+h1{font-family:'DM Serif Display',serif;font-size:48px;color:#1C1A16;letter-spacing:-1px;margin-bottom:.5rem;}
+h1 span{color:#E8891A;}
+.subtitle{font-size:16px;color:#9C8F78;margin-bottom:3rem;}
+h2{font-family:'DM Serif Display',serif;font-size:28px;color:#1C1A16;margin:3rem 0 1.5rem;padding-bottom:.75rem;border-bottom:0.5px solid rgba(28,26,22,0.15);}
+h3{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#9C8F78;font-weight:500;margin-bottom:1rem;}
+
+/* LOGO SECTION */
+.logo-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1rem;}
+.logo-box{border-radius:16px;padding:2.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;}
+.logo-box.light{background:#fff;border:0.5px solid rgba(28,26,22,0.12);}
+.logo-box.dark{background:#1C1A16;}
+.logo-box.amber{background:#E8891A;}
+.logo-box-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#9C8F78;}
+.logo-box.dark .logo-box-label{color:rgba(255,255,255,0.4);}
+.logo-box.amber .logo-box-label{color:rgba(28,26,22,0.6);}
+
+/* COLOR PALETTE */
+.color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1rem;}
+.color-chip{border-radius:12px;overflow:hidden;}
+.color-swatch{height:80px;}
+.color-info{background:#fff;padding:10px 12px;border:0.5px solid rgba(28,26,22,0.1);border-top:none;border-radius:0 0 12px 12px;}
+.color-name{font-size:12px;font-weight:500;color:#1C1A16;}
+.color-hex{font-size:11px;color:#9C8F78;font-family:monospace;margin-top:2px;}
+.color-use{font-size:10px;color:#9C8F78;margin-top:2px;}
+
+/* TYPOGRAPHY */
+.type-sample{background:#fff;border-radius:16px;padding:2rem;margin-bottom:1rem;border:0.5px solid rgba(28,26,22,0.1);}
+.type-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#9C8F78;margin-bottom:12px;}
+.type-display{font-family:'DM Serif Display',serif;font-size:42px;color:#1C1A16;line-height:1.1;}
+.type-display em{color:#E8891A;font-style:italic;}
+.type-ui{font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;color:#1C1A16;}
+.type-body{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:300;color:#6B6456;line-height:1.6;}
+
+/* ICONS GRID */
+.icons-grid{display:flex;gap:1rem;flex-wrap:wrap;}
+.icon-item{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.icon-item span{font-size:11px;color:#9C8F78;letter-spacing:1px;text-transform:uppercase;}
+
+/* USAGE */
+.do-dont{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+.do-box,.dont-box{background:#fff;border-radius:14px;padding:1.5rem;border:0.5px solid rgba(28,26,22,0.1);}
+.do-box{border-top:3px solid #2EA87A;}
+.dont-box{border-top:3px solid #E24B4A;}
+.do-label{font-size:12px;font-weight:500;color:#2EA87A;margin-bottom:.75rem;}
+.dont-label{font-size:12px;font-weight:500;color:#E24B4A;margin-bottom:.75rem;}
+.do-box p,.dont-box p{font-size:13px;color:#6B6456;line-height:1.6;}
+
+/* TAGLINE */
+.tagline-box{background:#1C1A16;border-radius:16px;padding:3rem;text-align:center;margin-bottom:1rem;}
+.tagline{font-family:'DM Serif Display',serif;font-size:32px;color:#F5EDD8;line-height:1.2;}
+.tagline em{color:#E8891A;font-style:italic;}
+.tagline-sub{font-size:14px;color:rgba(245,237,216,0.5);margin-top:1rem;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div style="margin-bottom:3rem;padding-bottom:2rem;border-bottom:0.5px solid rgba(28,26,22,0.15);">
+    <h1>Space<span>Logg</span></h1>
+    <div class="subtitle">Brand Identity Guidelines · 2025</div>
+    <p style="font-size:14px;color:#6B6456;max-width:540px;line-height:1.65;">This document defines the visual identity of SpaceLogg. Use these guidelines to ensure consistent and professional representation across all touchpoints.</p>
+  </div>
+
+  <!-- LOGO -->
+  <h2>Logo</h2>
+  <div class="logo-grid">
+    <div class="logo-box light">
+      <svg viewBox="0 0 200 60" width="200" height="60">
+        <rect x="0" y="8" width="44" height="44" rx="11" fill="#E8891A"/>
+        <circle cx="22" cy="26" r="9" fill="none" stroke="#1C1A16" stroke-width="2.5"/>
+        <circle cx="22" cy="26" r="3.5" fill="#1C1A16"/>
+        <line x1="22" y1="35" x2="22" y2="47" stroke="#1C1A16" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M15 46 Q22 42 29 46" fill="none" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/>
+        <text x="54" y="37" font-family="Georgia,serif" font-size="28" fill="#1C1A16" letter-spacing="-0.5">Space</text>
+        <text x="130" y="37" font-family="Georgia,serif" font-size="28" fill="#E8891A" letter-spacing="-0.5">Logg</text>
+      </svg>
+      <div class="logo-box-label">Primary — Light</div>
+    </div>
+    <div class="logo-box dark">
+      <svg viewBox="0 0 200 60" width="200" height="60">
+        <rect x="0" y="8" width="44" height="44" rx="11" fill="#E8891A"/>
+        <circle cx="22" cy="26" r="9" fill="none" stroke="#1C1A16" stroke-width="2.5"/>
+        <circle cx="22" cy="26" r="3.5" fill="#1C1A16"/>
+        <line x1="22" y1="35" x2="22" y2="47" stroke="#1C1A16" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M15 46 Q22 42 29 46" fill="none" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/>
+        <text x="54" y="37" font-family="Georgia,serif" font-size="28" fill="#F5EDD8" letter-spacing="-0.5">Space</text>
+        <text x="130" y="37" font-family="Georgia,serif" font-size="28" fill="#E8891A" letter-spacing="-0.5">Logg</text>
+      </svg>
+      <div class="logo-box-label">Primary — Dark</div>
+    </div>
+  </div>
+  <div class="logo-grid">
+    <div class="logo-box amber" style="padding:2rem;">
+      <svg viewBox="0 0 60 60" width="80" height="80">
+        <rect width="60" height="60" rx="14" fill="#1C1A16"/>
+        <circle cx="30" cy="24" r="10" fill="none" stroke="#F5EDD8" stroke-width="2.5"/>
+        <circle cx="30" cy="24" r="4" fill="#F5EDD8"/>
+        <line x1="30" y1="34" x2="30" y2="46" stroke="#F5EDD8" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M22 45 Q30 41 38 45" fill="none" stroke="#F5EDD8" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="logo-box-label">Icon Mark — Amber</div>
+    </div>
+    <div class="logo-box light" style="padding:2rem;">
+      <svg viewBox="0 0 60 60" width="80" height="80">
+        <rect width="60" height="60" rx="14" fill="#E8891A"/>
+        <circle cx="30" cy="24" r="10" fill="none" stroke="#1C1A16" stroke-width="2.5"/>
+        <circle cx="30" cy="24" r="4" fill="#1C1A16"/>
+        <line x1="30" y1="34" x2="30" y2="46" stroke="#1C1A16" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M22 45 Q30 41 38 45" fill="none" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="logo-box-label">Icon Mark — Primary</div>
+    </div>
+  </div>
+
+  <!-- TAGLINE -->
+  <h2>Tagline</h2>
+  <div class="tagline-box">
+    <div class="tagline">Find your space.<br><em>Do your work.</em></div>
+    <div class="tagline-sub">Use this tagline consistently across all marketing materials.</div>
+  </div>
+
+  <!-- COLORS -->
+  <h2>Color Palette</h2>
+  <div class="color-grid">
+    <div class="color-chip"><div class="color-swatch" style="background:#E8891A;"></div><div class="color-info"><div class="color-name">Amber Blaze</div><div class="color-hex">#E8891A</div><div class="color-use">Primary · CTAs · Accents</div></div></div>
+    <div class="color-chip"><div class="color-swatch" style="background:#1C1A16;"></div><div class="color-info"><div class="color-name">Deep Charcoal</div><div class="color-hex">#1C1A16</div><div class="color-use">Text · Dark backgrounds</div></div></div>
+    <div class="color-chip"><div class="color-swatch" style="background:#F5EDD8;"></div><div class="color-info"><div class="color-name">Warm Parchment</div><div class="color-hex">#F5EDD8</div><div class="color-use">Backgrounds · Light surfaces</div></div></div>
+    <div class="color-chip"><div class="color-swatch" style="background:#2EA87A;"></div><div class="color-info"><div class="color-name">Grove Green</div><div class="color-hex">#2EA87A</div><div class="color-use">Coworking · Success</div></div></div>
+    <div class="color-chip"><div class="color-swatch" style="background:#6B5ED6;"></div><div class="color-info"><div class="color-name">Quiet Indigo</div><div class="color-hex">#6B5ED6</div><div class="color-use">Libraries</div></div></div>
+    <div class="color-chip"><div class="color-swatch" style="background:#B87A2A;"></div><div class="color-info"><div class="color-name">Teak Brown</div><div class="color-hex">#B87A2A</div><div class="color-use">Hotel Lounges</div></div></div>
+  </div>
+
+  <!-- TYPOGRAPHY -->
+  <h2>Typography</h2>
+  <div class="type-sample">
+    <div class="type-label">Display — DM Serif Display</div>
+    <div class="type-display">Find your<br><em>perfect workspace.</em></div>
+    <div style="margin-top:1rem;font-size:13px;color:#9C8F78;">Use for headlines, hero text, section titles</div>
+  </div>
+  <div class="type-sample">
+    <div class="type-label">UI / Body — DM Sans</div>
+    <div class="type-ui" style="margin-bottom:8px;">Coworking Spaces · Filter by category</div>
+    <div class="type-body">SpaceLogg helps remote workers discover coworking spaces, cafes, libraries, and hotel lounges nearby — all in one place. Fast WiFi, great coffee, and a space to get things done.</div>
+    <div style="margin-top:1rem;font-size:13px;color:#9C8F78;">Weight 500 for UI labels · Weight 300–400 for body text</div>
+  </div>
+
+  <!-- USAGE -->
+  <h2>Logo Usage</h2>
+  <div class="do-dont">
+    <div class="do-box">
+      <div class="do-label">✓ Do</div>
+      <p>Use the full wordmark (SpaceLogg) on light or dark backgrounds with sufficient contrast.<br/><br/>
+      Use the icon mark alone for app icons, favicons, and small placements.<br/><br/>
+      Maintain clear space around the logo equal to the height of the "S" on all sides.</p>
+    </div>
+    <div class="dont-box">
+      <div class="dont-label">✕ Don't</div>
+      <p>Don't change the colors of the logo or use it on busy backgrounds without a backing.<br/><br/>
+      Don't stretch, rotate, or distort the logo in any direction.<br/><br/>
+      Don't separate "Space" and "Logg" or use them independently in different colors.</p>
+    </div>
+  </div>
+
+  <!-- CATEGORY COLORS -->
+  <h2>Category Color System</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+    <div style="background:#FDF0E0;border-radius:12px;padding:1.25rem;border:0.5px solid rgba(232,137,26,0.2);">
+      <div style="font-size:20px;margin-bottom:6px;">☕</div>
+      <div style="font-weight:500;color:#A05E0A;font-size:14px;">Cafés</div>
+      <div style="font-size:12px;color:#9C8F78;margin-top:2px;">#E8891A Amber Blaze</div>
+    </div>
+    <div style="background:#E8F4F0;border-radius:12px;padding:1.25rem;border:0.5px solid rgba(46,168,122,0.2);">
+      <div style="font-size:20px;margin-bottom:6px;">🖥</div>
+      <div style="font-weight:500;color:#1A6B50;font-size:14px;">Coworking</div>
+      <div style="font-size:12px;color:#9C8F78;margin-top:2px;">#2EA87A Grove Green</div>
+    </div>
+    <div style="background:#EBE8F8;border-radius:12px;padding:1.25rem;border:0.5px solid rgba(107,94,214,0.2);">
+      <div style="font-size:20px;margin-bottom:6px;">📚</div>
+      <div style="font-weight:500;color:#4A3E9E;font-size:14px;">Libraries</div>
+      <div style="font-size:12px;color:#9C8F78;margin-top:2px;">#6B5ED6 Quiet Indigo</div>
+    </div>
+    <div style="background:#F5EDD8;border-radius:12px;padding:1.25rem;border:0.5px solid rgba(184,122,42,0.2);">
+      <div style="font-size:20px;margin-bottom:6px;">🏨</div>
+      <div style="font-weight:500;color:#6B4A1A;font-size:14px;">Hotel Lounges</div>
+      <div style="font-size:12px;color:#9C8F78;margin-top:2px;">#B87A2A Teak Brown</div>
+    </div>
+  </div>
+
+  <!-- FILE LIST -->
+  <h2>Asset Files Included</h2>
+  <div style="background:#fff;border-radius:14px;padding:1.5rem;border:0.5px solid rgba(28,26,22,0.1);">
+    <div style="display:grid;gap:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-icon.svg</span><span style="color:#9C8F78;">Vector icon mark — amber</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-icon-dark.svg</span><span style="color:#9C8F78;">Vector icon mark — charcoal</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-logo.svg</span><span style="color:#9C8F78;">Full wordmark — light background</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-logo-white.svg</span><span style="color:#9C8F78;">Full wordmark — dark background</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-favicon-16.png</span><span style="color:#9C8F78;">Favicon 16×16px</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-favicon-32.png</span><span style="color:#9C8F78;">Favicon 32×32px</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-favicon-64.png</span><span style="color:#9C8F78;">Favicon 64×64px</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-icon-128.png</span><span style="color:#9C8F78;">App icon 128×128px</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-icon-256.png</span><span style="color:#9C8F78;">App icon 256×256px</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-icon-512.png</span><span style="color:#9C8F78;">App icon 512×512px — App stores</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:0.5px solid rgba(28,26,22,0.08);"><span style="font-weight:500;">spacelogg-icon-white-128.png</span><span style="color:#9C8F78;">White variant 128×128px</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;"><span style="font-weight:500;">spacelogg-icon-white-256.png</span><span style="color:#9C8F78;">White variant 256×256px</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top:3rem;text-align:center;font-size:13px;color:#9C8F78;">
+    SpaceLogg Brand Identity · Find your space. Do your work. · © 2025
+  </div>
+</div>
+</body>
+</html>
