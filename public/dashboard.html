@@ -328,7 +328,11 @@ function selectSlot(idx) {
     <div class="booking-summary-row"><span>Time</span><span>${slot.label} (${slot.start}–${slot.end})</span></div>
     <div class="booking-summary-row"><span>Price</span><span>${currentBookingSpace.price||'Free'}${currentBookingSpace.price_unit||''}</span></div>`;
   document.getElementById('booking-summary').style.display='block';
-  document.getElementById('confirm-booking-btn').style.display='flex';
+  const btn = document.getElementById('confirm-booking-btn');
+  btn.style.display='flex';
+  const price = currentBookingSpace.price;
+  const isFree = !price || price.toLowerCase() === 'free';
+  btn.textContent = isFree ? 'Confirm booking →' : `Pay & Book (${price}) →`;
 }
 
 async function confirmBooking() {
@@ -337,15 +341,24 @@ async function confirmBooking() {
   const guests=document.getElementById('booking-guests').value;
   const note=document.getElementById('booking-note').value;
   const btn=document.getElementById('confirm-booking-btn');
-  btn.textContent='Confirming…'; btn.disabled=true;
+  const origText=btn.textContent;
+  btn.textContent='Processing…'; btn.disabled=true;
   try {
-    await apiFetch('/bookings',{method:'POST',body:JSON.stringify({space_id:currentBookingSpace.id,date,start_time:selectedStart,end_time:selectedEnd,guests:Number(guests),note})});
+    const data=await apiFetch('/bookings',{method:'POST',body:JSON.stringify({space_id:currentBookingSpace.id,date,start_time:selectedStart,end_time:selectedEnd,guests:Number(guests),note})});
+    if (data.payment_url) {
+      // Redirect to Paystack checkout
+      btn.textContent='Redirecting to payment…';
+      window.location.href=data.payment_url;
+      return;
+    }
+    // Free space — confirmed immediately
     closeBookingModal();
     toast('Booking confirmed! Check your email. 🎉','success');
   } catch(err){
     const errEl=document.getElementById('booking-error');
     errEl.style.display='block'; errEl.textContent=err.message;
-  } finally { btn.textContent='Confirm booking →'; btn.disabled=false; }
+    btn.textContent=origText; btn.disabled=false;
+  }
 }
 
 // ── EDIT SPACE ──

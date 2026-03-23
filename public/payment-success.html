@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Payment Successful — SpaceLogg</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/branding/spacelogg-favicon-32.png"/>
+<link rel="icon" type="image/svg+xml" href="/branding/spacelogg-icon.svg"/>
+<link rel="stylesheet" href="/css/main.css"/>
+<style>
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--parchment);}
+.success-card{background:#fff;border-radius:var(--radius-lg);padding:3rem;max-width:480px;width:100%;text-align:center;box-shadow:0 4px 24px rgba(28,26,22,0.08);border:0.5px solid var(--border);}
+.success-icon{width:80px;height:80px;border-radius:50%;background:rgba(76,175,80,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:36px;}
+.success-title{font-family:'DM Serif Display',serif;font-size:28px;color:var(--charcoal);margin-bottom:0.75rem;}
+.success-sub{font-size:15px;color:var(--text-secondary);line-height:1.6;margin-bottom:2rem;}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;margin-bottom:1.5rem;}
+.status-pill.confirming{background:rgba(232,137,26,0.12);color:var(--amber);}
+.status-pill.confirmed{background:rgba(76,175,80,0.12);color:#388E3C;}
+</style>
+</head>
+<body>
+<div class="success-card">
+  <div class="success-icon">&#10003;</div>
+  <h1 class="success-title">Payment successful!</h1>
+  <div id="status-pill" class="status-pill confirming">Confirming your booking...</div>
+  <p class="success-sub" id="status-text">We're securing your workspace now. This usually takes just a moment.</p>
+  <a href="/profile.html" class="btn btn-amber" style="width:100%;">View my bookings</a>
+  <a href="/dashboard.html" class="btn btn-outline" style="width:100%;margin-top:0.75rem;">Browse more spaces</a>
+</div>
+<script src="/js/app.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const bookingId = params.get('booking_id');
+
+async function pollStatus() {
+  if (!bookingId) return;
+  try {
+    const data = await apiFetch(`/bookings/${bookingId}/payment-status`);
+    const pill = document.getElementById('status-pill');
+    const text = document.getElementById('status-text');
+    if (data.booking_status === 'confirmed') {
+      pill.className = 'status-pill confirmed';
+      pill.innerHTML = 'Booking confirmed!';
+      text.textContent = 'Your workspace is booked. Check your email for confirmation details.';
+      return; // stop polling
+    }
+    if (data.booking_status === 'paid') {
+      pill.innerHTML = 'Confirming with workspace...';
+    }
+    setTimeout(pollStatus, 2000);
+  } catch { setTimeout(pollStatus, 3000); }
+}
+pollStatus();
+</script>
+</body>
+</html>

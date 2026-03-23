@@ -82,12 +82,73 @@ db.serialize(() => {
     total_price TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
 
+  db.run(`CREATE TABLE IF NOT EXISTS space_integrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+    platform TEXT NOT NULL,
+    external_space_id TEXT NOT NULL,
+    credentials_enc TEXT NOT NULL,
+    config TEXT DEFAULT '{}',
+    enabled INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(space_id))`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS booking_sync_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+    platform TEXT NOT NULL,
+    action TEXT NOT NULL,
+    external_ref TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    request_payload TEXT,
+    response_payload TEXT,
+    error_message TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+    amount INTEGER NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'NGN',
+    provider TEXT NOT NULL DEFAULT 'paystack',
+    provider_ref TEXT,
+    provider_status TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    metadata TEXT DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS payouts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_id INTEGER NOT NULL REFERENCES users(id),
+    amount INTEGER NOT NULL,
+    currency TEXT NOT NULL DEFAULT 'NGN',
+    period_start TEXT,
+    period_end TEXT,
+    status TEXT NOT NULL DEFAULT 'pending',
+    paid_at TEXT,
+    note TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+
+  // Safe migrations (swallow error if column already exists)
+  db.run('ALTER TABLE bookings ADD COLUMN external_ref TEXT', [], () => {});
+  db.run('ALTER TABLE bookings ADD COLUMN amount_value INTEGER', [], () => {});
+  db.run("ALTER TABLE bookings ADD COLUMN currency TEXT DEFAULT 'NGN'", [], () => {});
+
   db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_category ON spaces(category)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_status   ON spaces(status)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_saved_user      ON saved_spaces(user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_notif_user      ON notifications(user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_bookings_space  ON bookings(space_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_bookings_user   ON bookings(user_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_integrations_space ON space_integrations(space_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_sync_log_booking ON booking_sync_log(booking_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_payments_booking ON payments(booking_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_payments_ref ON payments(provider_ref)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_payouts_owner ON payouts(owner_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status)`);
 
   // Seed spaces if empty
   db.get('SELECT COUNT(*) as c FROM spaces', [], (err, row) => {

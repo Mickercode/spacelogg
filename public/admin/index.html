@@ -78,6 +78,8 @@ body{padding-top:64px;}
     <button class="tab-btn" onclick="switchTab('bookings',this)">Bookings</button>
     <button class="tab-btn" onclick="switchTab('users',this)">Users</button>
     <button class="tab-btn" onclick="switchTab('admins',this)">Admin Accounts</button>
+    <button class="tab-btn" onclick="switchTab('integrations',this)">Integrations</button>
+    <button class="tab-btn" onclick="switchTab('revenue',this)">Revenue</button>
   </div>
 
   <!-- ADD SPACE TAB -->
@@ -162,8 +164,11 @@ body{padding-top:64px;}
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <select class="form-select" id="booking-filter" style="width:150px;padding:7px 12px;font-size:13px;" onchange="loadBookings()">
             <option value="">All statuses</option>
+            <option value="pending_payment">Pending payment</option>
+            <option value="paid">Paid</option>
             <option value="confirmed">Confirmed</option>
             <option value="cancelled">Cancelled</option>
+            <option value="refunded">Refunded</option>
           </select>
         </div>
       </div>
@@ -185,6 +190,122 @@ body{padding-top:64px;}
       <div style="overflow-x:auto;">
         <table class="atable"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
         <tbody id="users-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTEGRATIONS TAB -->
+  <div class="tab-pane" id="tab-integrations">
+    <!-- How it works -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">How webhook integrations work</span></div>
+      <div class="form-section" style="font-size:13px;color:var(--text-secondary);line-height:1.7;">
+        <p style="margin:0 0 8px;">When a booking is confirmed on SpaceLogg, we send a webhook to the space owner's system. If they cancel on their side, they send a webhook back. No API keys needed.</p>
+        <p style="margin:0;"><strong>Incoming webhook URLs</strong> (give these to space owners):</p>
+        <code style="display:block;background:var(--parchment);padding:10px 14px;border-radius:8px;margin:8px 0;font-size:12px;word-break:break-all;">POST https://www.spacelogg.com/api/webhooks/skedda<br/>POST https://www.spacelogg.com/api/webhooks/officernd<br/>POST https://www.spacelogg.com/api/webhooks/cobot</code>
+      </div>
+    </div>
+
+    <!-- Add Integration -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Connect a space to a partner system</span></div>
+      <div class="form-section">
+        <form id="add-integration-form">
+          <div class="form-2col">
+            <div class="form-group">
+              <label class="form-label">Space <span style="color:var(--red)">*</span></label>
+              <select class="form-select" id="int-space-id" required><option value="">Select a space…</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Platform <span style="color:var(--red)">*</span></label>
+              <select class="form-select" id="int-platform" required>
+                <option value="">Select platform…</option>
+                <option value="skedda">Skedda</option>
+                <option value="officernd">OfficeRnD</option>
+                <option value="cobot">Cobot</option>
+                <option value="custom">Custom / Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Partner webhook URL <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="int-webhook-url" required placeholder="https://their-system.com/webhook/spacelogg"/>
+            <div class="form-hint">SpaceLogg will POST booking events (created, cancelled) to this URL</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">External space/resource ID</label>
+            <input class="form-input" id="int-ext-id" placeholder="Optional — helps the partner identify which space"/>
+          </div>
+          <div class="alert alert-error" id="int-error"></div>
+          <div class="alert alert-success" id="int-success"></div>
+          <button type="submit" class="btn btn-amber">Connect integration</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Active Integrations -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Active integrations</span></div>
+      <div style="overflow-x:auto;">
+        <table class="atable"><thead><tr><th>Space</th><th>Platform</th><th>Webhook URL</th><th>Status</th><th>Added</th><th>Actions</th></tr></thead>
+        <tbody id="integrations-body"></tbody></table>
+      </div>
+      <div id="integrations-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No integrations yet. Connect one above.</div>
+    </div>
+
+    <!-- Sync Log -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Webhook log (last 50)</span><button class="btn btn-outline btn-sm" onclick="loadSyncLog()">Refresh</button></div>
+      <div style="overflow-x:auto;">
+        <table class="atable"><thead><tr><th>Space</th><th>Platform</th><th>Action</th><th>Status</th><th>Error</th><th>Time</th></tr></thead>
+        <tbody id="sync-log-body"></tbody></table>
+      </div>
+      <div id="sync-log-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No webhook activity yet.</div>
+    </div>
+  </div>
+
+  <!-- REVENUE TAB -->
+  <div class="tab-pane" id="tab-revenue">
+    <!-- Revenue Stats -->
+    <div class="stats-grid" id="revenue-stats">
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Loading…</div></div>
+    </div>
+
+    <!-- Recent Payments -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Recent payments</span></div>
+      <div style="overflow-x:auto;">
+        <table class="atable"><thead><tr><th>Space</th><th>User</th><th>Amount</th><th>Date</th><th>Booking</th><th>Status</th></tr></thead>
+        <tbody id="payments-body"></tbody></table>
+      </div>
+      <div id="payments-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No payments yet.</div>
+    </div>
+
+    <!-- Payouts -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Payouts</span>
+        <button class="btn btn-outline btn-sm" onclick="openGeneratePayouts()">Generate payouts</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="atable"><thead><tr><th>Owner</th><th>Amount</th><th>Period</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="payouts-body"></tbody></table>
+      </div>
+      <div id="payouts-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No payouts yet. Generate payouts for a period.</div>
+    </div>
+
+    <!-- Generate Payouts Form -->
+    <div class="panel" id="generate-payouts-panel" style="display:none;">
+      <div class="panel-header"><span class="panel-title">Generate payouts for period</span></div>
+      <div class="form-section">
+        <div class="form-2col">
+          <div class="form-group"><label class="form-label">Period start</label><input type="date" class="form-input" id="payout-start"/></div>
+          <div class="form-group"><label class="form-label">Period end</label><input type="date" class="form-input" id="payout-end"/></div>
+        </div>
+        <div class="form-hint" style="margin-bottom:1rem;">Commission rate: ${process.env.COMMISSION_PERCENT || 10}% deducted. Payouts calculated from successful payments in this period.</div>
+        <div class="alert alert-error" id="payout-gen-error"></div>
+        <div class="alert alert-success" id="payout-gen-success"></div>
+        <button class="btn btn-amber" onclick="generatePayouts()">Generate payouts</button>
       </div>
     </div>
   </div>
@@ -379,10 +500,12 @@ function switchTab(tab, el) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   if (el) el.classList.add('active');
-  if (tab==='spaces-all') loadAllSpaces();
-  if (tab==='bookings')   loadBookings();
-  if (tab==='users')      loadUsers();
-  if (tab==='admins')     loadAdmins();
+  if (tab==='spaces-all')   loadAllSpaces();
+  if (tab==='bookings')     loadBookings();
+  if (tab==='users')        loadUsers();
+  if (tab==='admins')       loadAdmins();
+  if (tab==='integrations') { loadIntegrations(); loadSyncLog(); loadSpacesForIntegration(); }
+  if (tab==='revenue')      { loadRevenue(); loadPayouts(); }
 }
 
 function setupForms() {
@@ -445,6 +568,184 @@ function setupForms() {
     } catch(err) { errEl.style.display='block'; errEl.textContent=err.message; }
   });
 }
+
+// ═══════════════════════════════════════════════
+//  INTEGRATIONS
+// ═══════════════════════════════════════════════
+
+
+async function loadSpacesForIntegration() {
+  try {
+    const { spaces } = await apiFetch('/admin/spaces?status=approved&limit=500');
+    const sel = document.getElementById('int-space-id');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Select a space…</option>' +
+      spaces.map(s => `<option value="${s.id}">${s.name} (${s.city})</option>`).join('');
+    if (current) sel.value = current;
+  } catch(e) { console.error(e); }
+}
+
+async function loadIntegrations() {
+  try {
+    const { integrations } = await apiFetch('/admin/integrations');
+    const tbody = document.getElementById('integrations-body');
+    const empty = document.getElementById('integrations-empty');
+    if (!integrations.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = integrations.map(i => {
+      let webhookUrl = '—';
+      try { const cfg = JSON.parse(i.config||'{}'); webhookUrl = cfg.webhook_url || '—'; } catch {}
+      return `
+      <tr>
+        <td style="font-weight:500;color:var(--charcoal);">${i.space_name}</td>
+        <td><span class="status-badge" style="background:#E8F4FD;color:#1565C0;">${i.platform}</span></td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${webhookUrl}">${webhookUrl}</td>
+        <td><span class="status-badge status-${i.enabled?'approved':'rejected'}">${i.enabled?'Active':'Disabled'}</span></td>
+        <td>${new Date(i.created_at).toLocaleDateString()}</td>
+        <td><div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="toggleIntegration(${i.id},${i.enabled?0:1})">${i.enabled?'Disable':'Enable'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteIntegration(${i.id},'${i.space_name}')">Delete</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function toggleIntegration(id, enabled) {
+  await apiFetch(`/admin/integrations/${id}`, { method:'PATCH', body: JSON.stringify({ enabled }) });
+  toast(enabled ? 'Integration enabled' : 'Integration disabled', 'success');
+  loadIntegrations();
+}
+
+async function deleteIntegration(id, name) {
+  if (!confirm(`Remove integration for "${name}"? Bookings will revert to SpaceLogg native.`)) return;
+  await apiFetch(`/admin/integrations/${id}`, { method:'DELETE' });
+  toast('Integration deleted','success');
+  loadIntegrations();
+}
+
+async function loadSyncLog() {
+  try {
+    const { logs } = await apiFetch('/admin/sync-log?limit=50');
+    const tbody = document.getElementById('sync-log-body');
+    const empty = document.getElementById('sync-log-empty');
+    if (!logs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = logs.map(l => `
+      <tr>
+        <td>${l.space_name}</td>
+        <td><span class="status-badge" style="background:#E8F4FD;color:#1565C0;">${l.platform}</span></td>
+        <td>${l.action}</td>
+        <td><span class="status-badge status-${l.status==='success'?'approved':'rejected'}">${l.status}</span></td>
+        <td style="font-size:12px;color:var(--red);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${l.error_message||''}">${l.error_message||'—'}</td>
+        <td style="white-space:nowrap;font-size:12px;">${new Date(l.created_at).toLocaleString()}</td>
+      </tr>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+// ═══════════════════════════════════════════════
+//  REVENUE & PAYOUTS
+// ═══════════════════════════════════════════════
+
+function fmtMoney(kobo, currency='NGN') {
+  const syms = {NGN:'₦', USD:'$', GBP:'£', EUR:'€'};
+  return `${syms[currency]||currency+' '}${(kobo/100).toLocaleString('en',{minimumFractionDigits:0,maximumFractionDigits:2})}`;
+}
+
+async function loadRevenue() {
+  try {
+    const r = await apiFetch('/admin/revenue');
+    document.getElementById('revenue-stats').innerHTML = `
+      <div class="stat-card"><div class="stat-num green">${fmtMoney(r.totalRevenue)}</div><div class="stat-label">Total revenue</div></div>
+      <div class="stat-card"><div class="stat-num amber">${fmtMoney(r.monthlyRevenue)}</div><div class="stat-label">This month</div></div>
+      <div class="stat-card"><div class="stat-num">${fmtMoney(r.pendingPayouts)}</div><div class="stat-label">Pending payouts</div></div>
+      <div class="stat-card"><div class="stat-num green">${fmtMoney(r.completedPayouts)}</div><div class="stat-label">Paid out</div></div>`;
+
+    const tbody = document.getElementById('payments-body');
+    const empty = document.getElementById('payments-empty');
+    if (!r.recentPayments.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+    tbody.innerHTML = r.recentPayments.map(p => `
+      <tr>
+        <td style="font-weight:500;color:var(--charcoal);">${p.space_name}</td>
+        <td>${p.user_name}</td>
+        <td style="font-weight:600;">${fmtMoney(p.amount, p.currency)}</td>
+        <td style="white-space:nowrap;">${new Date(p.created_at).toLocaleDateString()}</td>
+        <td style="font-size:12px;">${p.date} ${p.start_time}–${p.end_time}</td>
+        <td><span class="status-badge status-approved">Paid</span></td>
+      </tr>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function loadPayouts() {
+  try {
+    const { payouts } = await apiFetch('/admin/payouts');
+    const tbody = document.getElementById('payouts-body');
+    const empty = document.getElementById('payouts-empty');
+    if (!payouts.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+    tbody.innerHTML = payouts.map(p => `
+      <tr>
+        <td><div style="font-weight:500;color:var(--charcoal);">${p.owner_name}</div><div style="font-size:11px;color:var(--text-muted);">${p.owner_email}</div></td>
+        <td style="font-weight:600;">${fmtMoney(p.amount, p.currency)}</td>
+        <td style="font-size:12px;white-space:nowrap;">${p.period_start||'—'} to ${p.period_end||'—'}</td>
+        <td><span class="status-badge status-${p.status==='paid'?'approved':'pending'}">${p.status}</span></td>
+        <td>${p.status==='pending'?`<button class="btn btn-outline btn-sm" onclick="markPayoutPaid(${p.id})">Mark paid</button>`:`<span style="font-size:12px;color:var(--text-muted);">${p.paid_at?new Date(p.paid_at).toLocaleDateString():'—'}</span>`}</td>
+      </tr>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function markPayoutPaid(id) {
+  if (!confirm('Mark this payout as paid?')) return;
+  await apiFetch(`/admin/payouts/${id}/mark-paid`, { method:'PATCH', body: JSON.stringify({}) });
+  toast('Payout marked as paid','success');
+  loadPayouts(); loadRevenue();
+}
+
+function openGeneratePayouts() {
+  const panel = document.getElementById('generate-payouts-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function generatePayouts() {
+  const errEl = document.getElementById('payout-gen-error');
+  const okEl = document.getElementById('payout-gen-success');
+  errEl.style.display='none'; okEl.style.display='none';
+  const period_start = document.getElementById('payout-start').value;
+  const period_end = document.getElementById('payout-end').value;
+  if (!period_start || !period_end) { errEl.style.display='block'; errEl.textContent='Both dates required'; return; }
+  try {
+    const result = await apiFetch('/admin/payouts/generate', { method:'POST', body: JSON.stringify({ period_start, period_end }) });
+    okEl.style.display='block'; okEl.textContent=result.message + ` (Commission: ${result.commission})`;
+    loadPayouts(); loadRevenue();
+  } catch(err) { errEl.style.display='block'; errEl.textContent=err.message; }
+}
+
+// Add integration form
+document.getElementById('add-integration-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('int-error');
+  const okEl  = document.getElementById('int-success');
+  errEl.style.display='none'; okEl.style.display='none';
+
+  const platform = document.getElementById('int-platform').value;
+  const space_id = document.getElementById('int-space-id').value;
+  const webhook_url = document.getElementById('int-webhook-url').value;
+  const external_space_id = document.getElementById('int-ext-id').value || 'n/a';
+
+  if (!platform || !space_id || !webhook_url) { errEl.style.display='block'; errEl.textContent='Space, platform, and webhook URL are required'; return; }
+
+  try {
+    await apiFetch('/admin/integrations', { method:'POST', body: JSON.stringify({
+      space_id: Number(space_id), platform, external_space_id,
+      credentials: { webhook: true },
+      config: { webhook_url }
+    })});
+    okEl.style.display='block'; okEl.textContent='Integration connected!';
+    this.reset();
+    loadIntegrations();
+  } catch(err) { errEl.style.display='block'; errEl.textContent=err.message; }
+});
 
 init();
 </script>

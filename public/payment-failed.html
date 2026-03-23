@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Payment Failed — SpaceLogg</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/branding/spacelogg-favicon-32.png"/>
+<link rel="icon" type="image/svg+xml" href="/branding/spacelogg-icon.svg"/>
+<link rel="stylesheet" href="/css/main.css"/>
+<style>
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--parchment);}
+.fail-card{background:#fff;border-radius:var(--radius-lg);padding:3rem;max-width:480px;width:100%;text-align:center;box-shadow:0 4px 24px rgba(28,26,22,0.08);border:0.5px solid var(--border);}
+.fail-icon{width:80px;height:80px;border-radius:50%;background:rgba(211,47,47,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:36px;}
+.fail-title{font-family:'DM Serif Display',serif;font-size:28px;color:var(--charcoal);margin-bottom:0.75rem;}
+.fail-sub{font-size:15px;color:var(--text-secondary);line-height:1.6;margin-bottom:2rem;}
+</style>
+</head>
+<body>
+<div class="fail-card">
+  <div class="fail-icon">&#10007;</div>
+  <h1 class="fail-title">Payment didn't go through</h1>
+  <p class="fail-sub">Your payment was not completed. No charges were made. You can try again or browse other spaces.</p>
+  <a href="/dashboard.html" class="btn btn-amber" style="width:100%;">Try again</a>
+  <a href="/profile.html" class="btn btn-outline" style="width:100%;margin-top:0.75rem;">View my bookings</a>
+</div>
+</body>
+</html>

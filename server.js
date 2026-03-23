@@ -9,6 +9,10 @@ const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0'; // Required for Railway/Render
 
 app.use(cors());
+
+// Paystack webhook needs raw body for HMAC signature verification — must be BEFORE express.json()
+app.use('/api/webhooks/paystack', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
@@ -21,6 +25,7 @@ app.use('/api/users',         require('./routes/users'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin',         require('./routes/admin'));
 app.use('/api/bookings',      require('./routes/bookings'));
+app.use('/api/webhooks',      require('./routes/webhooks'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', version: '1.0.0' }));
 
