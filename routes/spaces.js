@@ -17,16 +17,28 @@ function parse(row) {
 // GET /api/spaces
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { category, city, q, limit=50, offset=0 } = req.query;
+    const { category, city, area, q, limit=50, offset=0 } = req.query;
     let sql='SELECT * FROM spaces WHERE status=?'; const args=['approved'];
     if (category) { sql+=' AND category=?'; args.push(category); }
     if (city)     { sql+=' AND city LIKE ?'; args.push(`%${city}%`); }
-    if (q)        { sql+=' AND (name LIKE ? OR description LIKE ? OR address LIKE ?)'; const l=`%${q}%`; args.push(l,l,l); }
+    if (area)     { sql+=' AND area LIKE ?'; args.push(`%${area}%`); }
+    if (q)        { sql+=' AND (name LIKE ? OR description LIKE ? OR address LIKE ? OR area LIKE ?)'; const l=`%${q}%`; args.push(l,l,l,l); }
     sql+=' ORDER BY rating DESC LIMIT ? OFFSET ?'; args.push(Number(limit),Number(offset));
     const spaces   = await db.allAsync(sql, args);
     const countRow = await db.getAsync('SELECT COUNT(*) as c FROM spaces WHERE status=?',['approved']);
     res.json({ spaces: spaces.map(parse), total: countRow.c });
   } catch(err){ console.error(err); res.status(500).json({error:'Failed to load spaces'}); }
+});
+
+// GET /api/spaces/areas — distinct areas for filter dropdown
+router.get('/areas', async (req, res) => {
+  const { city } = req.query;
+  let sql = "SELECT DISTINCT area FROM spaces WHERE status='approved' AND area != ''";
+  const args = [];
+  if (city) { sql += ' AND city LIKE ?'; args.push(`%${city}%`); }
+  sql += ' ORDER BY area ASC';
+  const rows = await db.allAsync(sql, args);
+  res.json({ areas: rows.map(r => r.area) });
 });
 
 // GET /api/spaces/:id
@@ -46,13 +58,13 @@ router.get('/:id', optionalAuth, async (req, res) => {
 // POST /api/spaces — ADMIN ONLY
 router.post('/', requireAuth, requireAdmin, upload.array('images',6), async (req, res) => {
   try {
-    const { name, category, description, address, city, lat, lng, price, price_unit, amenities, hours } = req.body;
+    const { name, category, description, address, city, area, lat, lng, price, price_unit, amenities, hours } = req.body;
     if (!name||!category||!address) return res.status(400).json({error:'Name, category and address are required'});
     const images = req.files?.length ? await uploadFiles(req.files) : [];
     const { lastID } = await db.runAsync(
-      `INSERT INTO spaces (name,category,description,address,city,lat,lng,price,price_unit,amenities,hours,images,owner_id,status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'approved')`,
-      [name, category, description||'', address, city||'',
+      `INSERT INTO spaces (name,category,description,address,city,area,lat,lng,price,price_unit,amenities,hours,images,owner_id,status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'approved')`,
+      [name, category, description||'', address, city||'', area||'',
        lat?Number(lat):null, lng?Number(lng):null,
        price||'', price_unit||'',
        amenities||'[]', hours||'{}',
@@ -67,7 +79,7 @@ router.patch('/:id', requireAuth, requireAdmin, upload.array('images',6), async 
   try {
     const space = await db.getAsync('SELECT * FROM spaces WHERE id=?',[req.params.id]);
     if (!space) return res.status(404).json({error:'Space not found'});
-    const fields=['name','category','description','address','city','lat','lng','price','price_unit','amenities','hours'];
+    const fields=['name','category','description','address','city','area','lat','lng','price','price_unit','amenities','hours'];
     const updates=[]; const params=[];
     for (const f of fields) { if (req.body[f]!==undefined){ updates.push(`${f}=?`); params.push(req.body[f]); } }
     const keptRaw  = req.body.kept_images;

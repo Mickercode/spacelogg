@@ -114,6 +114,9 @@ body{padding-top:64px;}
         <button class="filter-tab" onclick="setFilter('coworking',this)"><span class="filter-dot" style="background:var(--green)"></span>Coworking</button>
         <button class="filter-tab" onclick="setFilter('library',this)"><span class="filter-dot" style="background:var(--indigo)"></span>Libraries</button>
         <button class="filter-tab" onclick="setFilter('hotel',this)"><span class="filter-dot" style="background:var(--teak)"></span>Hotels</button>
+        <select class="filter-tab" id="area-filter" onchange="setAreaFilter(this.value)" style="border:0.5px solid var(--border-strong);padding:6px 10px;font-size:12px;cursor:pointer;border-radius:20px;background:#fff;font-family:'DM Sans',sans-serif;">
+          <option value="">All areas</option>
+        </select>
       </div>
     </div>
     <div class="results-count" id="results-count"></div>
@@ -170,17 +173,30 @@ body{padding-top:64px;}
 
 <script src="/js/app.js"></script>
 <script>
-let activeFilter='', searchTimer=null, mapInstance=null, mapMarkers={}, savedIds=new Set(), selectedRating=0;
+let activeFilter='', activeArea='', searchTimer=null, mapInstance=null, mapMarkers={}, savedIds=new Set(), selectedRating=0;
 let currentBookingSpace=null, selectedStart=null, selectedEnd=null, bookedSlots=[];
 
 async function init() {
   renderNav();
   await loadSavedIds();
-  // Check for search query from landing page
+  await loadAreas();
   const q = new URLSearchParams(window.location.search).get('q');
   if (q) document.getElementById('search').value = q;
   await loadSpaces(q ? {q} : {});
   initMap();
+}
+
+async function loadAreas() {
+  try {
+    const { areas } = await apiFetch('/spaces/areas');
+    const sel = document.getElementById('area-filter');
+    sel.innerHTML = '<option value="">All areas</option>' + areas.map(a => `<option value="${a}">${a}</option>`).join('');
+  } catch {}
+}
+
+function setAreaFilter(area) {
+  activeArea = area;
+  doSearch();
 }
 
 async function loadSpaces(params={}) {
@@ -193,7 +209,7 @@ async function loadSpaces(params={}) {
     <div class="space-card" id="card-${s.id}" onclick="openSpace(${s.id})">
       <div style="height:130px;background:${catGrad(s.category)};position:relative;">
         <span class="card-cat-badge">${catIcon(s.category)} ${catLabel(s.category)}</span>
-        <span class="card-dist">📍 ${s.city}</span>
+        <span class="card-dist">📍 ${s.area ? s.area+', ' : ''}${s.city}</span>
       </div>
       <div class="card-body">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">
@@ -231,7 +247,7 @@ function renderMarkers(spaces) {
 
 function setFilter(cat,el){activeFilter=cat;document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');doSearch();}
 function debounceSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(doSearch,400);}
-function doSearch(){const q=document.getElementById('search').value;const p={};if(activeFilter)p.category=activeFilter;if(q)p.q=q;loadSpaces(p);}
+function doSearch(){const q=document.getElementById('search').value;const p={};if(activeFilter)p.category=activeFilter;if(activeArea)p.area=activeArea;if(q)p.q=q;loadSpaces(p);}
 
 async function openSpace(id) {
   const {space,saved,reviews}=await apiFetch('/spaces/'+id);
@@ -247,7 +263,7 @@ async function openSpace(id) {
     <div class="smodal-body">
       <span class="modal-cat" style="background:${catColorLight(space.category)};color:${catColorDark(space.category)};">${catIcon(space.category)} ${catLabel(space.category)}</span>
       <div class="modal-name">${space.name}</div>
-      <div class="modal-loc">📍 ${space.address}, ${space.city}</div>
+      <div class="modal-loc">📍 ${space.address}${space.area ? ', '+space.area : ''}, ${space.city}</div>
       <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:1rem;">${space.description||''}</p>
       <div class="modal-section">Amenities</div>
       <div class="modal-amenities">${space.amenities.map(a=>`<span class="modal-amenity">✓ ${a}</span>`).join('')||'<span style="font-size:13px;color:var(--text-muted)">Not listed</span>'}</div>

@@ -85,7 +85,10 @@ body{padding-top:64px;}
           <div class="form-group"><label class="form-label">Category <span class="req">*</span></label><select class="form-select" name="category" required><option value="">Select…</option><option value="coworking">Coworking Space</option><option value="cafe">Café</option><option value="library">Library</option><option value="hotel">Hotel Lounge</option></select></div>
           <div class="form-group"><label class="form-label">City <span class="req">*</span></label><input class="form-input" name="city" placeholder="e.g. Lagos" required/></div>
         </div>
-        <div class="form-group"><label class="form-label">Address <span class="req">*</span></label><input class="form-input" name="address" placeholder="Full street address" required/></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Area / LGA</label><input class="form-input" name="area" placeholder="e.g. Ikeja, Victoria Island"/></div>
+          <div class="form-group"><label class="form-label">Address <span class="req">*</span></label><input class="form-input" name="address" placeholder="Full street address" required/></div>
+        </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Latitude</label><input class="form-input" name="lat" placeholder="e.g. 7.3775" type="number" step="any"/><div class="form-hint">Right-click on Google Maps → copy coordinates</div></div>
           <div class="form-group"><label class="form-label">Longitude</label><input class="form-input" name="lng" placeholder="e.g. 3.9470" type="number" step="any"/></div>
@@ -179,7 +182,7 @@ document.getElementById('list-form').addEventListener('submit',async function(e)
   const btn=document.getElementById('submit-btn');btn.textContent='Submitting…';btn.disabled=true;
   try{
     const fd=new FormData();
-    ['name','category','city','address','lat','lng','description','price','price_unit'].forEach(f=>{if(this[f]?.value)fd.append(f,this[f].value);});
+    ['name','category','city','area','address','lat','lng','description','price','price_unit'].forEach(f=>{if(this[f]?.value)fd.append(f,this[f].value);});
     fd.append('amenities',JSON.stringify(Array.from(this.querySelectorAll('input[type="checkbox"]:checked')).map(c=>c.value)));
     const hours={};document.querySelectorAll('[data-type="open"]').forEach(inp=>{const cl=document.querySelector(`[data-day="${inp.getAttribute('data-day')}"][data-type="close"]`).value;if(inp.value&&cl)hours[inp.getAttribute('data-day')]=`${inp.value} – ${cl}`;});
     fd.append('hours',JSON.stringify(hours));
