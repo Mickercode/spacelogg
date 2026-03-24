@@ -207,7 +207,7 @@ async function loadSpaces(params={}) {
   if (!spaces.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No spaces found</div><div class="empty-sub">Try a different filter or search.</div></div>'; renderMarkers([]); return; }
   list.innerHTML = spaces.map(s=>`
     <div class="space-card" id="card-${s.id}" onclick="openSpace(${s.id})">
-      <div style="height:130px;background:${catGrad(s.category)};position:relative;">
+      <div style="height:130px;background:${s.images&&s.images.length?`url('${s.images[0]}') center/cover no-repeat`:catGrad(s.category)};position:relative;">
         <span class="card-cat-badge">${catIcon(s.category)} ${catLabel(s.category)}</span>
         <span class="card-dist">📍 ${s.area ? s.area+', ' : ''}${s.city}</span>
       </div>
@@ -257,7 +257,7 @@ async function openSpace(id) {
   const isOwner = user && space.owner_id === user.id;
 
   document.getElementById('space-modal-body').innerHTML=`
-    <div class="smodal-img" style="background:${catGrad(space.category)};">
+    <div class="smodal-img" style="background:${space.images&&space.images.length?`url('${space.images[0]}') center/cover no-repeat`:catGrad(space.category)};">
       <button class="smodal-close" onclick="closeSpaceModal()">✕</button>
     </div>
     <div class="smodal-body">
