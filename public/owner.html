@@ -96,6 +96,13 @@ body{padding-top:64px;}
   <div id="listings-area">
     <div style="text-align:center;padding:3rem;color:var(--text-muted);font-size:14px;">Loading your spaces…</div>
   </div>
+
+  <div style="margin-top:2rem;">
+    <h2 style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--charcoal);margin-bottom:1rem;">Recent bookings on your spaces</h2>
+    <div id="owner-bookings">
+      <div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:14px;">Loading…</div>
+    </div>
+  </div>
 </div>
 
 <footer>
@@ -118,6 +125,32 @@ async function init() {
   requireLogin('/owner.html');
   renderNav();
   await loadListings();
+  await loadOwnerBookings();
+}
+
+async function loadOwnerBookings() {
+  const container = document.getElementById('owner-bookings');
+  try {
+    const { listings } = await apiFetch('/users/my-listings');
+    if (!listings.length) { container.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:13px;">List a space to start receiving bookings.</div>'; return; }
+    let allBookings = [];
+    for (const l of listings.filter(s => s.status === 'approved')) {
+      try {
+        const { bookings } = await apiFetch(`/bookings/my-space/${l.id}`);
+        allBookings.push(...bookings.map(b => ({ ...b, space_name: l.name })));
+      } catch {}
+    }
+    allBookings.sort((a,b) => b.date.localeCompare(a.date));
+    if (!allBookings.length) { container.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:13px;">No bookings yet. They\'ll show up here when users book your spaces.</div>'; return; }
+    container.innerHTML = allBookings.slice(0, 20).map(b => `
+      <div class="listing-row">
+        <div>
+          <div class="listing-name">${b.space_name}</div>
+          <div class="listing-meta">${b.user_name} · ${b.date} · ${b.start_time}–${b.end_time} · ${b.guests} guest${b.guests>1?'s':''}</div>
+        </div>
+        <span class="status-badge status-${b.status==='confirmed'?'approved':b.status==='cancelled'?'rejected':'pending'}">${b.status}</span>
+      </div>`).join('');
+  } catch { container.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:13px;">Could not load bookings.</div>'; }
 }
 
 async function loadListings() {
@@ -131,11 +164,12 @@ async function loadListings() {
     ? (listings.reduce((s,l) => s + (l.rating||0), 0) / listings.length).toFixed(1)
     : '—';
 
+  const totalReviews = listings.reduce((s,l) => s + (l.review_count||0), 0);
   document.getElementById('owner-stats').innerHTML = `
     <div class="stat-card"><div class="stat-card-num green">${approved}</div><div class="stat-card-label">Live spaces</div></div>
     <div class="stat-card"><div class="stat-card-num amber">${pending}</div><div class="stat-card-label">Pending review</div></div>
-    <div class="stat-card"><div class="stat-card-num">${listings.length}</div><div class="stat-card-label">Total listings</div></div>
-    <div class="stat-card"><div class="stat-card-num">${avgRating}<span style="font-size:18px;color:var(--amber)">★</span></div><div class="stat-card-label">Avg. rating</div></div>`;
+    <div class="stat-card"><div class="stat-card-num">${avgRating}<span style="font-size:18px;color:var(--amber)">★</span></div><div class="stat-card-label">Avg. rating</div></div>
+    <div class="stat-card"><div class="stat-card-num">${totalReviews}</div><div class="stat-card-label">Total reviews</div></div>`;
 
   if (!listings.length) {
     document.getElementById('listings-area').innerHTML = `

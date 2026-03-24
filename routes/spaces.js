@@ -30,6 +30,44 @@ router.get('/', optionalAuth, async (req, res) => {
   } catch(err){ console.error(err); res.status(500).json({error:'Failed to load spaces'}); }
 });
 
+// GET /api/spaces/nearby?lat=X&lng=Y&radius=10 — spaces near a location (radius in km)
+router.get('/nearby', async (req, res) => {
+  try {
+    const { lat, lng, radius = 10, limit = 50 } = req.query;
+    if (!lat || !lng) return res.status(400).json({ error: 'lat and lng required' });
+    const userLat = Number(lat), userLng = Number(lng), r = Number(radius);
+    // Haversine approximation in SQL (good enough for filtering)
+    const spaces = await db.allAsync(`
+      SELECT *, (
+        6371 * 2 * atan2(
+          sqrt(sin((radians(lat) - radians(?)) / 2) * sin((radians(lat) - radians(?)) / 2) +
+          cos(radians(?)) * cos(radians(lat)) *
+          sin((radians(lng) - radians(?)) / 2) * sin((radians(lng) - radians(?)) / 2)),
+          sqrt(1 - sin((radians(lat) - radians(?)) / 2) * sin((radians(lat) - radians(?)) / 2) -
+          cos(radians(?)) * cos(radians(lat)) *
+          sin((radians(lng) - radians(?)) / 2) * sin((radians(lng) - radians(?)) / 2))
+        )
+      ) as distance
+      FROM spaces WHERE status = 'approved' AND lat IS NOT NULL AND lng IS NOT NULL
+      HAVING distance <= ?
+      ORDER BY distance ASC LIMIT ?`,
+      [userLat, userLat, userLat, userLng, userLng, userLat, userLat, userLat, userLng, userLng, r, Number(limit)]);
+    res.json({ spaces: spaces.map(parse), total: spaces.length });
+  } catch (err) {
+    // SQLite doesn't have radians/atan2 — fall back to simple bounding box
+    try {
+      const userLat = Number(req.query.lat), userLng = Number(req.query.lng), r = Number(req.query.radius || 10);
+      const degPerKm = 1 / 111.32;
+      const latMin = userLat - r * degPerKm, latMax = userLat + r * degPerKm;
+      const lngMin = userLng - r * degPerKm, lngMax = userLng + r * degPerKm;
+      const spaces = await db.allAsync(
+        `SELECT * FROM spaces WHERE status = 'approved' AND lat BETWEEN ? AND ? AND lng BETWEEN ? AND ? ORDER BY rating DESC LIMIT ?`,
+        [latMin, latMax, lngMin, lngMax, Number(req.query.limit || 50)]);
+      res.json({ spaces: spaces.map(parse), total: spaces.length });
+    } catch (err2) { console.error(err2); res.status(500).json({ error: 'Nearby search failed' }); }
+  }
+});
+
 // GET /api/spaces/areas — distinct areas for filter dropdown
 router.get('/areas', async (req, res) => {
   const { city } = req.query;

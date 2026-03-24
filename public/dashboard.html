@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Explore Spaces — SpaceLogg</title>
+<meta name="description" content="Browse and book coworking spaces, cafes, libraries and hotel lounges near you. Filter by area, category, and amenities."/>
+<meta property="og:title" content="Explore Spaces — SpaceLogg"/>
+<meta property="og:description" content="Browse and book workspaces near you."/>
+<meta property="og:image" content="/branding/spacelogg-icon-512.png"/>
+<meta name="twitter:card" content="summary"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/branding/spacelogg-favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="16x16" href="/branding/spacelogg-favicon-16.png"/>
 <link rel="icon" type="image/svg+xml" href="/branding/spacelogg-icon.svg"/>
@@ -33,7 +38,24 @@ body{padding-top:64px;}
 
 /* Space modal */
 .space-modal{max-width:580px;padding:0;max-height:90vh;overflow-y:auto;}
-.smodal-img{height:210px;position:relative;}
+.smodal-img{height:210px;position:relative;overflow:hidden;}
+.smodal-gallery{display:flex;transition:transform 0.3s ease;height:100%;}
+.smodal-gallery img{width:100%;height:100%;object-fit:cover;flex-shrink:0;}
+.gallery-btn{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.9);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--charcoal);z-index:2;transition:opacity 0.2s;}
+.gallery-btn:hover{background:#fff;}
+.gallery-btn.left{left:0.75rem;}
+.gallery-btn.right{right:3rem;}
+.gallery-dots{position:absolute;bottom:0.75rem;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:2;}
+.gallery-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.5);cursor:pointer;transition:background 0.2s;}
+.gallery-dot.active{background:#fff;}
+
+/* Week view calendar */
+.week-day{flex:1;text-align:center;padding:8px 4px;border-radius:10px;cursor:pointer;border:0.5px solid var(--border);transition:all 0.15s;background:#fff;min-width:0;}
+.week-day:hover{border-color:var(--amber);}
+.week-day.selected{background:var(--charcoal);color:var(--parchment);border-color:var(--charcoal);}
+.week-day.today{border-color:var(--amber);}
+.week-day-name{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;opacity:0.6;font-weight:500;}
+.week-day-num{font-size:16px;font-weight:600;line-height:1.4;}
 .smodal-close{position:absolute;top:1rem;right:1rem;width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.92);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text-secondary);z-index:2;}
 .smodal-body{padding:1.5rem;}
 .modal-cat{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:16px;font-size:11px;font-weight:500;margin-bottom:.75rem;}
@@ -68,7 +90,16 @@ body{padding-top:64px;}
 /* Edit space modal */
 .edit-modal{max-width:560px;}
 
-@media(max-width:900px){.dash-layout{grid-template-columns:1fr;height:auto;}.dash-map{position:relative;top:0;height:40vh;}}
+@media(max-width:900px){
+  .dash-layout{grid-template-columns:1fr;height:auto;}
+  .dash-map{position:relative;top:0;height:40vh;}
+  .space-modal{max-width:100%;max-height:100vh;border-radius:0;}
+  .smodal-img{height:180px;}
+  .week-day-num{font-size:14px;}
+  .gallery-btn{width:28px;height:28px;font-size:12px;}
+  .filter-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;}
+  .filter-tab{flex-shrink:0;}
+}
 </style>
 </head>
 <body>
@@ -107,6 +138,7 @@ body{padding-top:64px;}
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;opacity:0.4"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5L22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <input class="search-input" id="search" style="font-size:16px;" placeholder="Search spaces…" oninput="debounceSearch()"/>
         <button class="search-btn" onclick="doSearch()">Search</button>
+        <button class="search-btn" onclick="findNearMe()" title="Spaces near me" style="background:transparent;color:var(--text-muted);padding:8px;font-size:16px;">📍</button>
       </div>
       <div class="filter-tabs">
         <button class="filter-tab active" onclick="setFilter('',this)">All</button>
@@ -137,8 +169,13 @@ body{padding-top:64px;}
     <div style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:.25rem;">Book a spot</div>
     <div id="booking-space-name" style="font-size:14px;color:var(--text-muted);margin-bottom:1.5rem;"></div>
     <div class="form-group">
-      <label class="form-label">Date</label>
-      <input class="form-input" type="date" id="booking-date" onchange="loadAvailability()" min=""/>
+      <label class="form-label">Select a date</label>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <button class="btn btn-outline btn-sm" onclick="shiftWeek(-1)" style="padding:4px 8px;">‹</button>
+        <div id="week-view" style="display:flex;gap:4px;flex:1;"></div>
+        <button class="btn btn-outline btn-sm" onclick="shiftWeek(1)" style="padding:4px 8px;">›</button>
+      </div>
+      <input class="form-input" type="date" id="booking-date" onchange="loadAvailability()" min="" style="display:none;"/>
     </div>
     <div id="slots-section" style="display:none;">
       <label class="form-label" style="margin-bottom:8px;">Select time slot</label>
@@ -249,6 +286,41 @@ function setFilter(cat,el){activeFilter=cat;document.querySelectorAll('.filter-t
 function debounceSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(doSearch,400);}
 function doSearch(){const q=document.getElementById('search').value;const p={};if(activeFilter)p.category=activeFilter;if(activeArea)p.area=activeArea;if(q)p.q=q;loadSpaces(p);}
 
+async function findNearMe() {
+  if (!navigator.geolocation) { toast('Geolocation not supported by your browser','error'); return; }
+  toast('Finding spaces near you...','info');
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    try {
+      const { latitude, longitude } = pos.coords;
+      const { spaces, total } = await apiFetch(`/spaces/nearby?lat=${latitude}&lng=${longitude}&radius=15`);
+      document.getElementById('results-count').textContent = `${total} space${total!==1?'s':''} near you`;
+      const list = document.getElementById('spaces-list');
+      if (!spaces.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">📍</div><div class="empty-title">No spaces nearby</div><div class="empty-sub">Try expanding your search or browse all spaces.</div></div>'; renderMarkers([]); return; }
+      list.innerHTML = spaces.map(s=>`
+        <div class="space-card" id="card-${s.id}" onclick="openSpace(${s.id})">
+          <div style="height:130px;background:${s.images&&s.images.length?`url('${s.images[0]}') center/cover no-repeat`:catGrad(s.category)};position:relative;">
+            <span class="card-cat-badge">${catIcon(s.category)} ${catLabel(s.category)}</span>
+            <span class="card-dist">📍 ${s.area ? s.area+', ' : ''}${s.city}</span>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">
+              <div class="card-name">${s.name}</div>
+              <div style="font-size:12px;font-weight:500;flex-shrink:0;color:var(--charcoal);">★ ${s.rating||'—'}</div>
+            </div>
+            <div class="card-location">${s.address}</div>
+            <div class="card-amenities">${s.amenities.slice(0,3).map(a=>`<span class="amenity-tag">${a}</span>`).join('')}${s.amenities.length>3?`<span class="amenity-tag">+${s.amenities.length-3}</span>`:''}</div>
+            <div class="card-footer">
+              <div class="card-price"><strong>${s.price||'Free'}</strong><span> ${s.price_unit||''}</span></div>
+              <button class="save-btn ${savedIds.has(s.id)?'saved':''}" onclick="toggleSave(event,${s.id})">${savedIds.has(s.id)?'♥':'♡'}</button>
+            </div>
+          </div>
+        </div>`).join('');
+      renderMarkers(spaces);
+      if (mapInstance) mapInstance.setView([latitude, longitude], 13);
+    } catch(err) { toast('Failed to find nearby spaces','error'); }
+  }, () => { toast('Location access denied','error'); }, { enableHighAccuracy: true, timeout: 10000 });
+}
+
 async function openSpace(id) {
   const {space,saved,reviews}=await apiFetch('/spaces/'+id);
   if(space.lat&&space.lng&&mapInstance){mapInstance.setView([space.lat,space.lng],15,{animate:true});if(mapMarkers[id])mapMarkers[id].openPopup();}
@@ -257,7 +329,12 @@ async function openSpace(id) {
   const isOwner = user && space.owner_id === user.id;
 
   document.getElementById('space-modal-body').innerHTML=`
-    <div class="smodal-img" style="background:${space.images&&space.images.length?`url('${space.images[0]}') center/cover no-repeat`:catGrad(space.category)};">
+    <div class="smodal-img" style="${!space.images||!space.images.length?'background:'+catGrad(space.category):''}" id="smodal-img-wrap">
+      ${space.images&&space.images.length ? `
+        <div class="smodal-gallery" id="smodal-gallery">${space.images.map(img=>`<img src="${img}" alt=""/>`).join('')}</div>
+        ${space.images.length>1?`<button class="gallery-btn left" onclick="galleryNav(-1)">‹</button><button class="gallery-btn right" onclick="galleryNav(1)">›</button>
+        <div class="gallery-dots">${space.images.map((_,i)=>`<span class="gallery-dot${i===0?' active':''}" onclick="galleryGo(${i})"></span>`).join('')}</div>`:''}
+      ` : ''}
       <button class="smodal-close" onclick="closeSpaceModal()">✕</button>
     </div>
     <div class="smodal-body">
@@ -287,6 +364,22 @@ async function openSpace(id) {
   document.body.style.overflow='hidden';
 }
 function closeSpaceModal(){document.getElementById('space-modal').classList.remove('open');document.body.style.overflow='';}
+
+let galleryIdx=0;
+function galleryNav(dir){
+  const gallery=document.getElementById('smodal-gallery');
+  if(!gallery)return;
+  const count=gallery.children.length;
+  galleryIdx=(galleryIdx+dir+count)%count;
+  galleryGo(galleryIdx);
+}
+function galleryGo(idx){
+  const gallery=document.getElementById('smodal-gallery');
+  if(!gallery)return;
+  galleryIdx=idx;
+  gallery.style.transform=`translateX(-${idx*100}%)`;
+  document.querySelectorAll('.gallery-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+}
 function setRating(val,id){selectedRating=val;for(let i=1;i<=5;i++){const s=document.getElementById(`star-${id}-${i}`);if(s)s.classList.toggle('active',i<=val);}}
 async function submitReview(spaceId){
   if(!selectedRating){toast('Please select a rating','error');return;}
@@ -294,8 +387,12 @@ async function submitReview(spaceId){
 }
 
 // ── BOOKING ──
+let weekStart = new Date();
+weekStart.setHours(0,0,0,0);
+
 function openBookingModal(space) {
   currentBookingSpace=space; selectedStart=null; selectedEnd=null;
+  weekStart = new Date(); weekStart.setHours(0,0,0,0);
   document.getElementById('booking-space-name').textContent=space.name+' · '+space.address;
   document.getElementById('booking-date').min=new Date().toISOString().split('T')[0];
   document.getElementById('booking-date').value='';
@@ -305,6 +402,38 @@ function openBookingModal(space) {
   document.getElementById('booking-error').style.display='none';
   document.getElementById('space-modal').classList.remove('open');
   document.getElementById('booking-modal').classList.add('open');
+  renderWeek();
+}
+
+function renderWeek() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const container = document.getElementById('week-view');
+  const selected = document.getElementById('booking-date').value;
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    if (d < today) { html += `<div class="week-day" style="opacity:0.3;cursor:default;"><div class="week-day-name">${days[d.getDay()]}</div><div class="week-day-num">${d.getDate()}</div></div>`; continue; }
+    const iso = d.toISOString().split('T')[0];
+    const isSelected = iso === selected;
+    const isToday = d.getTime() === today.getTime();
+    html += `<div class="week-day${isSelected?' selected':''}${isToday?' today':''}" onclick="selectWeekDay('${iso}')"><div class="week-day-name">${days[d.getDay()]}</div><div class="week-day-num">${d.getDate()}</div></div>`;
+  }
+  container.innerHTML = html;
+}
+
+function selectWeekDay(iso) {
+  document.getElementById('booking-date').value = iso;
+  renderWeek();
+  loadAvailability();
+}
+
+function shiftWeek(dir) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  weekStart.setDate(weekStart.getDate() + dir * 7);
+  if (weekStart < today) weekStart = new Date(today);
+  renderWeek();
 }
 function closeBookingModal(){document.getElementById('booking-modal').classList.remove('open');document.body.style.overflow='';}
 

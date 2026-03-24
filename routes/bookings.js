@@ -2,7 +2,7 @@ const express = require('express');
 const db      = require('../db/database');
 const { requireAuth } = require('../middleware/auth');
 const { sendEmail, emailTemplate } = require('../utils/mailer');
-const { notify } = require('../utils/notify');
+const { notify, Notify } = require('../utils/notify');
 const { getConnector } = require('../connectors');
 const { initializeTransaction, verifyTransaction, refundTransaction, parsePrice, formatAmount, generateReference } = require('../utils/payment');
 const { completeBookingAfterPayment } = require('./webhooks');
@@ -80,9 +80,7 @@ router.post('/', requireAuth, async (req, res) => {
       });
 
       if (space.owner_id && space.owner_id !== req.user.id) {
-        const user = await db.getAsync('SELECT name FROM users WHERE id = ?', [req.user.id]);
-        await notify({ userId: space.owner_id, type: 'new_booking', title: 'New booking!',
-          message: `${user.name} booked ${space.name} on ${date} (${start_time}–${end_time}).` });
+        await Notify.newBooking(space.owner_id, space.name, user.name, date, `${start_time}–${end_time}`);
       }
 
       return res.status(201).json({ booking, message: 'Booking confirmed' });

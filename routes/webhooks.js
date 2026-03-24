@@ -3,7 +3,7 @@ const db = require('../db/database');
 const { verifyWebhookSignature } = require('../utils/payment');
 const { getConnector } = require('../connectors');
 const { sendEmail, emailTemplate } = require('../utils/mailer');
-const { notify } = require('../utils/notify');
+const { notify, Notify } = require('../utils/notify');
 const router = express.Router();
 
 /**
@@ -69,10 +69,9 @@ async function completeBookingAfterPayment(bookingId) {
     })
   });
 
-  // Notify space owner
+  // Notify space owner via email + in-app
   if (booking.owner_id && booking.owner_id !== booking.user_id) {
-    await notify({ userId: booking.owner_id, type: 'new_booking', title: 'New booking!',
-      message: `${user.name} booked ${booking.space_name} on ${booking.date} (${booking.start_time}–${booking.end_time}).` });
+    await Notify.newBooking(booking.owner_id, booking.space_name, user.name, booking.date, `${booking.start_time}–${booking.end_time}`);
   }
 
   // Fire outgoing webhook to partner systems
