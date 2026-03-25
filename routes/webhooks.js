@@ -4,6 +4,7 @@ const { verifyWebhookSignature } = require('../utils/payment');
 const { getConnector } = require('../connectors');
 const { sendEmail, emailTemplate } = require('../utils/mailer');
 const { notify, Notify } = require('../utils/notify');
+const { awardBookingCredits } = require('./wallet');
 const router = express.Router();
 
 /**
@@ -68,6 +69,11 @@ async function completeBookingAfterPayment(bookingId) {
       ctaUrl: `${appUrl}/profile.html`
     })
   });
+
+  // Award credits for paid booking
+  if (booking.amount_value && booking.amount_value > 0) {
+    await awardBookingCredits(booking.user_id, booking.amount_value, bookingId, booking.space_name);
+  }
 
   // Notify space owner via email + in-app
   if (booking.owner_id && booking.owner_id !== booking.user_id) {

@@ -113,7 +113,10 @@ body{padding-top:64px;}
           </div>
           <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" name="description" placeholder="Describe the space, atmosphere, and facilities…" style="min-height:90px;"></textarea></div>
           <div class="form-2col">
-            <div class="form-group"><label class="form-label">Price</label><input class="form-input" name="price" placeholder="e.g. ₦2,500 or Free"/></div>
+            <div class="form-group"><label class="form-label">SpaceLogg Price</label><input class="form-input" name="price" placeholder="e.g. ₦2,500 or Free"/><div class="form-hint">What users pay on SpaceLogg</div></div>
+            <div class="form-group"><label class="form-label">Walk-in Price</label><input class="form-input" name="walkin_price" placeholder="e.g. ₦3,000"/><div class="form-hint">Regular price without SpaceLogg</div></div>
+          </div>
+          <div class="form-2col">
             <div class="form-group"><label class="form-label">Per</label>
               <select class="form-select" name="price_unit">
                 <option value="/day">Per day</option>
@@ -522,7 +525,7 @@ function setupForms() {
     btn.textContent='Adding…'; btn.disabled=true;
     try {
       const fd = new FormData();
-      ['name','category','city','area','address','lat','lng','description','price','price_unit'].forEach(f => {
+      ['name','category','city','area','address','lat','lng','description','price','walkin_price','price_unit'].forEach(f => {
         const v = this[f]?.value; if (v) fd.append(f, v);
       });
       const amenities = Array.from(document.querySelectorAll('#amenity-grid input:checked')).map(c=>c.value);

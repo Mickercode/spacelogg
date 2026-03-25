@@ -34,4 +34,20 @@ router.get('/my-listings', requireAuth, async (req, res) => {
   res.json({ listings: rows.map(parse) });
 });
 
+// Recently viewed
+router.get('/recently-viewed', requireAuth, async (req, res) => {
+  const rows = await db.allAsync(
+    `SELECT s.*, rv.viewed_at FROM spaces s JOIN recently_viewed rv ON rv.space_id = s.id
+     WHERE rv.user_id = ? AND s.status = 'approved' ORDER BY rv.viewed_at DESC LIMIT 10`, [req.user.id]);
+  res.json({ spaces: rows.map(parse) });
+});
+
+router.post('/recently-viewed/:spaceId', requireAuth, async (req, res) => {
+  await db.runAsync(
+    `INSERT INTO recently_viewed (user_id, space_id) VALUES (?, ?)
+     ON CONFLICT(user_id, space_id) DO UPDATE SET viewed_at = datetime('now')`,
+    [req.user.id, req.params.spaceId]);
+  res.sendStatus(200);
+});
+
 module.exports = router;

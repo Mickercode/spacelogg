@@ -25,6 +25,7 @@ app.use('/api/users',         require('./routes/users'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin',         require('./routes/admin'));
 app.use('/api/bookings',      require('./routes/bookings'));
+app.use('/api/wallet',        require('./routes/wallet'));
 app.use('/api/webhooks',      require('./routes/webhooks'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', version: '1.0.0' }));

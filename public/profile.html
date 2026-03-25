@@ -60,13 +60,21 @@ body{padding-top:64px;}
     </div>
     <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="logout()">Sign out</button>
   </div>
+  <!-- Wallet card -->
+  <div id="wallet-card" style="background:var(--charcoal);color:#fff;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;">
+    <div><div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.5;margin-bottom:4px;">SpaceLogg Credits</div><div id="wallet-balance" style="font-family:'DM Serif Display',serif;font-size:28px;">...</div></div>
+    <div style="font-size:12px;opacity:0.5;">Earn 5% back on every booking</div>
+  </div>
+
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('saved',this)">Saved spaces</button>
+    <button class="tab-btn" onclick="switchTab('recent',this)">Recently viewed</button>
     <button class="tab-btn" onclick="switchTab('listings',this)">My listings</button>
     <button class="tab-btn" onclick="switchTab('bookings',this)">My bookings</button>
     <button class="tab-btn" onclick="switchTab('settings',this)">Settings</button>
   </div>
   <div class="tab-pane active" id="tab-saved"><div class="saved-grid" id="saved-grid"></div></div>
+  <div class="tab-pane" id="tab-recent"><div id="recent-container"><div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:13px;">Loading...</div></div></div>
   <div class="tab-pane" id="tab-listings">
     <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;"><a href="/list-space.html" class="btn btn-primary btn-sm">+ List a space</a></div>
     <div id="listings-container"></div>
@@ -102,14 +110,31 @@ async function init() {
   document.getElementById('psince').textContent  = new Date(user.created_at||Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'});
   document.getElementById('s-name').value = user.name;
   loadSaved();
+  loadWallet();
 }
 function switchTab(tab,el){
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active'); el.classList.add('active');
   if(tab==='saved')    loadSaved();
+  if(tab==='recent')   loadRecentlyViewed();
   if(tab==='listings') loadListings();
   if(tab==='bookings') loadBookings();
+}
+async function loadWallet(){
+  try{
+    const {balance,currency}=await apiFetch('/wallet');
+    const syms={NGN:'₦',USD:'$',GBP:'£'};
+    document.getElementById('wallet-balance').textContent=`${syms[currency]||''}${(balance/100).toLocaleString('en',{minimumFractionDigits:0})}`;
+  }catch{document.getElementById('wallet-balance').textContent='₦0';}
+}
+async function loadRecentlyViewed(){
+  const c=document.getElementById('recent-container');
+  try{
+    const {spaces}=await apiFetch('/users/recently-viewed');
+    if(!spaces.length){c.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:13px;">No recently viewed spaces. <a href="/dashboard.html" style="color:var(--amber);">Start exploring</a></div>';return;}
+    c.innerHTML=spaces.map(s=>`<div class="listing-row" style="cursor:pointer;" onclick="window.location.href='/dashboard.html?open=${s.id}'"><div><div class="listing-name">${s.name}</div><div class="listing-meta">${s.area?s.area+', ':''}${s.city} · ${s.category}</div></div><div class="card-price"><strong>${s.price||'Free'}</strong></div></div>`).join('');
+  }catch{c.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text-muted);">Could not load.</div>';}
 }
 async function loadSaved(){
   const {saved}=await apiFetch('/users/saved');
@@ -141,7 +166,10 @@ async function loadBookings(){
   if(!bookings.length){c.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">No bookings yet</div><div class="empty-sub">Book a workspace and it will appear here.</div><a href="/dashboard.html" class="btn btn-primary" style="margin-top:1rem">Explore spaces</a></div>';return;}
   const statusMap={'confirmed':'approved','cancelled':'rejected','refunded':'rejected','paid':'pending','pending_payment':'pending'};
   const statusLabel={'confirmed':'Confirmed','cancelled':'Cancelled','refunded':'Refunded','paid':'Paid — confirming','pending_payment':'Awaiting payment'};
-  c.innerHTML=bookings.map(b=>`<div class="listing-row"><div><div class="listing-name">${b.space_name}</div><div class="listing-meta">${b.date} · ${b.start_time}–${b.end_time} · ${b.guests} guest${b.guests>1?'s':''}</div>${b.total_price?`<div class="listing-meta" style="margin-top:2px;font-weight:500;">${b.total_price} ${b.currency||''}</div>`:''}</div><div style="display:flex;align-items:center;gap:8px;"><span class="status-badge status-${statusMap[b.status]||'pending'}">${statusLabel[b.status]||b.status}</span>${b.status==='confirmed'||b.status==='paid'?`<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>`:''}${b.status==='pending_payment'?`<button class="btn btn-outline btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>`:''}</div></div>`).join('');
+  c.innerHTML=bookings.map(b=>{
+    const isPast = b.status==='confirmed' && new Date(b.date+'T23:59:59') < new Date();
+    return `<div class="listing-row"><div><div class="listing-name">${b.space_name}</div><div class="listing-meta">${b.date} · ${b.start_time}–${b.end_time} · ${b.guests} guest${b.guests>1?'s':''}</div>${b.total_price?`<div class="listing-meta" style="margin-top:2px;font-weight:500;">${b.total_price} ${b.currency||''}</div>`:''}</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span class="status-badge status-${statusMap[b.status]||'pending'}">${statusLabel[b.status]||b.status}</span>${b.status==='confirmed'&&!isPast?`<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>`:''}${isPast?`<a href="/dashboard.html?open=${b.space_id}" class="btn btn-amber btn-sm">Book again</a>`:''} ${b.status==='pending_payment'?`<button class="btn btn-outline btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>`:''}</div></div>`;
+  }).join('');
 }
 async function cancelBooking(id){if(!confirm('Cancel this booking?'))return;try{await apiFetch('/bookings/'+id+'/cancel',{method:'PATCH'});toast('Booking cancelled','success');loadBookings();}catch(err){toast(err.message,'error');}}
 

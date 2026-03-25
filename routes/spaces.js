@@ -68,6 +68,23 @@ router.get('/nearby', async (req, res) => {
   }
 });
 
+// GET /api/spaces/discover — discovery feed sections
+router.get('/discover', async (req, res) => {
+  try {
+    const topRated = await db.allAsync(
+      "SELECT * FROM spaces WHERE status='approved' AND rating >= 4.5 ORDER BY rating DESC, review_count DESC LIMIT 6");
+    const newest = await db.allAsync(
+      "SELECT * FROM spaces WHERE status='approved' ORDER BY created_at DESC LIMIT 6");
+    const mostReviewed = await db.allAsync(
+      "SELECT * FROM spaces WHERE status='approved' AND review_count > 0 ORDER BY review_count DESC LIMIT 6");
+    res.json({
+      topRated: topRated.map(parse),
+      newest: newest.map(parse),
+      mostReviewed: mostReviewed.map(parse)
+    });
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Discovery failed' }); }
+});
+
 // GET /api/spaces/areas — distinct areas for filter dropdown
 router.get('/areas', async (req, res) => {
   const { city } = req.query;
@@ -85,7 +102,11 @@ router.get('/:id', optionalAuth, async (req, res) => {
     const space = await db.getAsync('SELECT * FROM spaces WHERE id=? AND status=?',[req.params.id,'approved']);
     if (!space) return res.status(404).json({error:'Space not found'});
     let saved = false;
-    if (req.user) { const s=await db.getAsync('SELECT id FROM saved_spaces WHERE user_id=? AND space_id=?',[req.user.id,space.id]); saved=!!s; }
+    if (req.user) {
+      const s=await db.getAsync('SELECT id FROM saved_spaces WHERE user_id=? AND space_id=?',[req.user.id,space.id]); saved=!!s;
+      // Track recently viewed
+      db.runAsync('INSERT INTO recently_viewed (user_id, space_id) VALUES (?, ?) ON CONFLICT(user_id, space_id) DO UPDATE SET viewed_at = datetime(\'now\')', [req.user.id, space.id]).catch(()=>{});
+    }
     const reviews = await db.allAsync(
       `SELECT r.*, u.name as user_name FROM reviews r JOIN users u ON u.id=r.user_id WHERE r.space_id=? ORDER BY r.created_at DESC LIMIT 20`,
       [space.id]);
@@ -96,15 +117,15 @@ router.get('/:id', optionalAuth, async (req, res) => {
 // POST /api/spaces — ADMIN ONLY
 router.post('/', requireAuth, requireAdmin, upload.array('images',6), async (req, res) => {
   try {
-    const { name, category, description, address, city, area, lat, lng, price, price_unit, amenities, hours } = req.body;
+    const { name, category, description, address, city, area, lat, lng, price, walkin_price, price_unit, amenities, hours } = req.body;
     if (!name||!category||!address) return res.status(400).json({error:'Name, category and address are required'});
     const images = req.files?.length ? await uploadFiles(req.files) : [];
     const { lastID } = await db.runAsync(
-      `INSERT INTO spaces (name,category,description,address,city,area,lat,lng,price,price_unit,amenities,hours,images,owner_id,status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'approved')`,
+      `INSERT INTO spaces (name,category,description,address,city,area,lat,lng,price,walkin_price,price_unit,amenities,hours,images,owner_id,status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'approved')`,
       [name, category, description||'', address, city||'', area||'',
        lat?Number(lat):null, lng?Number(lng):null,
-       price||'', price_unit||'',
+       price||'', walkin_price||'', price_unit||'',
        amenities||'[]', hours||'{}',
        JSON.stringify(images), req.user.id]);
     const space = await db.getAsync('SELECT * FROM spaces WHERE id=?',[lastID]);
@@ -117,7 +138,7 @@ router.patch('/:id', requireAuth, requireAdmin, upload.array('images',6), async 
   try {
     const space = await db.getAsync('SELECT * FROM spaces WHERE id=?',[req.params.id]);
     if (!space) return res.status(404).json({error:'Space not found'});
-    const fields=['name','category','description','address','city','area','lat','lng','price','price_unit','amenities','hours'];
+    const fields=['name','category','description','address','city','area','lat','lng','price','walkin_price','price_unit','amenities','hours'];
     const updates=[]; const params=[];
     for (const f of fields) { if (req.body[f]!==undefined){ updates.push(`${f}=?`); params.push(req.body[f]); } }
     const keptRaw  = req.body.kept_images;

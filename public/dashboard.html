@@ -256,7 +256,7 @@ async function loadSpaces(params={}) {
         <div class="card-location">${s.address}</div>
         <div class="card-amenities">${s.amenities.slice(0,3).map(a=>`<span class="amenity-tag">${a}</span>`).join('')}${s.amenities.length>3?`<span class="amenity-tag">+${s.amenities.length-3}</span>`:''}</div>
         <div class="card-footer">
-          <div class="card-price"><strong>${s.price||'Free'}</strong><span> ${s.price_unit||''}</span></div>
+          <div class="card-price">${s.walkin_price?`<span style="text-decoration:line-through;color:var(--text-muted);font-size:12px;margin-right:4px;">${s.walkin_price}</span>`:''}<strong>${s.price||'Free'}</strong><span> ${s.price_unit||''}</span></div>
           <button class="save-btn ${savedIds.has(s.id)?'saved':''}" onclick="toggleSave(event,${s.id})">${savedIds.has(s.id)?'♥':'♡'}</button>
         </div>
       </div>
@@ -310,7 +310,7 @@ async function findNearMe() {
             <div class="card-location">${s.address}</div>
             <div class="card-amenities">${s.amenities.slice(0,3).map(a=>`<span class="amenity-tag">${a}</span>`).join('')}${s.amenities.length>3?`<span class="amenity-tag">+${s.amenities.length-3}</span>`:''}</div>
             <div class="card-footer">
-              <div class="card-price"><strong>${s.price||'Free'}</strong><span> ${s.price_unit||''}</span></div>
+              <div class="card-price">${s.walkin_price?`<span style="text-decoration:line-through;color:var(--text-muted);font-size:12px;margin-right:4px;">${s.walkin_price}</span>`:''}<strong>${s.price||'Free'}</strong><span> ${s.price_unit||''}</span></div>
               <button class="save-btn ${savedIds.has(s.id)?'saved':''}" onclick="toggleSave(event,${s.id})">${savedIds.has(s.id)?'♥':'♡'}</button>
             </div>
           </div>
@@ -352,7 +352,7 @@ async function openSpace(id) {
         <textarea class="form-textarea" id="rev-comment-${space.id}" placeholder="Share your experience…" style="min-height:70px;margin-bottom:8px;"></textarea>
         <button class="btn btn-outline btn-sm" onclick="submitReview(${space.id})">Submit review</button>`:''}
       <div class="modal-footer">
-        <div class="modal-price"><strong>${space.price||'Free'}</strong>${space.price_unit?`<span class="unit"> ${space.price_unit}</span>`:''}</div>
+        <div class="modal-price">${space.walkin_price?`<span style="text-decoration:line-through;color:var(--text-muted);font-weight:400;margin-right:6px;">${space.walkin_price}</span>`:''}<strong>${space.price||'Free'}</strong>${space.price_unit?`<span class="unit"> ${space.price_unit}</span>`:''} ${space.walkin_price?`<span style="font-size:11px;background:rgba(232,137,26,0.15);color:var(--amber);padding:2px 8px;border-radius:10px;margin-left:6px;">SpaceLogg Price</span>`:''}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-outline btn-sm save-btn ${saved?'saved':''}" id="modal-save-${space.id}" onclick="toggleSave(event,${space.id},true)">${saved?'♥ Saved':'♡ Save'}</button>
           ${isOwner?`<button class="btn btn-outline btn-sm" onclick="openEditModal(${space.id})">Edit listing</button>`:''}

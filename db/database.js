@@ -132,11 +132,39 @@ db.serialize(() => {
     note TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
 
+  // Wallet: credit balance per user
+  db.run(`CREATE TABLE IF NOT EXISTS wallet (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    balance INTEGER NOT NULL DEFAULT 0,
+    currency TEXT NOT NULL DEFAULT 'NGN',
+    UNIQUE(user_id, currency))`);
+
+  // Wallet transactions log
+  db.run(`CREATE TABLE IF NOT EXISTS wallet_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    amount INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    description TEXT,
+    booking_id INTEGER REFERENCES bookings(id),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+
+  // Recently viewed spaces
+  db.run(`CREATE TABLE IF NOT EXISTS recently_viewed (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+    viewed_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_id, space_id))`);
+
   // Safe migrations (swallow error if column already exists)
   db.run('ALTER TABLE bookings ADD COLUMN external_ref TEXT', [], () => {});
   db.run('ALTER TABLE bookings ADD COLUMN amount_value INTEGER', [], () => {});
   db.run("ALTER TABLE bookings ADD COLUMN currency TEXT DEFAULT 'NGN'", [], () => {});
   db.run("ALTER TABLE spaces ADD COLUMN area TEXT DEFAULT ''", [], () => {});
+  db.run("ALTER TABLE spaces ADD COLUMN walkin_price TEXT DEFAULT ''", [], () => {});
+  db.run("ALTER TABLE bookings ADD COLUMN credits_used INTEGER DEFAULT 0", [], () => {});
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_category ON spaces(category)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_status   ON spaces(status)`);
@@ -150,6 +178,9 @@ db.serialize(() => {
   db.run(`CREATE INDEX IF NOT EXISTS idx_payments_ref ON payments(provider_ref)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_payouts_owner ON payouts(owner_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_wallet_user ON wallet(user_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_wallet_tx_user ON wallet_transactions(user_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_recently_viewed ON recently_viewed(user_id)`);
 
   // Seed spaces if empty
   db.get('SELECT COUNT(*) as c FROM spaces', [], (err, row) => {
