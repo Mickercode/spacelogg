@@ -54,7 +54,7 @@ async function init() {
       localStorage.setItem('sl_user', JSON.stringify(user));
       document.getElementById('status').textContent = 'Welcome, ' + user.name + '! Redirecting...';
       document.getElementById('status').className = 'login-status ok';
-      setTimeout(() => window.location.href = '/space-admin/', 1000);
+      setTimeout(() => window.location.href = '/space-admin/dashboard', 1000);
     } catch (err) {
       document.getElementById('status').textContent = 'This link is expired or invalid. Please sign in below.';
       document.getElementById('status').className = 'login-status err';
@@ -69,7 +69,7 @@ async function init() {
         if (res.ok) {
           const { user } = await res.json();
           if (user.role === 'owner' || user.role === 'admin') {
-            window.location.href = '/space-admin/';
+            window.location.href = '/space-admin/dashboard';
             return;
           }
         }
@@ -95,7 +95,7 @@ document.getElementById('login-form')?.addEventListener('submit', async function
     if (data.user.role !== 'owner' && data.user.role !== 'admin') throw new Error('This account is not an owner account');
     localStorage.setItem('sl_token', data.token);
     localStorage.setItem('sl_user', JSON.stringify(data.user));
-    window.location.href = '/space-admin/';
+    window.location.href = '/space-admin/dashboard';
   } catch (err) {
     errEl.style.display = 'block';
     errEl.textContent = err.message;

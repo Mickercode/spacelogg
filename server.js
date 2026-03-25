@@ -34,14 +34,10 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', version: '1.0.0' }
 // Admin redirect
 app.get('/admin', (req, res) => res.redirect('/admin/login.html'));
 
-// Subdomain redirect: hostapp.spacelogg.com → owner dashboard
-app.use((req, res, next) => {
-  const host = req.hostname;
-  if (host === 'hostapp.spacelogg.com' && req.path === '/') {
-    return res.redirect('/space-admin/');
-  }
-  next();
-});
+// HostApp: /space-admin/ serves landing page, /space-admin/dashboard goes to app
+app.get('/space-admin', (req, res) => res.redirect('/space-admin/'));
+app.get('/space-admin/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'space-admin', 'landing.html')));
+app.get('/space-admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'space-admin', 'index.html')));
 
 // Catch-all: serve static file if exists, otherwise index.html
 app.get('*', (req, res) => {

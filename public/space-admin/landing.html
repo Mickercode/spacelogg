@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HostApp by SpaceLogg — Manage Your Workspace</title>
+<meta name="description" content="HostApp helps workspace owners manage bookings, track revenue, and grow their business on SpaceLogg."/>
+<meta property="og:title" content="HostApp by SpaceLogg — Manage Your Workspace"/>
+<meta property="og:description" content="The booking management platform for coworking spaces, cafes, libraries and hotel lounges."/>
+<meta property="og:image" content="/branding/spacelogg-icon-512.png"/>
+<meta name="twitter:card" content="summary"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/branding/spacelogg-favicon-32.png"/>
+<link rel="icon" type="image/svg+xml" href="/branding/spacelogg-icon.svg"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--charcoal:#1C1A16;--parchment:#F5EDD8;--amber:#E8891A;--amber-dark:#C97516;--green:#4CAF50;}
+body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--charcoal);color:#fff;}
+a{text-decoration:none;}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2.5rem;position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(28,26,22,0.95);backdrop-filter:blur(12px);}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-mark{font-family:Georgia,serif;font-size:20px;color:var(--parchment);}
+.nav-mark span{color:var(--amber);}
+.nav-badge{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);background:rgba(232,137,26,0.15);border:0.5px solid rgba(232,137,26,0.3);padding:3px 8px;border-radius:10px;}
+.nav-btns{display:flex;gap:10px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 22px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-amber{background:var(--amber);color:var(--charcoal);}.btn-amber:hover{background:var(--amber-dark);color:#fff;}
+.btn-outline{background:transparent;color:rgba(255,255,255,0.7);border:0.5px solid rgba(255,255,255,0.2);}.btn-outline:hover{border-color:var(--amber);color:var(--amber);}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 4rem;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at center top,rgba(232,137,26,0.08) 0%,transparent 60%);pointer-events:none;}
+.hero-content{max-width:700px;position:relative;z-index:1;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(232,137,26,0.12);border:0.5px solid rgba(232,137,26,0.3);border-radius:20px;padding:6px 16px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber);margin-bottom:2rem;}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.hero-title{font-family:Georgia,serif;font-size:clamp(36px,6vw,64px);line-height:1.1;letter-spacing:-1px;margin-bottom:1.5rem;}
+.hero-title em{color:var(--amber);font-style:italic;}
+.hero-sub{font-size:17px;color:rgba(255,255,255,0.55);line-height:1.7;margin-bottom:2.5rem;max-width:540px;margin-left:auto;margin-right:auto;}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+/* FEATURES */
+.features{padding:6rem 2.5rem;background:var(--parchment);}
+.features-inner{max-width:1000px;margin:0 auto;}
+.features-title{font-family:Georgia,serif;font-size:clamp(28px,4vw,40px);color:var(--charcoal);text-align:center;margin-bottom:0.75rem;}
+.features-sub{font-size:15px;color:#6B6456;text-align:center;margin-bottom:3rem;}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;}
+.feat-card{background:#fff;border-radius:16px;padding:2rem;border:0.5px solid #E8E0D0;}
+.feat-icon{font-size:28px;margin-bottom:1rem;}
+.feat-title{font-family:Georgia,serif;font-size:18px;color:var(--charcoal);margin-bottom:0.5rem;}
+.feat-desc{font-size:14px;color:#6B6456;line-height:1.6;}
+
+/* HOW IT WORKS */
+.how{padding:6rem 2.5rem;background:var(--charcoal);}
+.how-inner{max-width:800px;margin:0 auto;text-align:center;}
+.how-title{font-family:Georgia,serif;font-size:clamp(28px,4vw,40px);margin-bottom:3rem;}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;text-align:left;}
+.step-num{font-family:Georgia,serif;font-size:36px;color:var(--amber);line-height:1;margin-bottom:0.75rem;}
+.step-title{font-size:16px;font-weight:600;margin-bottom:0.25rem;}
+.step-desc{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.6;}
+
+/* PRICING */
+.pricing{padding:6rem 2.5rem;background:var(--parchment);}
+.pricing-inner{max-width:600px;margin:0 auto;text-align:center;}
+.pricing-title{font-family:Georgia,serif;font-size:clamp(28px,4vw,40px);color:var(--charcoal);margin-bottom:1rem;}
+.pricing-sub{font-size:15px;color:#6B6456;margin-bottom:2.5rem;}
+.pricing-card{background:#fff;border-radius:20px;padding:2.5rem;border:0.5px solid #E8E0D0;text-align:center;}
+.pricing-amount{font-family:Georgia,serif;font-size:48px;color:var(--charcoal);}
+.pricing-amount span{font-size:18px;color:#6B6456;font-family:inherit;font-weight:normal;}
+.pricing-detail{font-size:14px;color:#6B6456;margin:1rem 0 1.5rem;line-height:1.6;}
+.pricing-features{text-align:left;margin:1.5rem 0;font-size:14px;color:#6B6456;line-height:2;}
+.check{color:var(--green);margin-right:6px;}
+
+/* CTA */
+.cta{padding:6rem 2.5rem;background:var(--charcoal);text-align:center;}
+.cta-title{font-family:Georgia,serif;font-size:clamp(28px,4vw,40px);margin-bottom:1rem;}
+.cta-sub{font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:2rem;max-width:480px;margin-left:auto;margin-right:auto;}
+
+/* FOOTER */
+.foot{padding:2rem 2.5rem;border-top:0.5px solid rgba(255,255,255,0.08);text-align:center;font-size:12px;color:rgba(255,255,255,0.3);}
+
+@media(max-width:600px){
+  .nav{padding:1rem;}
+  .hero{padding:7rem 1.5rem 3rem;}
+  .steps{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-mark">Space<span>Logg</span></div>
+    <span class="nav-badge">HostApp</span>
+  </div>
+  <div class="nav-btns">
+    <a href="/space-admin/login.html" class="btn btn-outline">Sign in</a>
+    <a href="#demo" class="btn btn-amber">Book a demo</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow"><span class="hero-dot"></span> For workspace operators</div>
+    <h1 class="hero-title">Fill your seats.<br/>Not your <em>spreadsheets.</em></h1>
+    <p class="hero-sub">HostApp is SpaceLogg's free management platform for coworking spaces, cafes, libraries, and hotel lounges. Get discovered, accept bookings, and track revenue — all from one dashboard.</p>
+    <div class="hero-actions">
+      <a href="#demo" class="btn btn-amber">Book a demo &rarr;</a>
+      <a href="/space-admin/login.html" class="btn btn-outline">Already a host? Sign in</a>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="features-inner">
+    <h2 class="features-title">Everything you need to run your space</h2>
+    <p class="features-sub">No new software to learn. No setup fees. Just list, manage, and earn.</p>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon">📅</div>
+        <div class="feat-title">Booking management</div>
+        <div class="feat-desc">See every booking in real-time. Accept, reject, or mark no-shows. Filter by space, date, or status.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">💰</div>
+        <div class="feat-title">Revenue tracking</div>
+        <div class="feat-desc">Track total revenue, monthly earnings, and pending payouts. See exactly what you're owed.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <div class="feat-title">Analytics</div>
+        <div class="feat-desc">Know your busiest days, top-performing spaces, occupancy rates, and cancellation trends.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🏢</div>
+        <div class="feat-title">Space management</div>
+        <div class="feat-desc">Add spaces, set pricing (hourly, daily, monthly), upload photos, manage amenities and capacity.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🔒</div>
+        <div class="feat-title">Availability control</div>
+        <div class="feat-desc">Block dates for maintenance or private events. Set time-specific blocks. Users see real-time availability.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">⭐</div>
+        <div class="feat-title">Reviews & reputation</div>
+        <div class="feat-desc">See every review left by guests. Build your reputation on SpaceLogg and attract more bookings.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="how-inner">
+    <h2 class="how-title">How it works</h2>
+    <div class="steps">
+      <div>
+        <div class="step-num">1</div>
+        <div class="step-title">Book a demo</div>
+        <div class="step-desc">We'll walk you through HostApp and set up your account. Takes 15 minutes.</div>
+      </div>
+      <div>
+        <div class="step-num">2</div>
+        <div class="step-title">List your spaces</div>
+        <div class="step-desc">Add your desks, rooms, or lounges. Set pricing, photos, and amenities.</div>
+      </div>
+      <div>
+        <div class="step-num">3</div>
+        <div class="step-title">Start earning</div>
+        <div class="step-desc">Bookings come in from SpaceLogg users. You manage them from your dashboard. Payouts are automatic.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing">
+  <div class="pricing-inner">
+    <h2 class="pricing-title">Simple pricing</h2>
+    <p class="pricing-sub">No monthly fees. No setup costs. We only earn when you earn.</p>
+    <div class="pricing-card">
+      <div class="pricing-amount">10% <span>per booking</span></div>
+      <div class="pricing-detail">That's it. SpaceLogg takes a 10% commission on each completed booking. You keep 90%.</div>
+      <div class="pricing-features">
+        <span class="check">&#10003;</span> Free to list your spaces<br/>
+        <span class="check">&#10003;</span> Free dashboard access<br/>
+        <span class="check">&#10003;</span> Automatic weekly payouts<br/>
+        <span class="check">&#10003;</span> No lock-in — leave anytime<br/>
+        <span class="check">&#10003;</span> Dual pricing support (walk-in vs SpaceLogg)<br/>
+        <span class="check">&#10003;</span> Real-time analytics and reports
+      </div>
+      <a href="#demo" class="btn btn-amber" style="width:100%;">Get started &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO CTA -->
+<section class="cta" id="demo">
+  <h2 class="cta-title">Ready to fill your seats?</h2>
+  <p class="cta-sub">Book a 15-minute demo and we'll get your spaces live on SpaceLogg.</p>
+  <div style="max-width:480px;margin:0 auto;background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:2rem;">
+    <form id="demo-form">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <input style="padding:12px 16px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:14px;outline:none;" placeholder="Your name" id="d-name" required/>
+        <input style="padding:12px 16px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:14px;outline:none;" placeholder="Email" type="email" id="d-email" required/>
+      </div>
+      <input style="width:100%;padding:12px 16px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:14px;outline:none;margin-bottom:12px;" placeholder="Space name (e.g. The Hub Lagos)" id="d-space"/>
+      <select style="width:100%;padding:12px 16px;border-radius:10px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);font-size:14px;outline:none;margin-bottom:12px;" id="d-type">
+        <option value="">Type of space</option>
+        <option value="coworking">Coworking space</option>
+        <option value="cafe">Café</option>
+        <option value="library">Library</option>
+        <option value="hotel">Hotel lounge</option>
+        <option value="other">Other</option>
+      </select>
+      <div id="demo-ok" style="display:none;padding:12px;border-radius:10px;background:rgba(76,175,80,0.15);color:var(--green);font-size:14px;margin-bottom:12px;text-align:center;">Demo request received! We'll be in touch within 24 hours.</div>
+      <button type="submit" class="btn btn-amber" style="width:100%;padding:14px;">Book a free demo &rarr;</button>
+    </form>
+  </div>
+</section>
+
+<footer class="foot">
+  <div style="margin-bottom:8px;"><span style="font-family:Georgia,serif;font-size:16px;color:rgba(255,255,255,0.5);">Space<span style="color:var(--amber);">Logg</span></span> <span style="margin-left:6px;">HostApp</span></div>
+  &copy; 2025 SpaceLogg. All rights reserved. &middot; <a href="/about.html" style="color:rgba(255,255,255,0.4);">About</a> &middot; <a href="/privacy.html" style="color:rgba(255,255,255,0.4);">Privacy</a> &middot; <a href="/contact.html" style="color:rgba(255,255,255,0.4);">Contact</a>
+</footer>
+
+<script>
+document.getElementById('demo-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const ok = document.getElementById('demo-ok');
+  try {
+    await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('d-name').value,
+        email: document.getElementById('d-email').value,
+        subject: 'HostApp Demo Request',
+        message: `Space: ${document.getElementById('d-space').value || 'Not specified'}\nType: ${document.getElementById('d-type').value || 'Not specified'}`
+      })
+    });
+  } catch {}
+  ok.style.display = 'block';
+  this.reset();
+});
+</script>
+</body>
+</html>
