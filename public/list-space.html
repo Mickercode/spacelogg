@@ -179,6 +179,7 @@ function removeImg(idx){imgFiles.splice(idx,1);renderPreviews();}
 document.getElementById('list-form').addEventListener('submit',async function(e){
   e.preventDefault();
   if(!Auth.loggedIn()){window.location.href='/?login=1&next=/list-space.html';return;}
+  const u=Auth.getUser();if(u.role!=='owner'&&u.role!=='admin'){toast('Only space owners can list spaces. Contact us to become a host.','error');btn.textContent='Submit space →';btn.disabled=false;return;}
   const btn=document.getElementById('submit-btn');btn.textContent='Submitting…';btn.disabled=true;
   try{
     const fd=new FormData();

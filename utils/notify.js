@@ -61,6 +61,37 @@ const Notify = {
     link: '/owner.html',
     email: true
   }),
+
+  bookingAccepted: (uid, spaceName, date) => notify({
+    userId: uid, type: 'booking_accepted',
+    title: 'Booking accepted!',
+    message: `Your booking at ${spaceName} on ${date} has been accepted by the host.`,
+    link: '/profile.html',
+    email: true
+  }),
+
+  bookingRejected: (uid, spaceName, date) => notify({
+    userId: uid, type: 'booking_rejected',
+    title: 'Booking not accepted',
+    message: `Your booking at ${spaceName} on ${date} was not accepted by the host. You will receive a refund if payment was made.`,
+    link: '/profile.html',
+    email: true
+  }),
+
+  payoutProcessed: (uid, amount) => notify({
+    userId: uid, type: 'payout',
+    title: 'Payout sent!',
+    message: `Your payout of ${amount} has been processed. Check your bank account.`,
+    email: true
+  }),
+
+  weeklySummary: (uid, bookings, revenue) => notify({
+    userId: uid, type: 'weekly_summary',
+    title: 'Your weekly summary',
+    message: `This week: ${bookings} booking${bookings !== 1 ? 's' : ''}, ${revenue} in revenue.`,
+    link: '/space-admin/',
+    email: true
+  }),
 };
 
 module.exports = { notify, Notify };

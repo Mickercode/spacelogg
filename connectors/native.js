@@ -9,12 +9,28 @@ class NativeConnector extends BaseConnector {
   }
 
   async checkAvailability(spaceId, date) {
+    // Check if entire date is blocked by owner
+    const fullBlock = await db.getAsync(
+      'SELECT id FROM availability_blocks WHERE space_id = ? AND block_date = ? AND start_time IS NULL',
+      [spaceId, date]);
+    if (fullBlock) return { bookedSlots: [], blocked: true };
+
+    // Get time-specific blocks
+    const blocks = await db.allAsync(
+      'SELECT start_time, end_time FROM availability_blocks WHERE space_id = ? AND block_date = ? AND start_time IS NOT NULL',
+      [spaceId, date]);
+
     const bookings = await db.allAsync(
       `SELECT start_time, end_time FROM bookings
-       WHERE space_id = ? AND date = ? AND status != 'cancelled'`,
+       WHERE space_id = ? AND date = ? AND status NOT IN ('cancelled','refunded')`,
       [spaceId, date]
     );
-    return { bookedSlots: bookings };
+
+    // Check capacity
+    const space = await db.getAsync('SELECT capacity FROM spaces WHERE id = ?', [spaceId]);
+    const capacity = space?.capacity || 1;
+
+    return { bookedSlots: [...bookings, ...blocks], blocked: false, capacity };
   }
 
   async createBooking({ spaceId, userId, date, startTime, endTime, guests, note }) {

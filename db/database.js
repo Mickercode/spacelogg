@@ -158,13 +158,46 @@ db.serialize(() => {
     viewed_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(user_id, space_id))`);
 
+  // Owner business profiles
+  db.run(`CREATE TABLE IF NOT EXISTS owner_profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    business_name TEXT,
+    business_description TEXT,
+    logo TEXT,
+    phone TEXT,
+    bank_name TEXT,
+    account_number TEXT,
+    account_name TEXT,
+    paystack_recipient_code TEXT,
+    verified INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_id))`);
+
+  // Availability blocks (owner blocks off dates/times)
+  db.run(`CREATE TABLE IF NOT EXISTS availability_blocks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+    block_date TEXT NOT NULL,
+    start_time TEXT,
+    end_time TEXT,
+    reason TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+
   // Safe migrations (swallow error if column already exists)
   db.run('ALTER TABLE bookings ADD COLUMN external_ref TEXT', [], () => {});
   db.run('ALTER TABLE bookings ADD COLUMN amount_value INTEGER', [], () => {});
   db.run("ALTER TABLE bookings ADD COLUMN currency TEXT DEFAULT 'NGN'", [], () => {});
   db.run("ALTER TABLE spaces ADD COLUMN area TEXT DEFAULT ''", [], () => {});
   db.run("ALTER TABLE spaces ADD COLUMN walkin_price TEXT DEFAULT ''", [], () => {});
+  db.run("ALTER TABLE spaces ADD COLUMN capacity INTEGER DEFAULT 1", [], () => {});
+  db.run("ALTER TABLE spaces ADD COLUMN price_hourly TEXT DEFAULT ''", [], () => {});
+  db.run("ALTER TABLE spaces ADD COLUMN price_monthly TEXT DEFAULT ''", [], () => {});
+  db.run("ALTER TABLE spaces ADD COLUMN wifi_speed TEXT DEFAULT ''", [], () => {});
+  db.run("ALTER TABLE spaces ADD COLUMN power_backup TEXT DEFAULT ''", [], () => {});
   db.run("ALTER TABLE bookings ADD COLUMN credits_used INTEGER DEFAULT 0", [], () => {});
+  db.run("ALTER TABLE bookings ADD COLUMN status_owner TEXT DEFAULT 'auto'", [], () => {});
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_category ON spaces(category)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_status   ON spaces(status)`);
@@ -178,6 +211,8 @@ db.serialize(() => {
   db.run(`CREATE INDEX IF NOT EXISTS idx_payments_ref ON payments(provider_ref)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_payouts_owner ON payouts(owner_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_owner_profiles ON owner_profiles(user_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_avail_blocks ON availability_blocks(space_id, block_date)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_wallet_user ON wallet(user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_wallet_tx_user ON wallet_transactions(user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_recently_viewed ON recently_viewed(user_id)`);

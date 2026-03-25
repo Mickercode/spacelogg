@@ -114,20 +114,24 @@ router.get('/:id', optionalAuth, async (req, res) => {
   } catch(err){ console.error(err); res.status(500).json({error:'Failed to load space'}); }
 });
 
-// POST /api/spaces — ADMIN ONLY
-router.post('/', requireAuth, requireAdmin, upload.array('images',6), async (req, res) => {
+// POST /api/spaces — ADMIN or OWNER
+router.post('/', requireAuth, (req, res, next) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'owner') return res.status(403).json({ error: 'Only space owners can create listings' });
+  next();
+}, upload.array('images',6), async (req, res) => {
   try {
     const { name, category, description, address, city, area, lat, lng, price, walkin_price, price_unit, amenities, hours } = req.body;
     if (!name||!category||!address) return res.status(400).json({error:'Name, category and address are required'});
     const images = req.files?.length ? await uploadFiles(req.files) : [];
+    const initialStatus = req.user.role === 'admin' ? 'approved' : 'pending';
     const { lastID } = await db.runAsync(
       `INSERT INTO spaces (name,category,description,address,city,area,lat,lng,price,walkin_price,price_unit,amenities,hours,images,owner_id,status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'approved')`,
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [name, category, description||'', address, city||'', area||'',
        lat?Number(lat):null, lng?Number(lng):null,
        price||'', walkin_price||'', price_unit||'',
        amenities||'[]', hours||'{}',
-       JSON.stringify(images), req.user.id]);
+       JSON.stringify(images), req.user.id, initialStatus]);
     const space = await db.getAsync('SELECT * FROM spaces WHERE id=?',[lastID]);
     res.status(201).json({ space: parse(space), message: 'Space added successfully' });
   } catch(err){ console.error(err); res.status(500).json({error:'Failed to add space: '+err.message}); }

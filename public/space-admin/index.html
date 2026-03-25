@@ -2,34 +2,39 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Owner Dashboard — SpaceLogg</title>
+<title>HostApp — SpaceLogg</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/branding/spacelogg-favicon-32.png"/>
 <link rel="icon" type="image/svg+xml" href="/branding/spacelogg-icon.svg"/>
 <link rel="stylesheet" href="/css/main.css"/>
 <style>
 body{padding-top:64px;background:var(--parchment);}
-.owner-wrap{max-width:1100px;margin:0 auto;padding:2rem 2rem 5rem;}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:2rem;}
-.stat-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
-.stat-num{font-family:'DM Serif Display',serif;font-size:32px;color:var(--charcoal);line-height:1;}
-.stat-num.amber{color:var(--amber);}
-.stat-num.green{color:var(--green);}
-.stat-label{font-size:12px;color:var(--text-muted);margin-top:4px;}
-.panel{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem;}
-.panel-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:0.5px solid var(--border);flex-wrap:wrap;gap:.75rem;}
-.panel-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--charcoal);}
-.otable{width:100%;border-collapse:collapse;}
-.otable th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);padding:.75rem 1.25rem;border-bottom:0.5px solid var(--border);font-weight:500;white-space:nowrap;}
-.otable td{padding:.875rem 1.25rem;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--text-secondary);vertical-align:middle;}
-.otable tr:last-child td{border-bottom:none;}
-.otable tr:hover td{background:var(--parchment-light);}
-.today-card{background:var(--charcoal);color:#fff;border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:2rem;}
-.today-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.5;margin-bottom:0.5rem;}
-.today-count{font-family:'DM Serif Display',serif;font-size:36px;line-height:1;}
-.today-list{margin-top:1rem;}
-.today-item{display:flex;justify-content:space-between;padding:8px 0;border-top:0.5px solid rgba(255,255,255,0.1);font-size:13px;}
-.today-item:first-child{border-top:none;}
-.revenue-card{background:linear-gradient(135deg,var(--amber),#D47B15);color:#fff;border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:2rem;}
+.ow{max-width:1100px;margin:0 auto;padding:2rem 2rem 5rem;}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:2rem;}
+.sc{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
+.sn{font-family:'DM Serif Display',serif;font-size:32px;color:var(--charcoal);line-height:1;}
+.sn.a{color:var(--amber);}.sn.g{color:var(--green);}
+.sl{font-size:12px;color:var(--text-muted);margin-top:4px;}
+.pnl{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem;}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:0.5px solid var(--border);flex-wrap:wrap;gap:.75rem;}
+.pt{font-family:'DM Serif Display',serif;font-size:18px;color:var(--charcoal);}
+.ot{width:100%;border-collapse:collapse;}
+.ot th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);padding:.75rem 1.25rem;border-bottom:0.5px solid var(--border);font-weight:500;white-space:nowrap;}
+.ot td{padding:.875rem 1.25rem;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--text-secondary);vertical-align:middle;}
+.ot tr:last-child td{border-bottom:none;}
+.ot tr:hover td{background:var(--parchment-light);}
+.tc{background:var(--charcoal);color:#fff;border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:2rem;}
+.rc{background:linear-gradient(135deg,var(--amber),#D47B15);color:#fff;border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:2rem;}
+.fs{padding:1.5rem;}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:600px){.f2{grid-template-columns:1fr;}}
+.amt-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.amt-ck{display:none;}
+.amt-lb{padding:6px 12px;border-radius:20px;border:0.5px solid var(--border-strong);font-size:13px;cursor:pointer;background:#fff;color:var(--text-secondary);transition:all 0.15s;}
+.amt-ck:checked+.amt-lb{background:var(--charcoal);color:var(--parchment);border-color:var(--charcoal);}
+.bar{height:24px;background:var(--amber);border-radius:4px;min-width:4px;transition:width 0.3s;}
+.bar-wrap{display:flex;align-items:center;gap:8px;}
+.bar-label{font-size:12px;color:var(--text-muted);min-width:32px;}
+.bar-val{font-size:12px;font-weight:600;color:var(--charcoal);}
 </style>
 </head>
 <body>
@@ -39,247 +44,262 @@ body{padding-top:64px;background:var(--parchment);}
     <div class="nav-wordmark" style="color:#fff;">Space<span>Logg</span></div>
   </a>
   <div class="nav-right">
-    <div class="nav-links">
-      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);font-weight:500;">Owner Dashboard</span>
-    </div>
+    <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);font-weight:500;">HostApp</span>
     <div style="display:flex;align-items:center;gap:10px;">
       <span id="owner-name" style="font-size:13px;color:rgba(255,255,255,0.5);"></span>
       <button onclick="ownerLogout()" class="btn btn-outline btn-sm" style="color:rgba(255,255,255,0.7);border-color:rgba(255,255,255,0.2);">Sign out</button>
     </div>
   </div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu" style="color:#fff;"><span></span><span></span><span></span></button>
 </nav>
 
-<div class="owner-wrap">
-  <div style="margin-bottom:2rem;">
-    <div class="section-eyebrow">Welcome back</div>
-    <h1 class="section-title" id="greeting">Dashboard</h1>
-  </div>
+<div class="ow">
+  <div style="margin-bottom:2rem;"><div class="section-eyebrow">Welcome back</div><h1 class="section-title" id="greeting">Dashboard</h1></div>
 
-  <!-- TODAY'S BOOKINGS -->
-  <div class="today-card">
-    <div class="today-title">Today's bookings</div>
-    <div class="today-count" id="today-count">—</div>
-    <div class="today-list" id="today-list"></div>
+  <!-- TODAY -->
+  <div class="tc">
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.5;">Today's bookings</div>
+    <div id="today-count" style="font-family:'DM Serif Display',serif;font-size:36px;">—</div>
+    <div id="today-list" style="margin-top:1rem;"></div>
   </div>
 
   <!-- STATS -->
-  <div class="stats-grid" id="stats-grid">
-    <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Loading…</div></div>
-  </div>
+  <div class="sg" id="stats-grid"><div class="sc"><div class="sn">—</div><div class="sl">Loading…</div></div></div>
 
   <!-- REVENUE -->
-  <div class="revenue-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
-      <div>
-        <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:4px;">Total Revenue</div>
-        <div id="total-revenue" style="font-family:'DM Serif Display',serif;font-size:36px;">...</div>
-      </div>
-      <div>
-        <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:4px;">This Month</div>
-        <div id="monthly-revenue" style="font-family:'DM Serif Display',serif;font-size:28px;">...</div>
-      </div>
-      <div>
-        <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:4px;">Pending Payout</div>
-        <div id="pending-payout" style="font-family:'DM Serif Display',serif;font-size:28px;">...</div>
-      </div>
+  <div class="rc">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+      <div><div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.7;">Total Revenue</div><div id="rev-total" style="font-family:'DM Serif Display',serif;font-size:36px;">...</div></div>
+      <div><div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.7;">This Month</div><div id="rev-month" style="font-family:'DM Serif Display',serif;font-size:28px;">...</div></div>
+      <div><div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.7;">Pending Payout</div><div id="rev-pending" style="font-family:'DM Serif Display',serif;font-size:28px;">...</div></div>
     </div>
   </div>
 
   <!-- TABS -->
-  <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('bookings',this)">Bookings</button>
-    <button class="tab-btn" onclick="switchTab('spaces',this)">My Spaces</button>
-    <button class="tab-btn" onclick="switchTab('reviews',this)">Reviews</button>
+  <div class="tab-bar" style="overflow-x:auto;flex-wrap:nowrap;">
+    <button class="tab-btn active" onclick="sw('bookings',this)">Bookings</button>
+    <button class="tab-btn" onclick="sw('spaces',this)">My Spaces</button>
+    <button class="tab-btn" onclick="sw('add-space',this)">+ Add Space</button>
+    <button class="tab-btn" onclick="sw('availability',this)">Availability</button>
+    <button class="tab-btn" onclick="sw('analytics',this)">Analytics</button>
+    <button class="tab-btn" onclick="sw('reviews',this)">Reviews</button>
+    <button class="tab-btn" onclick="sw('profile',this)">Settings</button>
   </div>
 
-  <!-- BOOKINGS TAB -->
+  <!-- BOOKINGS -->
   <div class="tab-pane active" id="tab-bookings">
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">All bookings</span>
-        <select class="form-select" id="booking-filter" style="width:150px;padding:7px 12px;font-size:13px;" onchange="loadBookings()">
-          <option value="">All statuses</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="pending_payment">Pending payment</option>
-          <option value="cancelled">Cancelled</option>
+    <div class="pnl"><div class="ph"><span class="pt">Bookings</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <select class="form-select" id="bk-filter" style="width:140px;padding:7px 12px;font-size:13px;" onchange="loadBookings()">
+          <option value="">All</option><option value="confirmed">Confirmed</option><option value="pending_payment">Pending</option><option value="cancelled">Cancelled</option>
         </select>
+        <select class="form-select" id="bk-space" style="width:160px;padding:7px 12px;font-size:13px;" onchange="loadBookings()"><option value="">All spaces</option></select>
       </div>
-      <div style="overflow-x:auto;">
-        <table class="otable"><thead><tr><th>Space</th><th>Guest</th><th>Date</th><th>Time</th><th>Guests</th><th>Status</th></tr></thead>
-        <tbody id="bookings-body"></tbody></table>
-      </div>
-      <div id="bookings-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No bookings yet.</div>
+    </div>
+    <div style="overflow-x:auto;"><table class="ot"><thead><tr><th>Space</th><th>Guest</th><th>Date</th><th>Time</th><th>#</th><th>Status</th><th>Actions</th></tr></thead><tbody id="bk-body"></tbody></table></div>
+    <div id="bk-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No bookings found.</div>
     </div>
   </div>
 
-  <!-- SPACES TAB -->
+  <!-- MY SPACES -->
   <div class="tab-pane" id="tab-spaces">
-    <div class="panel">
-      <div class="panel-header"><span class="panel-title">Your spaces on SpaceLogg</span></div>
-      <div style="overflow-x:auto;">
-        <table class="otable"><thead><tr><th>Name</th><th>Category</th><th>Area</th><th>Price</th><th>Rating</th><th>Status</th></tr></thead>
-        <tbody id="spaces-body"></tbody></table>
-      </div>
+    <div class="pnl"><div class="ph"><span class="pt">Your spaces</span></div>
+    <div style="overflow-x:auto;"><table class="ot"><thead><tr><th>Name</th><th>Category</th><th>Area</th><th>Price</th><th>Capacity</th><th>Rating</th><th>Status</th><th>Actions</th></tr></thead><tbody id="sp-body"></tbody></table></div>
     </div>
   </div>
 
-  <!-- REVIEWS TAB -->
-  <div class="tab-pane" id="tab-reviews">
-    <div class="panel">
-      <div class="panel-header"><span class="panel-title">Recent reviews</span></div>
-      <div id="reviews-list"></div>
-      <div id="reviews-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No reviews yet.</div>
+  <!-- ADD SPACE -->
+  <div class="tab-pane" id="tab-add-space">
+    <div class="pnl"><div class="ph"><span class="pt">Add a new space</span></div>
+    <div class="fs"><form id="add-space-form">
+      <div class="f2">
+        <div class="form-group"><label class="form-label">Space name *</label><input class="form-input" name="name" required placeholder="e.g. The Loft Workspace"/></div>
+        <div class="form-group"><label class="form-label">Category *</label><select class="form-select" name="category" required><option value="">Select…</option><option value="coworking">Coworking</option><option value="cafe">Café</option><option value="library">Library</option><option value="hotel">Hotel Lounge</option></select></div>
+      </div>
+      <div class="f2">
+        <div class="form-group"><label class="form-label">City *</label><input class="form-input" name="city" required placeholder="e.g. Lagos"/></div>
+        <div class="form-group"><label class="form-label">Area / LGA</label><input class="form-input" name="area" placeholder="e.g. Victoria Island"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Address *</label><input class="form-input" name="address" required placeholder="Full street address"/></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" name="description" placeholder="Describe the space…" style="min-height:80px;"></textarea></div>
+      <div class="f2">
+        <div class="form-group"><label class="form-label">Latitude</label><input class="form-input" name="lat" type="number" step="any" placeholder="e.g. 6.4541"/></div>
+        <div class="form-group"><label class="form-label">Longitude</label><input class="form-input" name="lng" type="number" step="any" placeholder="e.g. 3.3947"/></div>
+      </div>
+      <div style="font-size:14px;font-weight:600;color:var(--charcoal);margin:1.5rem 0 0.75rem;">Pricing</div>
+      <div class="f2">
+        <div class="form-group"><label class="form-label">SpaceLogg price</label><input class="form-input" name="price" placeholder="e.g. ₦2,500"/></div>
+        <div class="form-group"><label class="form-label">Walk-in price</label><input class="form-input" name="walkin_price" placeholder="e.g. ₦3,000"/></div>
+      </div>
+      <div class="f2">
+        <div class="form-group"><label class="form-label">Hourly rate</label><input class="form-input" name="price_hourly" placeholder="e.g. ₦500/hr"/></div>
+        <div class="form-group"><label class="form-label">Monthly rate</label><input class="form-input" name="price_monthly" placeholder="e.g. ₦45,000/mo"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Per</label><select class="form-select" name="price_unit"><option value="/day">Per day</option><option value="/hour">Per hour</option><option value="/month">Per month</option><option value="">Free</option></select></div>
+      <div style="font-size:14px;font-weight:600;color:var(--charcoal);margin:1.5rem 0 0.75rem;">Details</div>
+      <div class="f2">
+        <div class="form-group"><label class="form-label">Capacity (max bookings per slot)</label><input class="form-input" name="capacity" type="number" min="1" value="1"/></div>
+        <div class="form-group"><label class="form-label">WiFi speed</label><input class="form-input" name="wifi_speed" placeholder="e.g. 100 Mbps"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Power backup</label><select class="form-select" name="power_backup"><option value="">Not specified</option><option value="Generator">Generator</option><option value="Solar + Inverter">Solar + Inverter</option><option value="UPS">UPS</option><option value="None">None</option></select></div>
+      <div class="form-group"><label class="form-label">Amenities</label><div class="amt-grid" id="amt-grid"></div></div>
+      <div class="form-group"><label class="form-label">Photos (up to 6)</label><input type="file" name="images" accept="image/*" multiple class="form-input" style="padding:8px;"/></div>
+      <div class="alert alert-error" id="as-error"></div>
+      <div class="alert alert-success" id="as-success"></div>
+      <button type="submit" class="btn btn-amber">Submit space for review</button>
+    </form></div></div>
+  </div>
+
+  <!-- AVAILABILITY -->
+  <div class="tab-pane" id="tab-availability">
+    <div class="pnl"><div class="ph"><span class="pt">Block dates</span>
+      <select class="form-select" id="av-space" style="width:180px;padding:7px 12px;font-size:13px;" onchange="loadBlocks()"><option value="">Select space</option></select>
     </div>
+    <div class="fs">
+      <div class="f2" style="margin-bottom:1rem;">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="av-date"/></div>
+        <div class="form-group"><label class="form-label">Reason (optional)</label><input class="form-input" id="av-reason" placeholder="e.g. Maintenance"/></div>
+      </div>
+      <div class="f2" style="margin-bottom:1rem;">
+        <div class="form-group"><label class="form-label">Start time (leave blank to block all day)</label><input class="form-input" type="time" id="av-start"/></div>
+        <div class="form-group"><label class="form-label">End time</label><input class="form-input" type="time" id="av-end"/></div>
+      </div>
+      <button class="btn btn-amber btn-sm" onclick="addBlock()">Block date</button>
+    </div>
+    <div style="overflow-x:auto;"><table class="ot"><thead><tr><th>Date</th><th>Time</th><th>Reason</th><th>Actions</th></tr></thead><tbody id="av-body"></tbody></table></div>
+    <div id="av-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No blocked dates. Select a space above.</div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="tab-pane" id="tab-analytics">
+    <div class="sg" id="an-stats"></div>
+    <div class="pnl"><div class="ph"><span class="pt">Busiest days</span></div><div class="fs" id="an-days"></div></div>
+    <div class="pnl"><div class="ph"><span class="pt">Bookings per space</span></div><div class="fs" id="an-spaces"></div></div>
+    <div class="pnl"><div class="ph"><span class="pt">Monthly trend</span></div><div class="fs" id="an-trend"></div></div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div class="tab-pane" id="tab-reviews">
+    <div class="pnl"><div class="ph"><span class="pt">Reviews</span></div><div id="rv-list"></div>
+    <div id="rv-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No reviews yet.</div></div>
+  </div>
+
+  <!-- SETTINGS / PROFILE -->
+  <div class="tab-pane" id="tab-profile">
+    <div class="pnl"><div class="ph"><span class="pt">Business profile</span></div>
+    <div class="fs"><form id="profile-form">
+      <div class="f2">
+        <div class="form-group"><label class="form-label">Business name</label><input class="form-input" id="pf-bname" placeholder="Your business name"/></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="pf-phone" placeholder="+234..."/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Business description</label><textarea class="form-textarea" id="pf-bdesc" placeholder="Tell bookers about your business…" style="min-height:80px;"></textarea></div>
+      <div class="form-group"><label class="form-label">Logo</label><input type="file" id="pf-logo" accept="image/*" class="form-input" style="padding:8px;"/></div>
+      <div style="font-size:14px;font-weight:600;color:var(--charcoal);margin:1.5rem 0 0.75rem;">Bank details (for payouts)</div>
+      <div class="f2">
+        <div class="form-group"><label class="form-label">Bank name</label><input class="form-input" id="pf-bank" placeholder="e.g. GTBank"/></div>
+        <div class="form-group"><label class="form-label">Account number</label><input class="form-input" id="pf-acct" placeholder="0123456789"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Account name</label><input class="form-input" id="pf-acctname" placeholder="As shown on your bank account"/></div>
+      <div class="alert alert-error" id="pf-error"></div>
+      <div class="alert alert-success" id="pf-success"></div>
+      <button type="submit" class="btn btn-amber">Save profile</button>
+    </form></div></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 <script>
-const API = '/api';
-let ownerToken = localStorage.getItem('sl_token');
-let ownerUser = JSON.parse(localStorage.getItem('sl_user') || 'null');
+const API='/api';
+let T=localStorage.getItem('sl_token'),U=JSON.parse(localStorage.getItem('sl_user')||'null'),allSpaces=[];
+const AMENITIES=['Fast WiFi','Air Con','Power Outlets','Printing','Meeting Rooms','Café/Bar','Parking','Lockers','Standing Desks','Outdoor Seating','Quiet Zone','Phone Booths','24/7 Access','Coffee Service'];
 
-async function ownerFetch(path, opts = {}) {
-  const res = await fetch(API + path, {
-    ...opts,
-    headers: { 'Authorization': 'Bearer ' + ownerToken, 'Content-Type': 'application/json', ...(opts.headers||{}) }
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
+async function F(p,o={}){const r=await fetch(API+p,{...o,headers:{'Authorization':'Bearer '+T,'Content-Type':'application/json',...(o.headers||{})}});const d=await r.json();if(!r.ok)throw new Error(d.error||'Failed');return d;}
+async function FM(p,fd){const r=await fetch(API+p,{method:'POST',headers:{'Authorization':'Bearer '+T},body:fd});const d=await r.json();if(!r.ok)throw new Error(d.error||'Failed');return d;}
+function $(id){return document.getElementById(id);}
+function fmtM(k){return'₦'+(k/100).toLocaleString('en',{minimumFractionDigits:0});}
+function toast(m,t){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),3000);}
+function ownerLogout(){localStorage.removeItem('sl_token');localStorage.removeItem('sl_user');window.location.href='/space-admin/login.html';}
+
+async function init(){
+  if(!T||!U){window.location.href='/space-admin/login.html';return;}
+  try{const{user}=await F('/auth/me');if(user.role!=='owner'&&user.role!=='admin')throw 0;U=user;}catch{ownerLogout();return;}
+  $('owner-name').textContent=U.name;
+  $('greeting').textContent='Hi, '+U.name.split(' ')[0];
+  buildAmenities();
+  loadToday();loadStats();loadRevenue();loadBookings();loadSpaceSelectors();
 }
 
-function fmtMoney(kobo) {
-  return '₦' + (kobo / 100).toLocaleString('en', { minimumFractionDigits: 0 });
+// ── NAV ──
+function sw(tab,el){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  $('tab-'+tab).classList.add('active');el.classList.add('active');
+  if(tab==='bookings')loadBookings();if(tab==='spaces')loadSpaces();if(tab==='availability')loadBlocks();
+  if(tab==='analytics')loadAnalytics();if(tab==='reviews')loadReviews();if(tab==='profile')loadProfile();
 }
 
-function toast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast ' + type + ' show';
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
+// ── TODAY ──
+async function loadToday(){try{const{bookings}=await F('/owner/today');$('today-count').textContent=bookings.length;$('today-list').innerHTML=bookings.length?bookings.map(b=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-top:0.5px solid rgba(255,255,255,0.1);font-size:13px;"><span>${b.space_name} — ${b.user_name}</span><span>${b.start_time}–${b.end_time}</span></div>`).join(''):'<div style="font-size:13px;opacity:0.5;">No bookings today.</div>';}catch{}}
 
-function ownerLogout() {
-  localStorage.removeItem('sl_token');
-  localStorage.removeItem('sl_user');
-  window.location.href = '/space-admin/login.html';
-}
+// ── STATS ──
+async function loadStats(){try{const s=await F('/owner/stats');$('stats-grid').innerHTML=`<div class="sc"><div class="sn">${s.totalSpaces}</div><div class="sl">Spaces</div></div><div class="sc"><div class="sn g">${s.totalBookings}</div><div class="sl">Total bookings</div></div><div class="sc"><div class="sn a">${s.upcomingBookings}</div><div class="sl">Upcoming</div></div><div class="sc"><div class="sn">${s.totalReviews}</div><div class="sl">Reviews</div></div>`;}catch{}}
 
-async function init() {
-  if (!ownerToken || !ownerUser) { window.location.href = '/space-admin/login.html'; return; }
-  // Verify access
-  try {
-    const { user } = await ownerFetch('/auth/me');
-    if (user.role !== 'owner' && user.role !== 'admin') throw new Error('Not an owner');
-    ownerUser = user;
-  } catch { ownerLogout(); return; }
+// ── REVENUE ──
+async function loadRevenue(){try{const r=await F('/owner/revenue');$('rev-total').textContent=fmtM(r.totalRevenue);$('rev-month').textContent=fmtM(r.monthlyRevenue);$('rev-pending').textContent=fmtM(r.pendingPayout);}catch{}}
 
-  document.getElementById('owner-name').textContent = ownerUser.name;
-  document.getElementById('greeting').textContent = `Hi, ${ownerUser.name.split(' ')[0]}`;
+// ── SPACE SELECTORS ──
+async function loadSpaceSelectors(){try{const{spaces}=await F('/owner/spaces');allSpaces=spaces;const opts=spaces.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');$('bk-space').innerHTML='<option value="">All spaces</option>'+opts;$('av-space').innerHTML='<option value="">Select space</option>'+opts;}catch{}}
 
-  loadToday();
-  loadStats();
-  loadRevenue();
-  loadBookings();
-}
+// ── BOOKINGS ──
+async function loadBookings(){try{const st=$('bk-filter').value,sp=$('bk-space').value;let q='/owner/bookings?';if(st)q+='status='+st+'&';if(sp)q+='space_id='+sp;const{bookings}=await F(q);const tb=$('bk-body'),em=$('bk-empty');if(!bookings.length){tb.innerHTML='';em.style.display='block';return;}em.style.display='none';tb.innerHTML=bookings.map(b=>`<tr><td style="font-weight:500;color:var(--charcoal);">${b.space_name}</td><td><div style="font-weight:500;">${b.user_name}</div><div style="font-size:11px;color:var(--text-muted);">${b.user_email}</div></td><td style="white-space:nowrap;">${b.date}</td><td style="white-space:nowrap;">${b.start_time}–${b.end_time}</td><td>${b.guests}</td><td><span class="status-badge status-${b.status==='confirmed'?'approved':b.status==='cancelled'?'rejected':'pending'}">${b.status}</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap;">${b.status==='confirmed'?`<button class="btn btn-danger btn-sm" onclick="respondBooking(${b.id},'reject')">Reject</button><button class="btn btn-outline btn-sm" onclick="markNoShow(${b.id})">No-show</button>`:''}</div></td></tr>`).join('');}catch{}}
+async function respondBooking(id,action){if(!confirm(action==='reject'?'Reject this booking? The guest will be notified.':'Accept?'))return;try{await F(`/owner/bookings/${id}/respond`,{method:'PATCH',body:JSON.stringify({action})});toast('Booking '+action+'ed','success');loadBookings();}catch(e){toast(e.message,'error');}}
+async function markNoShow(id){if(!confirm('Mark as no-show?'))return;try{await F(`/owner/bookings/${id}/no-show`,{method:'PATCH'});toast('Marked as no-show','success');loadBookings();}catch(e){toast(e.message,'error');}}
 
-async function loadToday() {
-  try {
-    const { bookings, date } = await ownerFetch('/owner/today');
-    document.getElementById('today-count').textContent = bookings.length;
-    if (!bookings.length) {
-      document.getElementById('today-list').innerHTML = '<div style="font-size:13px;opacity:0.5;">No bookings scheduled for today.</div>';
-      return;
-    }
-    document.getElementById('today-list').innerHTML = bookings.map(b =>
-      `<div class="today-item"><span>${b.space_name} — ${b.user_name}</span><span>${b.start_time}–${b.end_time}</span></div>`
-    ).join('');
-  } catch {}
-}
+// ── SPACES ──
+async function loadSpaces(){try{const{spaces}=await F('/owner/spaces');$('sp-body').innerHTML=spaces.map(s=>`<tr><td style="font-weight:500;color:var(--charcoal);">${s.name}</td><td>${s.category}</td><td>${s.area||s.city}</td><td>${s.price||'Free'} ${s.price_unit||''}</td><td>${s.capacity||1}</td><td>★ ${s.rating||'—'} (${s.review_count||0})</td><td><span class="status-badge status-${s.status==='approved'?'approved':s.status==='unavailable'?'rejected':'pending'}">${s.status}</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn btn-outline btn-sm" onclick="toggleSpace(${s.id},'${s.status}')">${s.status==='approved'?'Pause':'Activate'}</button><button class="btn btn-danger btn-sm" onclick="deleteSpace(${s.id},'${s.name}')">Delete</button></div></td></tr>`).join('');}catch{}}
+async function toggleSpace(id,st){try{await F(`/owner/spaces/${id}/toggle`,{method:'PATCH'});toast(st==='approved'?'Space paused':'Space activated','success');loadSpaces();loadSpaceSelectors();}catch(e){toast(e.message,'error');}}
+async function deleteSpace(id,name){if(!confirm(`Delete "${name}" permanently?`))return;try{await F(`/owner/spaces/${id}`,{method:'DELETE'});toast('Deleted','success');loadSpaces();loadSpaceSelectors();}catch(e){toast(e.message,'error');}}
 
-async function loadStats() {
-  try {
-    const s = await ownerFetch('/owner/stats');
-    document.getElementById('stats-grid').innerHTML = `
-      <div class="stat-card"><div class="stat-num">${s.totalSpaces}</div><div class="stat-label">Spaces</div></div>
-      <div class="stat-card"><div class="stat-num green">${s.totalBookings}</div><div class="stat-label">Total bookings</div></div>
-      <div class="stat-card"><div class="stat-num amber">${s.upcomingBookings}</div><div class="stat-label">Upcoming</div></div>
-      <div class="stat-card"><div class="stat-num">${s.totalReviews}</div><div class="stat-label">Reviews</div></div>`;
-  } catch {}
-}
+// ── ADD SPACE ──
+function buildAmenities(){$('amt-grid').innerHTML=AMENITIES.map((a,i)=>`<span><input type="checkbox" class="amt-ck" id="am${i}" value="${a}"><label class="amt-lb" for="am${i}">${a}</label></span>`).join('');}
+$('add-space-form').addEventListener('submit',async function(e){
+  e.preventDefault();const err=$('as-error'),ok=$('as-success');err.style.display='none';ok.style.display='none';
+  try{const fd=new FormData();['name','category','city','area','address','lat','lng','description','price','walkin_price','price_unit','price_hourly','price_monthly','capacity','wifi_speed','power_backup'].forEach(f=>{if(this[f]?.value)fd.append(f,this[f].value);});
+  fd.append('amenities',JSON.stringify(Array.from(document.querySelectorAll('#amt-grid input:checked')).map(c=>c.value)));
+  fd.append('hours','{}');
+  Array.from(this.images?.files||[]).forEach(f=>fd.append('images',f));
+  await FM('/owner/spaces',fd);ok.style.display='block';ok.textContent='Space submitted for review!';this.reset();document.querySelectorAll('#amt-grid input').forEach(c=>c.checked=false);loadSpaceSelectors();}catch(e){err.style.display='block';err.textContent=e.message;}
+});
 
-async function loadRevenue() {
-  try {
-    const r = await ownerFetch('/owner/revenue');
-    document.getElementById('total-revenue').textContent = fmtMoney(r.totalRevenue);
-    document.getElementById('monthly-revenue').textContent = fmtMoney(r.monthlyRevenue);
-    document.getElementById('pending-payout').textContent = fmtMoney(r.pendingPayout);
-  } catch {}
-}
+// ── AVAILABILITY ──
+async function loadBlocks(){const sid=$('av-space').value;if(!sid){$('av-body').innerHTML='';$('av-empty').style.display='block';return;}try{const{blocks}=await F(`/owner/availability/${sid}`);const tb=$('av-body'),em=$('av-empty');if(!blocks.length){tb.innerHTML='';em.style.display='block';return;}em.style.display='none';tb.innerHTML=blocks.map(b=>`<tr><td style="white-space:nowrap;">${b.block_date}</td><td>${b.start_time&&b.end_time?b.start_time+'–'+b.end_time:'All day'}</td><td>${b.reason||'—'}</td><td><button class="btn btn-danger btn-sm" onclick="removeBlock(${b.id})">Remove</button></td></tr>`).join('');}catch{}}
+async function addBlock(){const sid=$('av-space').value,dt=$('av-date').value;if(!sid||!dt){toast('Select a space and date','error');return;}try{await F(`/owner/availability/${sid}/block`,{method:'POST',body:JSON.stringify({block_date:dt,start_time:$('av-start').value||null,end_time:$('av-end').value||null,reason:$('av-reason').value})});toast('Date blocked','success');$('av-date').value='';$('av-start').value='';$('av-end').value='';$('av-reason').value='';loadBlocks();}catch(e){toast(e.message,'error');}}
+async function removeBlock(id){try{await F(`/owner/availability/block/${id}`,{method:'DELETE'});toast('Block removed','success');loadBlocks();}catch(e){toast(e.message,'error');}}
 
-async function loadBookings() {
-  try {
-    const filter = document.getElementById('booking-filter').value;
-    const { bookings } = await ownerFetch('/owner/bookings' + (filter ? '?status=' + filter : ''));
-    const tbody = document.getElementById('bookings-body');
-    const empty = document.getElementById('bookings-empty');
-    if (!bookings.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-    empty.style.display = 'none';
-    tbody.innerHTML = bookings.map(b => `
-      <tr>
-        <td style="font-weight:500;color:var(--charcoal);">${b.space_name}</td>
-        <td><div style="font-weight:500;">${b.user_name}</div><div style="font-size:11px;color:var(--text-muted);">${b.user_email}</div></td>
-        <td style="white-space:nowrap;">${b.date}</td>
-        <td style="white-space:nowrap;">${b.start_time}–${b.end_time}</td>
-        <td>${b.guests}</td>
-        <td><span class="status-badge status-${b.status==='confirmed'?'approved':b.status==='cancelled'?'rejected':'pending'}">${b.status}</span></td>
-      </tr>`).join('');
-  } catch {}
-}
+// ── ANALYTICS ──
+async function loadAnalytics(){try{const a=await F('/owner/analytics');
+$('an-stats').innerHTML=`<div class="sc"><div class="sn">${a.occupancyRate}%</div><div class="sl">Occupancy rate</div></div><div class="sc"><div class="sn">${a.cancellationRate}%</div><div class="sl">Cancellation rate</div></div>`;
+const maxD=Math.max(...a.busiestDays.map(d=>d.count),1);$('an-days').innerHTML=a.busiestDays.map(d=>`<div class="bar-wrap" style="margin-bottom:6px;"><span class="bar-label">${d.day}</span><div class="bar" style="width:${(d.count/maxD)*100}%"></div><span class="bar-val">${d.count}</span></div>`).join('')||'<div style="color:var(--text-muted);font-size:13px;">No booking data yet.</div>';
+const maxS=Math.max(...a.perSpace.map(s=>s.bookings),1);$('an-spaces').innerHTML=a.perSpace.map(s=>`<div class="bar-wrap" style="margin-bottom:6px;"><span class="bar-label" style="min-width:120px;font-size:13px;">${s.name}</span><div class="bar" style="width:${(s.bookings/maxS)*100}%"></div><span class="bar-val">${s.bookings} bookings · ${fmtM(s.revenue)}</span></div>`).join('')||'<div style="color:var(--text-muted);font-size:13px;">No data yet.</div>';
+const maxT=Math.max(...a.monthlyTrend.map(m=>m.bookings),1);$('an-trend').innerHTML=a.monthlyTrend.map(m=>`<div class="bar-wrap" style="margin-bottom:6px;"><span class="bar-label" style="min-width:60px;">${m.month}</span><div class="bar" style="width:${(m.bookings/maxT)*100}%"></div><span class="bar-val">${m.bookings}</span></div>`).join('')||'<div style="color:var(--text-muted);font-size:13px;">No trend data yet.</div>';
+}catch{}}
 
-async function loadSpaces() {
-  try {
-    const { spaces } = await ownerFetch('/owner/spaces');
-    document.getElementById('spaces-body').innerHTML = spaces.map(s => `
-      <tr>
-        <td style="font-weight:500;color:var(--charcoal);">${s.name}</td>
-        <td>${s.category}</td>
-        <td>${s.area || s.city}</td>
-        <td>${s.price || 'Free'} ${s.price_unit || ''}</td>
-        <td>★ ${s.rating || '—'} (${s.review_count || 0})</td>
-        <td><span class="status-badge status-${s.status==='approved'?'approved':'pending'}">${s.status}</span></td>
-      </tr>`).join('');
-  } catch {}
-}
+// ── REVIEWS ──
+async function loadReviews(){try{const{reviews}=await F('/owner/reviews');const l=$('rv-list'),em=$('rv-empty');if(!reviews.length){l.innerHTML='';em.style.display='block';return;}em.style.display='none';l.innerHTML=reviews.map(r=>`<div style="padding:1rem 1.5rem;border-bottom:0.5px solid var(--border);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><div style="font-weight:500;font-size:14px;color:var(--charcoal);">${r.user_name}</div><div style="color:var(--amber);">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div></div><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">${r.space_name} · ${new Date(r.created_at).toLocaleDateString()}</div>${r.comment?`<div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${r.comment}</div>`:''}</div>`).join('');}catch{}}
 
-async function loadReviews() {
-  try {
-    const { reviews } = await ownerFetch('/owner/reviews');
-    const list = document.getElementById('reviews-list');
-    const empty = document.getElementById('reviews-empty');
-    if (!reviews.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
-    empty.style.display = 'none';
-    list.innerHTML = reviews.map(r => `
-      <div style="padding:1rem 1.5rem;border-bottom:0.5px solid var(--border);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <div style="font-weight:500;font-size:14px;color:var(--charcoal);">${r.user_name}</div>
-          <div style="color:var(--amber);font-size:14px;">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
-        </div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">${r.space_name} · ${new Date(r.created_at).toLocaleDateString()}</div>
-        ${r.comment ? `<div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${r.comment}</div>` : ''}
-      </div>`).join('');
-  } catch {}
-}
+// ── PROFILE ──
+async function loadProfile(){try{const{profile}=await F('/owner/profile');$('pf-bname').value=profile.business_name||'';$('pf-bdesc').value=profile.business_description||'';$('pf-phone').value=profile.phone||'';$('pf-bank').value=profile.bank_name||'';$('pf-acct').value=profile.account_number||'';$('pf-acctname').value=profile.account_name||'';}catch{}}
+$('profile-form').addEventListener('submit',async function(e){
+  e.preventDefault();const err=$('pf-error'),ok=$('pf-success');err.style.display='none';ok.style.display='none';
+  try{const fd=new FormData();fd.append('business_name',$('pf-bname').value);fd.append('business_description',$('pf-bdesc').value);fd.append('phone',$('pf-phone').value);fd.append('bank_name',$('pf-bank').value);fd.append('account_number',$('pf-acct').value);fd.append('account_name',$('pf-acctname').value);
+  const logo=$('pf-logo').files[0];if(logo)fd.append('logo',logo);
+  const r=await fetch(API+'/owner/profile',{method:'PATCH',headers:{'Authorization':'Bearer '+T},body:fd});const d=await r.json();if(!r.ok)throw new Error(d.error);
+  ok.style.display='block';ok.textContent='Profile saved!';$('pf-logo').value='';}catch(e){err.style.display='block';err.textContent=e.message;}
+});
 
-function switchTab(tab, el) {
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  el.classList.add('active');
-  if (tab === 'bookings') loadBookings();
-  if (tab === 'spaces') loadSpaces();
-  if (tab === 'reviews') loadReviews();
-}
+// ── HAMBURGER ──
+document.getElementById('nav-hamburger')?.addEventListener('click',function(){this.classList.toggle('open');});
 
 init();
 </script>
