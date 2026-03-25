@@ -1,10 +1,15 @@
 const express = require('express');
+const crypto  = require('crypto');
+const jwt     = require('jsonwebtoken');
+const bcrypt  = require('bcryptjs');
 const db      = require('../db/database');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { Notify } = require('../utils/notify');
 const { encrypt } = require('../utils/crypto');
 const { clearCache } = require('../connectors');
+const { sendEmail, emailTemplate } = require('../utils/mailer');
 const router  = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'spacelogg_dev_secret';
 
 router.use(requireAuth, requireAdmin);
 
@@ -315,6 +320,87 @@ router.patch('/payouts/:id/mark-paid', async (req, res) => {
     [req.body.note || '', req.params.id]
   );
   res.json({ message: 'Payout marked as paid' });
+});
+
+// ═══════════════════════════════════════════════════
+//  OWNER ONBOARDING
+// ═══════════════════════════════════════════════════
+
+// POST /api/admin/onboard-owner — create or promote user to owner, generate magic link
+router.post('/onboard-owner', async (req, res) => {
+  try {
+    const { name, email, space_ids } = req.body;
+    if (!name || !email) return res.status(400).json({ error: 'Name and email are required' });
+
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    let user = await db.getAsync('SELECT * FROM users WHERE email = ?', [email.toLowerCase()]);
+
+    if (user) {
+      // Promote existing user to owner
+      if (user.role === 'user') {
+        await db.runAsync('UPDATE users SET role = ? WHERE id = ?', ['owner', user.id]);
+      }
+    } else {
+      // Create new owner account with temporary password
+      const tempPw = crypto.randomBytes(8).toString('hex');
+      const hash = await bcrypt.hash(tempPw, 10);
+      const { lastID } = await db.runAsync(
+        "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'owner')",
+        [name, email.toLowerCase(), hash]);
+      user = { id: lastID, name, email: email.toLowerCase() };
+    }
+
+    // Assign spaces to this owner
+    if (space_ids && space_ids.length) {
+      for (const sid of space_ids) {
+        await db.runAsync('UPDATE spaces SET owner_id = ? WHERE id = ?', [user.id, sid]);
+      }
+    }
+
+    // Generate magic login token (valid 7 days)
+    const token = jwt.sign({ id: user.id, email: user.email, role: 'owner' }, JWT_SECRET, { expiresIn: '7d' });
+    const magicLink = `${appUrl}/space-admin/login.html?token=${token}`;
+
+    // Send onboarding email
+    await sendEmail({
+      to: user.email,
+      subject: 'Welcome to SpaceLogg — Your Owner Dashboard',
+      html: emailTemplate({
+        title: `Welcome, ${name}!`,
+        body: `<p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#6B6456;line-height:1.7;margin:0 0 16px;">You've been set up as a space owner on SpaceLogg. Your dashboard lets you manage your spaces, view bookings, track revenue, and more.</p>
+               <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#6B6456;line-height:1.7;margin:0 0 16px;">Click below to access your dashboard. This link is valid for 7 days.</p>`,
+        ctaText: 'Open My Dashboard',
+        ctaUrl: magicLink
+      })
+    });
+
+    res.json({ message: 'Owner onboarded', user_id: user.id, magic_link: magicLink });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to onboard owner: ' + err.message });
+  }
+});
+
+// GET /api/admin/owners — list all owners
+router.get('/owners', async (req, res) => {
+  const owners = await db.allAsync(
+    "SELECT id, name, email, created_at FROM users WHERE role = 'owner' ORDER BY created_at DESC");
+  // For each owner, get their space count
+  for (const o of owners) {
+    const row = await db.getAsync('SELECT COUNT(*) as c FROM spaces WHERE owner_id = ?', [o.id]);
+    o.space_count = row.c;
+  }
+  res.json({ owners });
+});
+
+// POST /api/admin/owners/:id/regenerate-link — regenerate magic link
+router.post('/owners/:id/regenerate-link', async (req, res) => {
+  const user = await db.getAsync("SELECT * FROM users WHERE id = ? AND role = 'owner'", [req.params.id]);
+  if (!user) return res.status(404).json({ error: 'Owner not found' });
+  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+  const token = jwt.sign({ id: user.id, email: user.email, role: 'owner' }, JWT_SECRET, { expiresIn: '7d' });
+  const magicLink = `${appUrl}/space-admin/login.html?token=${token}`;
+  res.json({ magic_link: magicLink });
 });
 
 module.exports = router;

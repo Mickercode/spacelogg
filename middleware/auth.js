@@ -36,4 +36,12 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, optionalAuth, requireAdmin };
+// Owner or admin
+function requireOwner(req, res, next) {
+  if (!req.user || (req.user.role !== 'owner' && req.user.role !== 'admin')) {
+    return res.status(403).json({ error: 'Space owner access required' });
+  }
+  next();
+}
+
+module.exports = { requireAuth, optionalAuth, requireAdmin, requireOwner };

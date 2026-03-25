@@ -78,6 +78,7 @@ body{padding-top:64px;}
     <button class="tab-btn" onclick="switchTab('bookings',this)">Bookings</button>
     <button class="tab-btn" onclick="switchTab('users',this)">Users</button>
     <button class="tab-btn" onclick="switchTab('admins',this)">Admin Accounts</button>
+    <button class="tab-btn" onclick="switchTab('owners',this)">Space Owners</button>
     <button class="tab-btn" onclick="switchTab('integrations',this)">Integrations</button>
     <button class="tab-btn" onclick="switchTab('revenue',this)">Revenue</button>
   </div>
@@ -196,6 +197,50 @@ body{padding-top:64px;}
       <div style="overflow-x:auto;">
         <table class="atable"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
         <tbody id="users-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPACE OWNERS TAB -->
+  <div class="tab-pane" id="tab-owners">
+    <!-- Onboard new owner -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Onboard a space owner</span></div>
+      <div class="form-section">
+        <form id="onboard-owner-form">
+          <div class="form-2col">
+            <div class="form-group"><label class="form-label">Owner name <span style="color:var(--red)">*</span></label><input class="form-input" id="oo-name" required placeholder="Full name"/></div>
+            <div class="form-group"><label class="form-label">Email <span style="color:var(--red)">*</span></label><input class="form-input" id="oo-email" type="email" required placeholder="owner@example.com"/></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Assign spaces</label>
+            <select class="form-select" id="oo-spaces" multiple style="min-height:80px;"><option value="">Loading spaces...</option></select>
+            <div class="form-hint">Hold Ctrl/Cmd to select multiple spaces</div>
+          </div>
+          <div class="alert alert-error" id="oo-error"></div>
+          <div class="alert alert-success" id="oo-success"></div>
+          <button type="submit" class="btn btn-amber">Onboard owner & send login link</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Existing owners -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Onboarded owners</span></div>
+      <div style="overflow-x:auto;">
+        <table class="atable"><thead><tr><th>Name</th><th>Email</th><th>Spaces</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="owners-body"></tbody></table>
+      </div>
+      <div id="owners-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No owners onboarded yet.</div>
+    </div>
+
+    <!-- Magic link display -->
+    <div class="panel" id="magic-link-panel" style="display:none;">
+      <div class="panel-header"><span class="panel-title">Owner login link</span></div>
+      <div class="form-section">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">Share this link with the owner. It's valid for 7 days.</p>
+        <input class="form-input" id="magic-link-url" readonly style="font-family:monospace;font-size:12px;" onclick="this.select()"/>
+        <button class="btn btn-outline btn-sm" style="margin-top:0.5rem;" onclick="copyMagicLink()">Copy link</button>
       </div>
     </div>
   </div>
@@ -510,6 +555,7 @@ function switchTab(tab, el) {
   if (tab==='bookings')     loadBookings();
   if (tab==='users')        loadUsers();
   if (tab==='admins')       loadAdmins();
+  if (tab==='owners')       { loadOwners(); loadSpacesForOwner(); }
   if (tab==='integrations') { loadIntegrations(); loadSyncLog(); loadSpacesForIntegration(); }
   if (tab==='revenue')      { loadRevenue(); loadPayouts(); }
 }
@@ -648,6 +694,70 @@ async function loadSyncLog() {
       </tr>`).join('');
   } catch(e) { console.error(e); }
 }
+
+// ═══════════════════════════════════════════════
+//  SPACE OWNERS
+// ═══════════════════════════════════════════════
+
+async function loadSpacesForOwner() {
+  try {
+    const { spaces } = await apiFetch('/admin/spaces?status=approved&limit=500');
+    const sel = document.getElementById('oo-spaces');
+    sel.innerHTML = spaces.map(s => `<option value="${s.id}">${s.name} (${s.city})</option>`).join('');
+  } catch {}
+}
+
+async function loadOwners() {
+  try {
+    const { owners } = await apiFetch('/admin/owners');
+    const tbody = document.getElementById('owners-body');
+    const empty = document.getElementById('owners-empty');
+    if (!owners.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = owners.map(o => `
+      <tr>
+        <td style="font-weight:500;color:var(--charcoal);">${o.name}</td>
+        <td>${o.email}</td>
+        <td>${o.space_count} space${o.space_count !== 1 ? 's' : ''}</td>
+        <td>${new Date(o.created_at).toLocaleDateString()}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="regenerateLink(${o.id},'${o.name}')">Get login link</button></td>
+      </tr>`).join('');
+  } catch {}
+}
+
+async function regenerateLink(id, name) {
+  try {
+    const { magic_link } = await apiFetch(`/admin/owners/${id}/regenerate-link`, { method: 'POST' });
+    document.getElementById('magic-link-url').value = magic_link;
+    document.getElementById('magic-link-panel').style.display = 'block';
+    toast(`Login link generated for ${name}`, 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function copyMagicLink() {
+  const input = document.getElementById('magic-link-url');
+  input.select();
+  navigator.clipboard.writeText(input.value);
+  toast('Link copied!', 'success');
+}
+
+document.getElementById('onboard-owner-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('oo-error');
+  const okEl = document.getElementById('oo-success');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  const name = document.getElementById('oo-name').value;
+  const email = document.getElementById('oo-email').value;
+  const space_ids = Array.from(document.getElementById('oo-spaces').selectedOptions).map(o => Number(o.value));
+  try {
+    const result = await apiFetch('/admin/onboard-owner', { method: 'POST', body: JSON.stringify({ name, email, space_ids }) });
+    okEl.style.display = 'block'; okEl.textContent = `Owner onboarded! Login link sent to ${email}`;
+    document.getElementById('magic-link-url').value = result.magic_link;
+    document.getElementById('magic-link-panel').style.display = 'block';
+    this.reset();
+    loadOwners();
+  } catch (err) { errEl.style.display = 'block'; errEl.textContent = err.message; }
+});
 
 // ═══════════════════════════════════════════════
 //  REVENUE & PAYOUTS
