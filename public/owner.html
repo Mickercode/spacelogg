@@ -123,6 +123,11 @@ let allListings = [];
 
 async function init() {
   requireLogin('/owner.html');
+  const user = Auth.getUser();
+  if (!user || (user.role !== 'owner' && user.role !== 'admin')) {
+    window.location.href = '/dashboard.html';
+    return;
+  }
   renderNav();
   await loadListings();
   await loadOwnerBookings();
