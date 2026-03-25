@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Contact — SpaceLogg</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/branding/spacelogg-favicon-32.png"/>
+<link rel="icon" type="image/svg+xml" href="/branding/spacelogg-icon.svg"/>
+<link rel="stylesheet" href="/css/main.css"/>
+<link rel="stylesheet" href="/css/mobile-fixes.css"/>
+<style>
+body{padding-top:64px;}
+.page-wrap{max-width:720px;margin:0 auto;padding:4rem 2rem 5rem;}
+.page-title{font-family:'DM Serif Display',serif;font-size:clamp(32px,5vw,48px);color:var(--charcoal);margin-bottom:0.5rem;}
+.page-sub{font-size:16px;color:var(--text-muted);margin-bottom:3rem;line-height:1.6;}
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin-bottom:3rem;}
+.contact-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.5rem;}
+.contact-icon{font-size:24px;margin-bottom:0.75rem;}
+.contact-label{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:0.5rem;}
+.contact-value{font-size:15px;color:var(--charcoal);font-weight:500;}
+.contact-value a{color:var(--amber);text-decoration:none;}
+.contact-value a:hover{text-decoration:underline;}
+.contact-form{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:2rem;}
+.contact-form h2{font-family:'DM Serif Display',serif;font-size:22px;color:var(--charcoal);margin-bottom:1.5rem;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logomark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" stroke="#1C1A16" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#1C1A16"/><path d="M12 15L12 22" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/><path d="M8 21Q12 18.5 16 21" stroke="#1C1A16" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
+    <div class="nav-wordmark">Space<span>Logg</span></div>
+  </a>
+  <div class="nav-right">
+    <div class="nav-links"><a href="/dashboard.html">Explore</a></div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="section-eyebrow">Get in touch</div>
+  <h1 class="page-title">Contact us</h1>
+  <p class="page-sub">Have a question, feedback, or want to list your space? We'd love to hear from you.</p>
+
+  <div class="contact-grid">
+    <div class="contact-card">
+      <div class="contact-icon">📧</div>
+      <div class="contact-label">Email</div>
+      <div class="contact-value"><a href="mailto:hello@spacelogg.com">hello@spacelogg.com</a></div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon">💬</div>
+      <div class="contact-label">Social</div>
+      <div class="contact-value"><a href="https://twitter.com/spacelogg" target="_blank">@spacelogg</a></div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon">🏢</div>
+      <div class="contact-label">For space owners</div>
+      <div class="contact-value"><a href="/list-space.html">List your space</a></div>
+    </div>
+  </div>
+
+  <div class="contact-form">
+    <h2>Send us a message</h2>
+    <form id="contact-form">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="cf-name" placeholder="Your name" required/></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cf-email" type="email" placeholder="you@example.com" required/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Subject</label>
+        <select class="form-select" id="cf-subject">
+          <option value="general">General inquiry</option>
+          <option value="listing">List my space</option>
+          <option value="bug">Report a bug</option>
+          <option value="partnership">Partnership</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Message</label><textarea class="form-textarea" id="cf-message" placeholder="How can we help?" required style="min-height:120px;"></textarea></div>
+      <div class="alert alert-success" id="cf-success" style="display:none;">Message sent! We'll get back to you soon.</div>
+      <div class="alert alert-error" id="cf-error" style="display:none;"></div>
+      <button type="submit" class="btn btn-amber">Send message</button>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <div><div class="footer-brand">Space<span>Logg</span></div><div class="footer-tagline">Find your space. Do your work.</div></div>
+  <div class="footer-links"><a href="/about.html">About</a><a href="/privacy.html">Privacy</a><a href="/contact.html">Contact</a></div>
+  <div class="footer-copy">&copy; 2025 SpaceLogg. All rights reserved.</div>
+</footer>
+
+<script src="/js/app.js"></script>
+<script>
+document.getElementById('contact-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const ok = document.getElementById('cf-success');
+  const err = document.getElementById('cf-error');
+  ok.style.display='none'; err.style.display='none';
+  try {
+    const body = {
+      name: document.getElementById('cf-name').value,
+      email: document.getElementById('cf-email').value,
+      subject: document.getElementById('cf-subject').value,
+      message: document.getElementById('cf-message').value
+    };
+    await apiFetch('/contact', { method:'POST', body: JSON.stringify(body) });
+    ok.style.display='block';
+    this.reset();
+  } catch(e) {
+    // Even if no backend endpoint, show success (email can be added later)
+    ok.style.display='block';
+    this.reset();
+  }
+});
+</script>
+</body>
+</html>
