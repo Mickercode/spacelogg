@@ -165,7 +165,7 @@ footer{background:var(--charcoal);color:var(--parchment);padding:3rem 2.5rem 2re
 .nav-hamburger:hover{background:var(--parchment);}
 .nav-hamburger span{
   display:block;width:22px;height:2px;
-  background:var(--charcoal);border-radius:2px;
+  background:currentColor;border-radius:2px;
   transition:all 0.25s;pointer-events:none;
 }
 .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
