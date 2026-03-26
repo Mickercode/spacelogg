@@ -37,7 +37,7 @@ app.get('/admin', (req, res) => res.redirect('/admin/login.html'));
 // HostApp: /space-admin/ serves landing page, /space-admin/dashboard goes to app
 app.get('/space-admin', (req, res) => res.redirect('/space-admin/'));
 app.get('/space-admin/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'space-admin', 'landing.html')));
-app.get('/space-admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'space-admin', 'index.html')));
+app.get('/space-admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'space-admin', 'dashboard.html')));
 
 // Catch-all: serve static file if exists, otherwise index.html
 app.get('*', (req, res) => {
