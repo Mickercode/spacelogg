@@ -268,7 +268,8 @@ $('add-space-form').addEventListener('submit',async function(e){
   try{const fd=new FormData();['name','category','city','area','address','lat','lng','description','price','walkin_price','price_unit','price_hourly','price_monthly','capacity','wifi_speed','power_backup'].forEach(f=>{if(this[f]?.value)fd.append(f,this[f].value);});
   fd.append('amenities',JSON.stringify(Array.from(document.querySelectorAll('#amt-grid input:checked')).map(c=>c.value)));
   fd.append('hours','{}');
-  Array.from(this.images?.files||[]).forEach(f=>fd.append('images',f));
+  const fileInput=this.querySelector('input[type="file"]');
+  if(fileInput&&fileInput.files.length){Array.from(fileInput.files).forEach(f=>fd.append('images',f));}
   await FM('/owner/spaces',fd);ok.style.display='block';ok.textContent='Space submitted for review!';this.reset();document.querySelectorAll('#amt-grid input').forEach(c=>c.checked=false);loadSpaceSelectors();}catch(e){err.style.display='block';err.textContent=e.message;}
 });
 
@@ -286,7 +287,7 @@ const maxT=Math.max(...a.monthlyTrend.map(m=>m.bookings),1);$('an-trend').innerH
 }catch{}}
 
 // ── REVIEWS ──
-async function loadReviews(){try{const{reviews}=await F('/owner/reviews');const l=$('rv-list'),em=$('rv-empty');if(!reviews.length){l.innerHTML='';em.style.display='block';return;}em.style.display='none';l.innerHTML=reviews.map(r=>`<div style="padding:1rem 1.5rem;border-bottom:0.5px solid var(--border);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><div style="font-weight:500;font-size:14px;color:var(--charcoal);">${r.user_name}</div><div style="color:var(--amber);">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div></div><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">${r.space_name} · ${new Date(r.created_at).toLocaleDateString()}</div>${r.comment?`<div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${r.comment}</div>`:''}</div>`).join('');}catch{}}
+async function loadReviews(){try{const{reviews}=await F('/owner/reviews');const l=$('rv-list'),em=$('rv-empty');if(!reviews||!reviews.length){l.innerHTML='';em.style.display='block';return;}em.style.display='none';l.innerHTML=reviews.map(r=>{const rt=Number(r.rating)||0;return`<div style="padding:1rem 1.5rem;border-bottom:0.5px solid var(--border);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><div style="font-weight:500;font-size:14px;color:var(--charcoal);">${r.user_name||'Anonymous'}</div><div style="color:var(--amber);">${'★'.repeat(rt)}${'☆'.repeat(5-rt)}</div></div><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">${r.space_name||''} · ${r.created_at?new Date(r.created_at).toLocaleDateString():''}</div>${r.comment?`<div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${r.comment}</div>`:''}</div>`;}).join('');}catch(e){console.error('Reviews error:',e);$('rv-list').innerHTML='';$('rv-empty').style.display='block';}}
 
 // ── PROFILE ──
 async function loadProfile(){try{const{profile}=await F('/owner/profile');$('pf-bname').value=profile.business_name||'';$('pf-bdesc').value=profile.business_description||'';$('pf-phone').value=profile.phone||'';$('pf-bank').value=profile.bank_name||'';$('pf-acct').value=profile.account_number||'';$('pf-acctname').value=profile.account_name||'';}catch{}}
