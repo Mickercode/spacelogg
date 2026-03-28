@@ -2,6 +2,7 @@ const express = require('express');
 const db      = require('../db/database');
 const { requireAuth, optionalAuth, requireAdmin } = require('../middleware/auth');
 const { Notify } = require('../utils/notify');
+const { sendEmail, emailTemplate } = require('../utils/mailer');
 const { upload, uploadFiles } = require('../utils/cloudinary');
 const router  = express.Router();
 
@@ -133,6 +134,29 @@ router.post('/', requireAuth, (req, res, next) => {
        amenities||'[]', hours||'{}',
        JSON.stringify(images), req.user.id, initialStatus]);
     const space = await db.getAsync('SELECT * FROM spaces WHERE id=?',[lastID]);
+
+    // Notify owner that their space was submitted
+    if (initialStatus === 'pending') {
+      Notify.spaceSubmitted(req.user.id, name).catch(() => {});
+
+      // Notify all admins about new pending space
+      const admins = await db.allAsync("SELECT email, name FROM users WHERE role='admin'");
+      const appUrl = process.env.APP_URL || 'http://localhost:3000';
+      for (const admin of admins) {
+        sendEmail({
+          to: admin.email,
+          subject: `New space pending approval: ${name}`,
+          html: emailTemplate({
+            title: 'New space submitted',
+            body: `<p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#6B6456;line-height:1.7;margin:0 0 16px;">Hi ${admin.name},</p>
+                   <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#6B6456;line-height:1.7;margin:0 0 16px;">A new space <strong>"${name}"</strong> (${category}, ${city || 'unknown city'}) has been submitted by ${req.user.name || req.user.email} and needs your approval.</p>`,
+            ctaText: 'Review in Admin Dashboard',
+            ctaUrl: `${appUrl}/admin/`
+          })
+        }).catch(() => {});
+      }
+    }
+
     res.status(201).json({ space: parse(space), message: 'Space added successfully' });
   } catch(err){ console.error(err); res.status(500).json({error:'Failed to add space: '+err.message}); }
 });

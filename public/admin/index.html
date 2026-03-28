@@ -74,6 +74,7 @@ body{padding-top:64px;}
   <!-- TABS -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('spaces-add',this)">➕ Add Space</button>
+    <button class="tab-btn" onclick="switchTab('pending',this)">Pending Approval <span id="pending-count" style="background:var(--amber);color:var(--charcoal);font-size:11px;padding:1px 7px;border-radius:10px;margin-left:4px;font-weight:600;"></span></button>
     <button class="tab-btn" onclick="switchTab('spaces-all',this)">All Spaces</button>
     <button class="tab-btn" onclick="switchTab('bookings',this)">Bookings</button>
     <button class="tab-btn" onclick="switchTab('users',this)">Users</button>
@@ -146,6 +147,15 @@ body{padding-top:64px;}
           <button type="submit" class="btn btn-amber" id="add-btn">Add space to SpaceLogg →</button>
         </form>
       </div>
+    </div>
+  </div>
+
+  <!-- PENDING APPROVAL TAB -->
+  <div class="tab-pane" id="tab-pending">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Spaces awaiting approval</span></div>
+      <div id="pending-list"></div>
+      <div id="pending-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No pending spaces. All clear!</div>
     </div>
   </div>
 
@@ -402,6 +412,7 @@ function init() {
   buildHours();
   loadStats();
   loadAllSpaces();
+  loadPendingSpaces();
   setupForms();
 }
 
@@ -450,6 +461,46 @@ async function loadAllSpaces(q='') {
       <td><span class="status-badge status-${s.status}">${s.status}</span></td>
       <td><div style="display:flex;gap:6px;"><button class="btn btn-danger btn-sm" onclick="deleteSpace(${s.id},'${s.name}')">Delete</button></div></td>
     </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No spaces yet. Add one using the Add Space tab.</td></tr>';
+}
+
+async function loadPendingSpaces() {
+  try {
+    const { spaces } = await apiFetch('/admin/spaces?status=pending&limit=100');
+    const list  = document.getElementById('pending-list');
+    const empty = document.getElementById('pending-empty');
+    const badge = document.getElementById('pending-count');
+    badge.textContent = spaces.length || '';
+    if (!spaces.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    list.innerHTML = spaces.map(s => `
+      <div class="pending-row">
+        <div style="flex:1;min-width:0;">
+          <div class="pending-name">${s.name}</div>
+          <div class="pending-meta">${catLabel(s.category)} · ${s.city}${s.area ? ', '+s.area : ''} · Submitted ${new Date(s.created_at).toLocaleDateString()}</div>
+          ${s.description ? `<div style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.5;">${s.description.substring(0,200)}${s.description.length>200?'…':''}</div>` : ''}
+          ${s.owner_name ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Owner: ${s.owner_name}</div>` : ''}
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-primary btn-sm" onclick="approveSpace(${s.id},'${s.name.replace(/'/g,"\\'")}')">Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectSpace(${s.id},'${s.name.replace(/'/g,"\\'")}')">Reject</button>
+        </div>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function approveSpace(id, name) {
+  if (!confirm(`Approve "${name}"? It will go live on SpaceLogg.`)) return;
+  await apiFetch(`/admin/spaces/${id}/approve`, { method:'PATCH', body: JSON.stringify({ status:'approved' }) });
+  toast(`"${name}" approved and live!`, 'success');
+  loadPendingSpaces(); loadStats();
+}
+
+async function rejectSpace(id, name) {
+  const reason = prompt(`Reject "${name}"? Enter a reason (optional):`);
+  if (reason === null) return;
+  await apiFetch(`/admin/spaces/${id}/approve`, { method:'PATCH', body: JSON.stringify({ status:'rejected', reason }) });
+  toast(`"${name}" rejected`, 'success');
+  loadPendingSpaces(); loadStats();
 }
 
 let spaceSearchTimer;
@@ -551,6 +602,7 @@ function switchTab(tab, el) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   if (el) el.classList.add('active');
+  if (tab==='pending')      loadPendingSpaces();
   if (tab==='spaces-all')   loadAllSpaces();
   if (tab==='bookings')     loadBookings();
   if (tab==='users')        loadUsers();

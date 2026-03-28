@@ -25,10 +25,18 @@ async function notify({ userId, type, title, message, link, email }) {
 }
 
 const Notify = {
+  spaceSubmitted: (uid, name) => notify({
+    userId: uid, type: 'space_submitted',
+    title: 'Space submitted for review',
+    message: `Your space "${name}" has been submitted and is pending approval. We'll review it and get back to you within 24 hours.`,
+    email: true
+  }),
+
   spaceApproved: (uid, name) => notify({
     userId: uid, type: 'space_approved',
     title: 'Your space was approved!',
     message: `"${name}" is now live on SpaceLogg. Users can find and book it.`,
+    link: '/space-admin/dashboard',
     email: true
   }),
 
@@ -36,6 +44,7 @@ const Notify = {
     userId: uid, type: 'space_rejected',
     title: 'Space submission update',
     message: `"${name}" was not approved. ${reason || 'Please review and resubmit.'}`,
+    link: '/space-admin/dashboard',
     email: true
   }),
 
