@@ -22,7 +22,7 @@ function paystackClient() {
  * @param {object} opts - { email, amount (kobo), currency, reference, callbackUrl, metadata }
  * @returns {{ authorization_url, access_code, reference }}
  */
-async function initializeTransaction({ email, amount, currency = 'NGN', reference, callbackUrl, metadata }) {
+async function initializeTransaction({ email, amount, currency = 'NGN', reference, callbackUrl, metadata, subaccount }) {
   const client = paystackClient();
   const payload = {
     email,
@@ -32,6 +32,11 @@ async function initializeTransaction({ email, amount, currency = 'NGN', referenc
     callback_url: callbackUrl,
     metadata: metadata || {}
   };
+  // If subaccount exists, Paystack auto-splits: owner gets 90%, SpaceLogg keeps 10%
+  if (subaccount) {
+    payload.subaccount = subaccount;
+    payload.bearer = 'account'; // SpaceLogg (main account) bears the Paystack transaction fee
+  }
   const { data } = await client.post('/transaction/initialize', payload);
   if (!data.status) throw new Error(data.message || 'Paystack initialization failed');
   return data.data; // { authorization_url, access_code, reference }

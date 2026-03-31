@@ -385,12 +385,34 @@ router.post('/onboard-owner', async (req, res) => {
 router.get('/owners', async (req, res) => {
   const owners = await db.allAsync(
     "SELECT id, name, email, created_at FROM users WHERE role = 'owner' ORDER BY created_at DESC");
-  // For each owner, get their space count
   for (const o of owners) {
     const row = await db.getAsync('SELECT COUNT(*) as c FROM spaces WHERE owner_id = ?', [o.id]);
     o.space_count = row.c;
+    const profile = await db.getAsync('SELECT * FROM owner_profiles WHERE user_id = ?', [o.id]);
+    o.profile = profile || {};
+    const revenue = await db.getAsync(
+      `SELECT COALESCE(SUM(p.amount),0) as total FROM payments p
+       JOIN bookings b ON p.booking_id = b.id
+       JOIN spaces s ON b.space_id = s.id
+       WHERE s.owner_id = ? AND p.status = 'paid'`, [o.id]);
+    o.total_revenue = revenue.total;
   }
   res.json({ owners });
+});
+
+// GET /api/admin/owners/:id — full owner detail
+router.get('/owners/:id', async (req, res) => {
+  const user = await db.getAsync("SELECT id, name, email, created_at FROM users WHERE id = ? AND role = 'owner'", [req.params.id]);
+  if (!user) return res.status(404).json({ error: 'Owner not found' });
+  const profile = await db.getAsync('SELECT * FROM owner_profiles WHERE user_id = ?', [user.id]);
+  const spaces = await db.allAsync('SELECT id, name, category, city, area, status, price FROM spaces WHERE owner_id = ?', [user.id]);
+  const revenue = await db.getAsync(
+    `SELECT COALESCE(SUM(p.amount),0) as total, COUNT(p.id) as count FROM payments p
+     JOIN bookings b ON p.booking_id = b.id JOIN spaces s ON b.space_id = s.id
+     WHERE s.owner_id = ? AND p.status = 'paid'`, [user.id]);
+  const bookings = await db.getAsync(
+    `SELECT COUNT(*) as total FROM bookings b JOIN spaces s ON b.space_id = s.id WHERE s.owner_id = ?`, [user.id]);
+  res.json({ owner: { ...user, profile: profile || {}, spaces, revenue: revenue.total, booking_count: bookings.total, payment_count: revenue.count } });
 });
 
 // POST /api/admin/owners/:id/regenerate-link — regenerate magic link
@@ -401,6 +423,64 @@ router.post('/owners/:id/regenerate-link', async (req, res) => {
   const token = jwt.sign({ id: user.id, email: user.email, role: 'owner' }, JWT_SECRET, { expiresIn: '7d' });
   const magicLink = `${appUrl}/space-admin/login.html?token=${token}`;
   res.json({ magic_link: magicLink });
+});
+
+// POST /api/admin/owners/:id/create-subaccount — create Paystack subaccount
+router.post('/owners/:id/create-subaccount', async (req, res) => {
+  try {
+    const user = await db.getAsync("SELECT * FROM users WHERE id = ? AND role = 'owner'", [req.params.id]);
+    if (!user) return res.status(404).json({ error: 'Owner not found' });
+    const profile = await db.getAsync('SELECT * FROM owner_profiles WHERE user_id = ?', [user.id]);
+    if (!profile || !profile.bank_name || !profile.account_number) {
+      return res.status(400).json({ error: 'Owner has not added bank details yet' });
+    }
+    if (profile.paystack_subaccount_id) {
+      return res.status(400).json({ error: 'Subaccount already exists: ' + profile.paystack_subaccount_id });
+    }
+
+    const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+    if (!PAYSTACK_SECRET) return res.status(500).json({ error: 'Paystack secret key not configured' });
+
+    // Resolve bank code from bank name
+    const banksRes = await fetch('https://api.paystack.co/bank', {
+      headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` }
+    });
+    const banksData = await banksRes.json();
+    const bank = banksData.data?.find(b =>
+      b.name.toLowerCase().includes(profile.bank_name.toLowerCase()) ||
+      profile.bank_name.toLowerCase().includes(b.name.toLowerCase())
+    );
+    if (!bank) return res.status(400).json({ error: `Could not find bank "${profile.bank_name}" on Paystack. Check the bank name.` });
+
+    // Create subaccount
+    const subRes = await fetch('https://api.paystack.co/subaccount', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${PAYSTACK_SECRET}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        business_name: profile.business_name || user.name,
+        bank_code: bank.code,
+        account_number: profile.account_number,
+        percentage_charge: 10,
+        settlement_bank: bank.code,
+        account_name: profile.account_name || user.name,
+        primary_contact_email: user.email
+      })
+    });
+    const subData = await subRes.json();
+    if (!subData.status) return res.status(400).json({ error: subData.message || 'Failed to create subaccount' });
+
+    // Save subaccount code
+    await db.runAsync('UPDATE owner_profiles SET paystack_subaccount_id = ? WHERE user_id = ?',
+      [subData.data.subaccount_code, user.id]);
+
+    res.json({ message: 'Subaccount created', subaccount_code: subData.data.subaccount_code });
+  } catch (err) {
+    console.error('Create subaccount error:', err);
+    res.status(500).json({ error: 'Failed to create subaccount: ' + err.message });
+  }
 });
 
 module.exports = router;

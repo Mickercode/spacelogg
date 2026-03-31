@@ -198,6 +198,7 @@ db.serialize(() => {
   db.run("ALTER TABLE spaces ADD COLUMN power_backup TEXT DEFAULT ''", [], () => {});
   db.run("ALTER TABLE bookings ADD COLUMN credits_used INTEGER DEFAULT 0", [], () => {});
   db.run("ALTER TABLE bookings ADD COLUMN status_owner TEXT DEFAULT 'auto'", [], () => {});
+  db.run("ALTER TABLE owner_profiles ADD COLUMN paystack_subaccount_id TEXT", [], () => {});
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_category ON spaces(category)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_status   ON spaces(status)`);

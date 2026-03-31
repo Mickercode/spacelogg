@@ -238,10 +238,16 @@ body{padding-top:64px;}
     <div class="panel">
       <div class="panel-header"><span class="panel-title">Onboarded owners</span></div>
       <div style="overflow-x:auto;">
-        <table class="atable"><thead><tr><th>Name</th><th>Email</th><th>Spaces</th><th>Joined</th><th>Actions</th></tr></thead>
+        <table class="atable"><thead><tr><th>Name</th><th>Email</th><th>Business</th><th>Bank</th><th>Spaces</th><th>Revenue</th><th>Joined</th><th>Actions</th></tr></thead>
         <tbody id="owners-body"></tbody></table>
       </div>
       <div id="owners-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No owners onboarded yet.</div>
+    </div>
+
+    <!-- Owner detail panel -->
+    <div class="panel" id="owner-detail-panel" style="display:none;">
+      <div class="panel-header"><span class="panel-title" id="od-title">Owner Details</span><button class="btn btn-outline btn-sm" onclick="document.getElementById('owner-detail-panel').style.display='none'">Close</button></div>
+      <div class="form-section" id="od-content"></div>
     </div>
 
     <!-- Magic link display -->
@@ -766,15 +772,104 @@ async function loadOwners() {
     const empty = document.getElementById('owners-empty');
     if (!owners.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
     empty.style.display = 'none';
-    tbody.innerHTML = owners.map(o => `
-      <tr>
+    tbody.innerHTML = owners.map(o => {
+      const p = o.profile || {};
+      const bankInfo = p.bank_name && p.account_number ? `${p.bank_name} · ${p.account_number}` : '<span style="color:var(--amber);">Not set</span>';
+      return `<tr>
         <td style="font-weight:500;color:var(--charcoal);">${o.name}</td>
-        <td>${o.email}</td>
+        <td style="font-size:12px;">${o.email}</td>
+        <td style="font-size:12px;">${p.business_name || '—'}</td>
+        <td style="font-size:12px;">${bankInfo}</td>
         <td>${o.space_count} space${o.space_count !== 1 ? 's' : ''}</td>
-        <td>${new Date(o.created_at).toLocaleDateString()}</td>
-        <td><button class="btn btn-outline btn-sm" onclick="regenerateLink(${o.id},'${o.name}')">Get login link</button></td>
-      </tr>`).join('');
+        <td style="font-weight:600;color:var(--green);">₦${(o.total_revenue||0).toLocaleString()}</td>
+        <td style="font-size:12px;">${new Date(o.created_at).toLocaleDateString()}</td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="viewOwner(${o.id})">View</button>
+          <button class="btn btn-outline btn-sm" onclick="regenerateLink(${o.id},'${o.name}')">Login link</button>
+        </div></td>
+      </tr>`;
+    }).join('');
   } catch {}
+}
+
+async function viewOwner(id) {
+  try {
+    const { owner } = await apiFetch(`/admin/owners/${id}`);
+    const p = owner.profile || {};
+    const panel = document.getElementById('owner-detail-panel');
+    document.getElementById('od-title').textContent = owner.name;
+    document.getElementById('od-content').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">Contact</div>
+          <div style="font-size:14px;color:var(--charcoal);margin-bottom:1rem;">
+            <div><strong>Email:</strong> ${owner.email}</div>
+            <div><strong>Phone:</strong> ${p.phone || 'Not provided'}</div>
+          </div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">Business</div>
+          <div style="font-size:14px;color:var(--charcoal);margin-bottom:1rem;">
+            <div><strong>Name:</strong> ${p.business_name || 'Not set'}</div>
+            <div><strong>Description:</strong> ${p.business_description || 'Not set'}</div>
+          </div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">Bank Details</div>
+          <div style="font-size:14px;color:var(--charcoal);padding:12px;background:var(--parchment);border-radius:var(--radius);margin-bottom:1rem;">
+            <div><strong>Bank:</strong> ${p.bank_name || '<span style="color:var(--amber);">Not set</span>'}</div>
+            <div><strong>Account Number:</strong> ${p.account_number || '<span style="color:var(--amber);">Not set</span>'}</div>
+            <div><strong>Account Name:</strong> ${p.account_name || '<span style="color:var(--amber);">Not set</span>'}</div>
+          </div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">Paystack Subaccount</div>
+          <div style="font-size:14px;color:var(--charcoal);margin-bottom:1rem;">
+            ${p.paystack_subaccount_id
+              ? '<span style="color:var(--green);font-weight:500;">✓ Connected</span> — ' + p.paystack_subaccount_id
+              : p.bank_name && p.account_number
+                ? '<button class="btn btn-amber btn-sm" onclick="createSubaccount('+owner.id+')">Create Subaccount</button>'
+                : '<span style="color:var(--text-muted);">Owner needs to add bank details first</span>'}
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">Stats</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;">
+            <div style="background:var(--parchment);border-radius:var(--radius);padding:12px;text-align:center;">
+              <div style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--charcoal);">${owner.spaces.length}</div>
+              <div style="font-size:11px;color:var(--text-muted);">Spaces</div>
+            </div>
+            <div style="background:var(--parchment);border-radius:var(--radius);padding:12px;text-align:center;">
+              <div style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--charcoal);">${owner.booking_count}</div>
+              <div style="font-size:11px;color:var(--text-muted);">Bookings</div>
+            </div>
+            <div style="background:var(--parchment);border-radius:var(--radius);padding:12px;text-align:center;">
+              <div style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--green);">₦${(owner.revenue||0).toLocaleString()}</div>
+              <div style="font-size:11px;color:var(--text-muted);">Total Revenue</div>
+            </div>
+            <div style="background:var(--parchment);border-radius:var(--radius);padding:12px;text-align:center;">
+              <div style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--amber);">₦${Math.round((owner.revenue||0)*0.9).toLocaleString()}</div>
+              <div style="font-size:11px;color:var(--text-muted);">Owner Payout (90%)</div>
+            </div>
+          </div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;">Spaces</div>
+          <div style="font-size:13px;color:var(--text-secondary);">
+            ${owner.spaces.map(s => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);">
+              <span>${s.name} <span style="color:var(--text-muted);">(${s.category})</span></span>
+              <span class="status-badge status-${s.status==='approved'?'approved':s.status==='pending'?'pending':'rejected'}">${s.status}</span>
+            </div>`).join('') || '<div style="color:var(--text-muted);">No spaces listed yet.</div>'}
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:0.5px solid var(--border);font-size:12px;color:var(--text-muted);">
+        Joined ${new Date(owner.created_at).toLocaleDateString()} · Owner ID: ${owner.id}
+      </div>`;
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior: 'smooth' });
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function createSubaccount(ownerId) {
+  try {
+    const result = await apiFetch(`/admin/owners/${ownerId}/create-subaccount`, { method: 'POST' });
+    toast('Paystack subaccount created!', 'success');
+    viewOwner(ownerId);
+    loadOwners();
+  } catch (e) { toast(e.message, 'error'); }
 }
 
 async function regenerateLink(id, name) {

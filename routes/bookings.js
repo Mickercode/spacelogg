@@ -107,12 +107,21 @@ router.post('/', requireAuth, async (req, res) => {
 
     // Initialize Paystack
     const user = await db.getAsync('SELECT name, email FROM users WHERE id = ?', [req.user.id]);
+
+    // Check if space owner has a Paystack subaccount for auto-split
+    let subaccount = null;
+    if (space.owner_id) {
+      const ownerProfile = await db.getAsync('SELECT paystack_subaccount_id FROM owner_profiles WHERE user_id = ?', [space.owner_id]);
+      if (ownerProfile?.paystack_subaccount_id) subaccount = ownerProfile.paystack_subaccount_id;
+    }
+
     const paystackData = await initializeTransaction({
       email: user.email,
       amount: amountKobo,
       currency,
       reference,
       callbackUrl: `${appUrl}/api/bookings/verify-payment?reference=${reference}`,
+      subaccount,
       metadata: {
         booking_id: lastID,
         space_name: space.name,
