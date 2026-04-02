@@ -87,6 +87,13 @@ router.patch('/me', requireAuth, async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Update failed' }); }
 });
 
+router.delete('/me', requireAuth, async (req, res) => {
+  try {
+    await db.runAsync('DELETE FROM users WHERE id = ?', [req.user.id]);
+    res.json({ message: 'Account deleted' });
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Deletion failed' }); }
+});
+
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;

@@ -57,7 +57,6 @@ body{padding-top:64px;}
       <div class="profile-email" id="pemail">—</div>
       <div style="margin-top:6px;font-size:13px;color:var(--text-muted);">Member since <span id="psince">—</span></div>
     </div>
-    <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="logout()">Sign out</button>
   </div>
   <!-- Wallet card -->
   <div id="wallet-card" style="background:var(--charcoal);color:#fff;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;">
@@ -83,6 +82,9 @@ body{padding-top:64px;}
       <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="s-name" placeholder="Your name"/></div>
       <div class="form-group"><label class="form-label">New password</label><input class="form-input" id="s-pw" type="password" placeholder="Leave blank to keep current"/></div>
       <button class="btn btn-primary" onclick="saveProfile()">Save changes</button>
+      <hr style="border:none;border-top:0.5px solid var(--border);margin:2rem 0;"/>
+      <button class="btn btn-outline" style="width:100%;" onclick="logout()">Sign out</button>
+      <button class="btn" style="width:100%;margin-top:8px;background:none;color:var(--text-muted);font-size:12px;" onclick="deleteAccount()">Delete my account</button>
     </div>
   </div>
 </div>
@@ -175,6 +177,14 @@ async function saveProfile(){
   const name=document.getElementById('s-name').value; const pw=document.getElementById('s-pw').value;
   if(name)body.name=name; if(pw)body.password=pw;
   try{const {user}=await apiFetch('/auth/me',{method:'PATCH',body:JSON.stringify(body)});Auth.setUser(user);document.getElementById('pname').textContent=user.name;document.getElementById('avatar-lg').textContent=user.name.charAt(0).toUpperCase();document.getElementById('s-pw').value='';toast('Profile updated ✓','success');}catch(err){toast(err.message,'error');}
+}
+async function deleteAccount(){
+  if(!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
+  if(!confirm('Really? All your data, bookings, and credits will be permanently lost.')) return;
+  try{
+    await apiFetch('/auth/me',{method:'DELETE'});
+    Auth.clear(); window.location.href='/';
+  }catch(err){toast(err.message,'error');}
 }
 init();
 </script>
