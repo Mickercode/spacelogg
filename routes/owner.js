@@ -28,7 +28,7 @@ router.get('/stats', async (req, res) => {
     db.getAsync(`SELECT COUNT(*) as c FROM reviews r JOIN spaces s ON s.id = r.space_id
                  WHERE s.owner_id = ?`, [uid]),
     db.getAsync(`SELECT COUNT(*) as c FROM bookings b JOIN spaces s ON s.id = b.space_id
-                 WHERE s.owner_id = ? AND b.status = 'confirmed' AND b.date >= date('now')`, [uid]),
+                 WHERE s.owner_id = ? AND b.status = 'confirmed' AND b.date >= CURRENT_DATE::text`, [uid]),
   ]);
   res.json({ totalSpaces: spaces.c, totalBookings: bookings.c, totalRevenue: revenue.c, totalReviews: reviews.c, upcomingBookings: upcoming.c });
 });
@@ -241,7 +241,7 @@ router.get('/revenue', async (req, res) => {
   const monthly = await db.getAsync(`
     SELECT COALESCE(SUM(p.amount),0) as c FROM payments p
     JOIN bookings b ON b.id = p.booking_id JOIN spaces s ON s.id = b.space_id
-    WHERE s.owner_id = ? AND p.status = 'success' AND p.created_at LIKE ?`, [uid, `${thisMonth}%`]);
+    WHERE s.owner_id = ? AND p.status = 'success' AND p.created_at::text LIKE ?`, [uid, `${thisMonth}%`]);
   const pendingPayout = await db.getAsync(
     "SELECT COALESCE(SUM(amount),0) as c FROM payouts WHERE owner_id = ? AND status = 'pending'", [uid]);
   const paidOut = await db.getAsync(
@@ -280,13 +280,13 @@ router.get('/analytics', async (req, res) => {
 
   // Busiest days of week
   const busiestDays = await db.allAsync(`
-    SELECT CASE cast(strftime('%w', b.date) as integer)
+    SELECT CASE EXTRACT(DOW FROM b.date::date)
       WHEN 0 THEN 'Sun' WHEN 1 THEN 'Mon' WHEN 2 THEN 'Tue' WHEN 3 THEN 'Wed'
       WHEN 4 THEN 'Thu' WHEN 5 THEN 'Fri' WHEN 6 THEN 'Sat' END as day,
       COUNT(*) as count
     FROM bookings b JOIN spaces s ON s.id = b.space_id
     WHERE s.owner_id = ? AND b.status = 'confirmed'
-    GROUP BY strftime('%w', b.date) ORDER BY count DESC`, [uid]);
+    GROUP BY EXTRACT(DOW FROM b.date::date) ORDER BY count DESC`, [uid]);
 
   // Bookings per space
   const perSpace = await db.allAsync(`
@@ -297,9 +297,9 @@ router.get('/analytics', async (req, res) => {
 
   // Monthly trend (last 6 months)
   const monthlyTrend = await db.allAsync(`
-    SELECT strftime('%Y-%m', b.date) as month, COUNT(*) as bookings
+    SELECT TO_CHAR(b.date::date, 'YYYY-MM') as month, COUNT(*) as bookings
     FROM bookings b JOIN spaces s ON s.id = b.space_id
-    WHERE s.owner_id = ? AND b.status = 'confirmed' AND b.date >= date('now', '-6 months')
+    WHERE s.owner_id = ? AND b.status = 'confirmed' AND b.date >= (CURRENT_DATE - INTERVAL '6 months')::text
     GROUP BY month ORDER BY month ASC`, [uid]);
 
   // Cancellation rate
@@ -310,7 +310,7 @@ router.get('/analytics', async (req, res) => {
   // Occupancy (bookings this week / capacity * 7)
   const thisWeekBookings = await db.getAsync(`
     SELECT COUNT(*) as c FROM bookings b JOIN spaces s ON s.id = b.space_id
-    WHERE s.owner_id = ? AND b.status = 'confirmed' AND b.date >= date('now', '-7 days')`, [uid]);
+    WHERE s.owner_id = ? AND b.status = 'confirmed' AND b.date >= (CURRENT_DATE - INTERVAL '7 days')::text`, [uid]);
   const totalCapacity = await db.getAsync(`SELECT COALESCE(SUM(capacity),1) as c FROM spaces WHERE owner_id = ? AND status = 'approved'`, [uid]);
   const occupancyRate = Math.min(100, Math.round((thisWeekBookings.c / (totalCapacity.c * 7)) * 100));
 

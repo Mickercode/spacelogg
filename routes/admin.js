@@ -241,7 +241,7 @@ router.get('/revenue', async (req, res) => {
     const total = await db.getAsync("SELECT COALESCE(SUM(amount),0) as c FROM payments WHERE status='success'");
     const thisMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
     const monthly = await db.getAsync(
-      "SELECT COALESCE(SUM(amount),0) as c FROM payments WHERE status='success' AND created_at LIKE ?",
+      "SELECT COALESCE(SUM(amount),0) as c FROM payments WHERE status='success' AND created_at::text LIKE ?",
       [`${thisMonth}%`]
     );
     const pendingPayouts = await db.getAsync("SELECT COALESCE(SUM(amount),0) as c FROM payouts WHERE status='pending'");
