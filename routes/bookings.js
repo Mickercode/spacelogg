@@ -157,7 +157,7 @@ router.get('/verify-payment', async (req, res) => {
     if (txData.status === 'success' && payment.status !== 'success') {
       // Update payment
       await db.runAsync(
-        `UPDATE payments SET status = 'success', provider_status = ?, metadata = ?, updated_at = datetime('now') WHERE id = ?`,
+        `UPDATE payments SET status = 'success', provider_status = ?, metadata = ?, updated_at = NOW() WHERE id = ?`,
         [txData.status, JSON.stringify(txData), payment.id]
       );
       await db.runAsync('UPDATE bookings SET status = ? WHERE id = ?', ['paid', payment.booking_id]);
@@ -204,7 +204,7 @@ router.patch('/:id/cancel', requireAuth, async (req, res) => {
       if (payment?.provider_ref) {
         try {
           await refundTransaction({ transactionRef: payment.provider_ref });
-          await db.runAsync("UPDATE payments SET status = 'refunded', updated_at = datetime('now') WHERE id = ?", [payment.id]);
+          await db.runAsync("UPDATE payments SET status = 'refunded', updated_at = NOW() WHERE id = ?", [payment.id]);
           await db.runAsync('UPDATE bookings SET status = ? WHERE id = ?', ['refunded', booking.id]);
         } catch (refundErr) {
           console.error('Refund failed:', refundErr.message);

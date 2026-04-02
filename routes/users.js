@@ -19,7 +19,7 @@ router.post('/saved/:spaceId', requireAuth, async (req, res) => {
   try {
     const space = await db.getAsync('SELECT id FROM spaces WHERE id = ? AND status = ?', [req.params.spaceId, 'approved']);
     if (!space) return res.status(404).json({ error: 'Space not found' });
-    await db.runAsync('INSERT OR IGNORE INTO saved_spaces (user_id, space_id) VALUES (?, ?)', [req.user.id, req.params.spaceId]);
+    await db.runAsync('INSERT INTO saved_spaces (user_id, space_id) VALUES (?, ?) ON CONFLICT(user_id, space_id) DO NOTHING', [req.user.id, req.params.spaceId]);
     res.status(201).json({ message: 'Space saved' });
   } catch (err) { res.status(500).json({ error: 'Could not save space' }); }
 });
@@ -45,7 +45,7 @@ router.get('/recently-viewed', requireAuth, async (req, res) => {
 router.post('/recently-viewed/:spaceId', requireAuth, async (req, res) => {
   await db.runAsync(
     `INSERT INTO recently_viewed (user_id, space_id) VALUES (?, ?)
-     ON CONFLICT(user_id, space_id) DO UPDATE SET viewed_at = datetime('now')`,
+     ON CONFLICT(user_id, space_id) DO UPDATE SET viewed_at = NOW()`,
     [req.user.id, req.params.spaceId]);
   res.sendStatus(200);
 });

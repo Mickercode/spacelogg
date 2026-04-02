@@ -106,7 +106,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     if (req.user) {
       const s=await db.getAsync('SELECT id FROM saved_spaces WHERE user_id=? AND space_id=?',[req.user.id,space.id]); saved=!!s;
       // Track recently viewed
-      db.runAsync('INSERT INTO recently_viewed (user_id, space_id) VALUES (?, ?) ON CONFLICT(user_id, space_id) DO UPDATE SET viewed_at = datetime(\'now\')', [req.user.id, space.id]).catch(()=>{});
+      db.runAsync('INSERT INTO recently_viewed (user_id, space_id) VALUES (?, ?) ON CONFLICT(user_id, space_id) DO UPDATE SET viewed_at = NOW()', [req.user.id, space.id]).catch(()=>{});
     }
     const reviews = await db.allAsync(
       `SELECT r.*, u.name as user_name FROM reviews r JOIN users u ON u.id=r.user_id WHERE r.space_id=? ORDER BY r.created_at DESC LIMIT 20`,

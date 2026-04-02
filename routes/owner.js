@@ -68,10 +68,10 @@ router.patch('/profile', upload.single('logo'), async (req, res) => {
       updates.push('logo = ?'); params.push(logoUrl);
     }
     if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
-    updates.push("updated_at = datetime('now')");
+    updates.push("updated_at = NOW()");
     params.push(req.user.id);
     // Ensure profile exists
-    await db.runAsync("INSERT OR IGNORE INTO owner_profiles (user_id) VALUES (?)", [req.user.id]);
+    await db.runAsync("INSERT INTO owner_profiles (user_id) VALUES (?) ON CONFLICT(user_id) DO NOTHING", [req.user.id]);
     await db.runAsync(`UPDATE owner_profiles SET ${updates.join(', ')} WHERE user_id = ?`, params);
     const profile = await db.getAsync('SELECT * FROM owner_profiles WHERE user_id = ?', [req.user.id]);
     res.json({ profile, message: 'Profile updated' });

@@ -1,264 +1,336 @@
-const sqlite3  = require('sqlite3').verbose();
-const path     = require('path');
-const fs       = require('fs');
+const { Pool } = require('pg');
 const bcrypt   = require('bcryptjs');
 
-// Railway uses ephemeral filesystem — use /tmp for SQLite
-// For persistent data on Railway, set DB_PATH in environment variables
-// pointing to a mounted volume path
-const DB_PATH = process.env.DB_PATH || (
-  process.env.RAILWAY_ENVIRONMENT ? '/tmp/spacelogg.db' : './db/spacelogg.db'
-);
-const dbDir   = path.dirname(DB_PATH);
-if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+// Connection string from environment
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  console.error('❌ DATABASE_URL is not set. Please set it in your environment variables.');
+  process.exit(1);
+}
 
-const db = new sqlite3.Database(DB_PATH, err => {
-  if (err) { console.error('DB error:', err); process.exit(1); }
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
-db.runAsync = (sql, p=[]) => new Promise((res,rej) => db.run(sql,p,function(err){err?rej(err):res({lastID:this.lastID,changes:this.changes})}));
-db.getAsync  = (sql, p=[]) => new Promise((res,rej) => db.get(sql,p,(err,row)=>err?rej(err):res(row)));
-db.allAsync  = (sql, p=[]) => new Promise((res,rej) => db.all(sql,p,(err,rows)=>err?rej(err):res(rows)));
+// Convert SQLite-style ? placeholders to PostgreSQL $1, $2, $3 style
+function convertPlaceholders(sql) {
+  let i = 0;
+  return sql.replace(/\?/g, () => `$${++i}`);
+}
 
-db.serialize(() => {
-  db.run('PRAGMA foreign_keys = ON');
-  db.run('PRAGMA journal_mode = WAL');
+// Compatibility wrapper — same interface as our old SQLite db object
+const db = {
+  // INSERT/UPDATE/DELETE — returns { lastID, changes }
+  runAsync: async (sql, params = []) => {
+    const pgSql = convertPlaceholders(sql);
+    const isInsert = /^\s*INSERT/i.test(sql);
+    const finalSql = isInsert && !/RETURNING/i.test(pgSql)
+      ? pgSql + ' RETURNING id'
+      : pgSql;
+    const result = await pool.query(finalSql, params);
+    return {
+      lastID: result.rows?.[0]?.id ?? null,
+      changes: result.rowCount
+    };
+  },
 
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE, password TEXT NOT NULL,
-    avatar TEXT, role TEXT NOT NULL DEFAULT 'user',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
+  // SELECT single row
+  getAsync: async (sql, params = []) => {
+    const result = await pool.query(convertPlaceholders(sql), params);
+    return result.rows[0] || null;
+  },
 
-  db.run(`CREATE TABLE IF NOT EXISTS spaces (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
-    category TEXT NOT NULL, description TEXT,
-    address TEXT NOT NULL, city TEXT NOT NULL DEFAULT '',
-    lat REAL, lng REAL, price TEXT, price_unit TEXT,
-    rating REAL DEFAULT 0, review_count INTEGER DEFAULT 0,
-    amenities TEXT DEFAULT '[]', hours TEXT DEFAULT '{}', images TEXT DEFAULT '[]',
-    owner_id INTEGER REFERENCES users(id),
-    status TEXT NOT NULL DEFAULT 'pending',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS saved_spaces (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
-    saved_at TEXT NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(user_id, space_id))`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS reviews (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
-    user_id  INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
-    rating INTEGER NOT NULL, comment TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(space_id, user_id))`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS notifications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, link TEXT,
-    read INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS password_resets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token TEXT NOT NULL UNIQUE, expires_at TEXT NOT NULL, used INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS bookings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    space_id   INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
-    user_id    INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
-    date       TEXT NOT NULL,
-    start_time TEXT NOT NULL,
-    end_time   TEXT NOT NULL,
-    guests     INTEGER NOT NULL DEFAULT 1,
-    note       TEXT,
-    status     TEXT NOT NULL DEFAULT 'confirmed',
-    total_price TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS space_integrations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
-    platform TEXT NOT NULL,
-    external_space_id TEXT NOT NULL,
-    credentials_enc TEXT NOT NULL,
-    config TEXT DEFAULT '{}',
-    enabled INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(space_id))`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS booking_sync_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
-    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
-    platform TEXT NOT NULL,
-    action TEXT NOT NULL,
-    external_ref TEXT,
-    status TEXT NOT NULL DEFAULT 'pending',
-    request_payload TEXT,
-    response_payload TEXT,
-    error_message TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS payments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
-    amount INTEGER NOT NULL,
-    currency TEXT NOT NULL DEFAULT 'NGN',
-    provider TEXT NOT NULL DEFAULT 'paystack',
-    provider_ref TEXT,
-    provider_status TEXT,
-    status TEXT NOT NULL DEFAULT 'pending',
-    metadata TEXT DEFAULT '{}',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')))`);
-
-  db.run(`CREATE TABLE IF NOT EXISTS payouts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    owner_id INTEGER NOT NULL REFERENCES users(id),
-    amount INTEGER NOT NULL,
-    currency TEXT NOT NULL DEFAULT 'NGN',
-    period_start TEXT,
-    period_end TEXT,
-    status TEXT NOT NULL DEFAULT 'pending',
-    paid_at TEXT,
-    note TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
-
-  // Wallet: credit balance per user
-  db.run(`CREATE TABLE IF NOT EXISTS wallet (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    balance INTEGER NOT NULL DEFAULT 0,
-    currency TEXT NOT NULL DEFAULT 'NGN',
-    UNIQUE(user_id, currency))`);
-
-  // Wallet transactions log
-  db.run(`CREATE TABLE IF NOT EXISTS wallet_transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    amount INTEGER NOT NULL,
-    type TEXT NOT NULL,
-    description TEXT,
-    booking_id INTEGER REFERENCES bookings(id),
-    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
-
-  // Recently viewed spaces
-  db.run(`CREATE TABLE IF NOT EXISTS recently_viewed (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
-    viewed_at TEXT NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(user_id, space_id))`);
-
-  // Owner business profiles
-  db.run(`CREATE TABLE IF NOT EXISTS owner_profiles (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    business_name TEXT,
-    business_description TEXT,
-    logo TEXT,
-    phone TEXT,
-    bank_name TEXT,
-    account_number TEXT,
-    account_name TEXT,
-    paystack_recipient_code TEXT,
-    verified INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(user_id))`);
-
-  // Availability blocks (owner blocks off dates/times)
-  db.run(`CREATE TABLE IF NOT EXISTS availability_blocks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
-    block_date TEXT NOT NULL,
-    start_time TEXT,
-    end_time TEXT,
-    reason TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')))`);
-
-  // Safe migrations (swallow error if column already exists)
-  db.run('ALTER TABLE bookings ADD COLUMN external_ref TEXT', [], () => {});
-  db.run('ALTER TABLE bookings ADD COLUMN amount_value INTEGER', [], () => {});
-  db.run("ALTER TABLE bookings ADD COLUMN currency TEXT DEFAULT 'NGN'", [], () => {});
-  db.run("ALTER TABLE spaces ADD COLUMN area TEXT DEFAULT ''", [], () => {});
-  db.run("ALTER TABLE spaces ADD COLUMN walkin_price TEXT DEFAULT ''", [], () => {});
-  db.run("ALTER TABLE spaces ADD COLUMN capacity INTEGER DEFAULT 1", [], () => {});
-  db.run("ALTER TABLE spaces ADD COLUMN price_hourly TEXT DEFAULT ''", [], () => {});
-  db.run("ALTER TABLE spaces ADD COLUMN price_monthly TEXT DEFAULT ''", [], () => {});
-  db.run("ALTER TABLE spaces ADD COLUMN wifi_speed TEXT DEFAULT ''", [], () => {});
-  db.run("ALTER TABLE spaces ADD COLUMN power_backup TEXT DEFAULT ''", [], () => {});
-  db.run("ALTER TABLE bookings ADD COLUMN credits_used INTEGER DEFAULT 0", [], () => {});
-  db.run("ALTER TABLE bookings ADD COLUMN status_owner TEXT DEFAULT 'auto'", [], () => {});
-  db.run("ALTER TABLE owner_profiles ADD COLUMN paystack_subaccount_id TEXT", [], () => {});
-
-  db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_category ON spaces(category)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_spaces_status   ON spaces(status)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_saved_user      ON saved_spaces(user_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_notif_user      ON notifications(user_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_bookings_space  ON bookings(space_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_bookings_user   ON bookings(user_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_integrations_space ON space_integrations(space_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_sync_log_booking ON booking_sync_log(booking_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_payments_booking ON payments(booking_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_payments_ref ON payments(provider_ref)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_payouts_owner ON payouts(owner_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_owner_profiles ON owner_profiles(user_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_avail_blocks ON availability_blocks(space_id, block_date)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_wallet_user ON wallet(user_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_wallet_tx_user ON wallet_transactions(user_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_recently_viewed ON recently_viewed(user_id)`);
-
-  // Seed spaces if empty
-  db.get('SELECT COUNT(*) as c FROM spaces', [], (err, row) => {
-    if (err || row.c > 0) return;
-    const ins = db.prepare(`INSERT INTO spaces
-      (name,category,description,address,city,area,lat,lng,price,price_unit,rating,review_count,amenities,hours,status)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,'approved')`);
-    [
-      ['The Loft Workspace','coworking','A premium coworking space with high-speed fibre, ergonomic chairs, and a quiet focused environment.','14 Marina Street','Lagos','Lagos Island',6.4541,3.3947,'₦2,500','/day',4.9,128,'["Fast WiFi","Air Con","Printing","Meeting Rooms","Café","Lockers"]','{"Mon–Fri":"7am – 10pm","Saturday":"8am – 8pm","Sunday":"Closed"}'],
-      ['Brew & Work Café','cafe','A warm artisan café with strong WiFi and great coffee. Popular with freelancers for its relaxed atmosphere.','22 Wuse Zone 4','Abuja','Wuse',9.0574,7.4898,'₦500','/coffee',4.7,84,'["WiFi","Power Outlets","Coffee","Pastries","Quiet Zone"]','{"Mon–Fri":"7am – 9pm","Saturday":"8am – 9pm","Sunday":"9am – 6pm"}'],
-      ['Central Public Library','library','A fully renovated public library with modern study facilities and reliable internet.','5 Independence Ave','Accra','Osu',5.5502,-0.2174,'Free','',4.5,61,'["WiFi","Quiet Space","Study Rooms","AC","Printing"]','{"Mon–Fri":"8am – 6pm","Saturday":"9am – 4pm","Sunday":"Closed"}'],
-      ['Skyline Business Lounge','hotel','A refined hotel business lounge available to non-guests by day pass.','Nairobi CBD','Nairobi','Nairobi CBD',-1.2863,36.8172,'$15','/day',4.6,47,'["High-Speed WiFi","AC","Coffee Service","Printing","Quiet"]','{"Mon–Sun":"6am – 11pm"}'],
-      ['Roamers Co','coworking','A modern coworking space with private pods, communal tables, café bar, and networking events.','31 Victoria Island','Lagos','Victoria Island',6.4281,3.4219,'₦3,000','/day',4.8,96,'["Fibre WiFi","Standing Desks","Locker","Café Bar","Events Space"]','{"Mon–Fri":"6am – 11pm","Saturday":"8am – 9pm","Sunday":"10am – 6pm"}'],
-      ['Grounds Café','cafe','A specialty coffee shop loved by the creative community. Great natural light and ample power sockets.','8 Oxford Street','London','Westminster',51.5155,-0.1410,'£5','/coffee',4.6,72,'["Fast WiFi","Power Points","Specialty Coffee","Food","Outdoor Seating"]','{"Mon–Fri":"7am – 8pm","Saturday":"8am – 8pm","Sunday":"10am – 5pm"}'],
-    ].forEach(r => ins.run(...r));
-    ins.finalize();
-    console.log('✅ Database seeded with sample spaces');
-  });
-
-  // Auto-create admin from env vars
-  if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
-    db.get('SELECT id, role FROM users WHERE email = ?', [process.env.ADMIN_EMAIL.toLowerCase()], async (err, row) => {
-      if (err) return;
-      if (row && row.role === 'admin') {
-        console.log(`✅ Admin account exists: ${process.env.ADMIN_EMAIL}`);
-        return;
-      }
-      const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
-      if (row) {
-        // User exists but not admin — promote them
-        db.run('UPDATE users SET role = ? WHERE email = ?', ['admin', process.env.ADMIN_EMAIL.toLowerCase()],
-          () => console.log(`✅ Promoted ${process.env.ADMIN_EMAIL} to admin`)
-        );
-      } else {
-        // Create fresh admin account
-        db.run(`INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'admin')`,
-          [process.env.ADMIN_NAME || 'Admin', process.env.ADMIN_EMAIL.toLowerCase(), hash],
-          () => console.log(`✅ Admin account created: ${process.env.ADMIN_EMAIL}`)
-        );
-      }
-    });
+  // SELECT multiple rows
+  allAsync: async (sql, params = []) => {
+    const result = await pool.query(convertPlaceholders(sql), params);
+    return result.rows;
   }
+};
+
+// ── SCHEMA ──
+async function initDB() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        avatar TEXT,
+        role TEXT NOT NULL DEFAULT 'user',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS spaces (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT,
+        address TEXT NOT NULL,
+        city TEXT NOT NULL DEFAULT '',
+        area TEXT DEFAULT '',
+        lat DOUBLE PRECISION,
+        lng DOUBLE PRECISION,
+        price TEXT,
+        walkin_price TEXT DEFAULT '',
+        price_unit TEXT,
+        price_hourly TEXT DEFAULT '',
+        price_monthly TEXT DEFAULT '',
+        rating DOUBLE PRECISION DEFAULT 0,
+        review_count INTEGER DEFAULT 0,
+        amenities TEXT DEFAULT '[]',
+        hours TEXT DEFAULT '{}',
+        images TEXT DEFAULT '[]',
+        owner_id INTEGER REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'pending',
+        capacity INTEGER DEFAULT 1,
+        wifi_speed TEXT DEFAULT '',
+        power_backup TEXT DEFAULT '',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS saved_spaces (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+        saved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(user_id, space_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS reviews (
+        id SERIAL PRIMARY KEY,
+        space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+        user_id  INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+        rating INTEGER NOT NULL,
+        comment TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(space_id, user_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        link TEXT,
+        read INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token TEXT NOT NULL UNIQUE,
+        expires_at TEXT NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS bookings (
+        id SERIAL PRIMARY KEY,
+        space_id   INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+        user_id    INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+        date       TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time   TEXT NOT NULL,
+        guests     INTEGER NOT NULL DEFAULT 1,
+        note       TEXT,
+        status     TEXT NOT NULL DEFAULT 'confirmed',
+        total_price TEXT,
+        external_ref TEXT,
+        amount_value INTEGER,
+        currency TEXT DEFAULT 'NGN',
+        credits_used INTEGER DEFAULT 0,
+        status_owner TEXT DEFAULT 'auto',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS space_integrations (
+        id SERIAL PRIMARY KEY,
+        space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+        platform TEXT NOT NULL,
+        external_space_id TEXT NOT NULL,
+        credentials_enc TEXT NOT NULL,
+        config TEXT DEFAULT '{}',
+        enabled INTEGER NOT NULL DEFAULT 1,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(space_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS booking_sync_log (
+        id SERIAL PRIMARY KEY,
+        booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+        space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+        platform TEXT NOT NULL,
+        action TEXT NOT NULL,
+        external_ref TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        request_payload TEXT,
+        response_payload TEXT,
+        error_message TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS payments (
+        id SERIAL PRIMARY KEY,
+        booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+        amount INTEGER NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'NGN',
+        provider TEXT NOT NULL DEFAULT 'paystack',
+        provider_ref TEXT,
+        provider_status TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        metadata TEXT DEFAULT '{}',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS payouts (
+        id SERIAL PRIMARY KEY,
+        owner_id INTEGER NOT NULL REFERENCES users(id),
+        amount INTEGER NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'NGN',
+        period_start TEXT,
+        period_end TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        paid_at TEXT,
+        note TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS wallet (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        balance INTEGER NOT NULL DEFAULT 0,
+        currency TEXT NOT NULL DEFAULT 'NGN',
+        UNIQUE(user_id, currency)
+      );
+
+      CREATE TABLE IF NOT EXISTS wallet_transactions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        amount INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        description TEXT,
+        booking_id INTEGER REFERENCES bookings(id),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS recently_viewed (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+        viewed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(user_id, space_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS owner_profiles (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        business_name TEXT,
+        business_description TEXT,
+        logo TEXT,
+        phone TEXT,
+        bank_name TEXT,
+        account_number TEXT,
+        account_name TEXT,
+        paystack_recipient_code TEXT,
+        paystack_subaccount_id TEXT,
+        verified INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(user_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS availability_blocks (
+        id SERIAL PRIMARY KEY,
+        space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+        block_date TEXT NOT NULL,
+        start_time TEXT,
+        end_time TEXT,
+        reason TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    // Indexes
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_spaces_category ON spaces(category);
+      CREATE INDEX IF NOT EXISTS idx_spaces_status ON spaces(status);
+      CREATE INDEX IF NOT EXISTS idx_saved_user ON saved_spaces(user_id);
+      CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id);
+      CREATE INDEX IF NOT EXISTS idx_bookings_space ON bookings(space_id);
+      CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);
+      CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
+      CREATE INDEX IF NOT EXISTS idx_integrations_space ON space_integrations(space_id);
+      CREATE INDEX IF NOT EXISTS idx_sync_log_booking ON booking_sync_log(booking_id);
+      CREATE INDEX IF NOT EXISTS idx_payments_booking ON payments(booking_id);
+      CREATE INDEX IF NOT EXISTS idx_payments_ref ON payments(provider_ref);
+      CREATE INDEX IF NOT EXISTS idx_payouts_owner ON payouts(owner_id);
+      CREATE INDEX IF NOT EXISTS idx_owner_profiles ON owner_profiles(user_id);
+      CREATE INDEX IF NOT EXISTS idx_avail_blocks ON availability_blocks(space_id, block_date);
+      CREATE INDEX IF NOT EXISTS idx_wallet_user ON wallet(user_id);
+      CREATE INDEX IF NOT EXISTS idx_wallet_tx_user ON wallet_transactions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_recently_viewed ON recently_viewed(user_id);
+    `);
+
+    // Seed spaces if empty
+    const { rows } = await client.query('SELECT COUNT(*) as c FROM spaces');
+    if (parseInt(rows[0].c) === 0) {
+      const seeds = [
+        ['The Loft Workspace','coworking','A premium coworking space with high-speed fibre, ergonomic chairs, and a quiet focused environment.','14 Marina Street','Lagos','Lagos Island',6.4541,3.3947,'₦2,500','/day',4.9,128,'["Fast WiFi","Air Con","Printing","Meeting Rooms","Café","Lockers"]','{"Mon–Fri":"7am – 10pm","Saturday":"8am – 8pm","Sunday":"Closed"}'],
+        ['Brew & Work Café','cafe','A warm artisan café with strong WiFi and great coffee. Popular with freelancers for its relaxed atmosphere.','22 Wuse Zone 4','Abuja','Wuse',9.0574,7.4898,'₦500','/coffee',4.7,84,'["WiFi","Power Outlets","Coffee","Pastries","Quiet Zone"]','{"Mon–Fri":"7am – 9pm","Saturday":"8am – 9pm","Sunday":"9am – 6pm"}'],
+        ['Central Public Library','library','A fully renovated public library with modern study facilities and reliable internet.','5 Independence Ave','Accra','Osu',5.5502,-0.2174,'Free','',4.5,61,'["WiFi","Quiet Space","Study Rooms","AC","Printing"]','{"Mon–Fri":"8am – 6pm","Saturday":"9am – 4pm","Sunday":"Closed"}'],
+        ['Skyline Business Lounge','hotel','A refined hotel business lounge available to non-guests by day pass.','Nairobi CBD','Nairobi','Nairobi CBD',-1.2863,36.8172,'$15','/day',4.6,47,'["High-Speed WiFi","AC","Coffee Service","Printing","Quiet"]','{"Mon–Sun":"6am – 11pm"}'],
+        ['Roamers Co','coworking','A modern coworking space with private pods, communal tables, café bar, and networking events.','31 Victoria Island','Lagos','Victoria Island',6.4281,3.4219,'₦3,000','/day',4.8,96,'["Fibre WiFi","Standing Desks","Locker","Café Bar","Events Space"]','{"Mon–Fri":"6am – 11pm","Saturday":"8am – 9pm","Sunday":"10am – 6pm"}'],
+        ['Grounds Café','cafe','A specialty coffee shop loved by the creative community. Great natural light and ample power sockets.','8 Oxford Street','London','Westminster',51.5155,-0.1410,'£5','/coffee',4.6,72,'["Fast WiFi","Power Points","Specialty Coffee","Food","Outdoor Seating"]','{"Mon–Fri":"7am – 8pm","Saturday":"8am – 8pm","Sunday":"10am – 5pm"}'],
+      ];
+      for (const s of seeds) {
+        await client.query(
+          `INSERT INTO spaces (name,category,description,address,city,area,lat,lng,price,price_unit,rating,review_count,amenities,hours,status)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'approved')`, s
+        );
+      }
+      console.log('✅ Database seeded with sample spaces');
+    }
+
+    // Auto-create admin from env vars
+    if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+      const existing = await client.query('SELECT id, role FROM users WHERE email = $1', [process.env.ADMIN_EMAIL.toLowerCase()]);
+      if (existing.rows.length && existing.rows[0].role === 'admin') {
+        console.log(`✅ Admin account exists: ${process.env.ADMIN_EMAIL}`);
+      } else {
+        const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+        if (existing.rows.length) {
+          await client.query('UPDATE users SET role = $1 WHERE email = $2', ['admin', process.env.ADMIN_EMAIL.toLowerCase()]);
+          console.log(`✅ Promoted ${process.env.ADMIN_EMAIL} to admin`);
+        } else {
+          await client.query(
+            `INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, 'admin')`,
+            [process.env.ADMIN_NAME || 'Admin', process.env.ADMIN_EMAIL.toLowerCase(), hash]
+          );
+          console.log(`✅ Admin account created: ${process.env.ADMIN_EMAIL}`);
+        }
+      }
+    }
+
+    console.log('✅ PostgreSQL database initialized');
+  } catch (err) {
+    console.error('❌ Database initialization error:', err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+// Initialize on startup
+initDB().catch(err => {
+  console.error('Fatal DB error:', err);
+  process.exit(1);
 });
 
 module.exports = db;

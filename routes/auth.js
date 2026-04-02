@@ -90,7 +90,7 @@ router.post('/reset-password', async (req, res) => {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ error: 'Token and password required' });
     if (password.length < 6) return res.status(400).json({ error: 'Password too short' });
-    const reset = await db.getAsync(`SELECT * FROM password_resets WHERE token = ? AND used = 0 AND expires_at > datetime('now')`, [token]);
+    const reset = await db.getAsync(`SELECT * FROM password_resets WHERE token = ? AND used = 0 AND expires_at > NOW()`, [token]);
     if (!reset) return res.status(400).json({ error: 'Invalid or expired reset link' });
     const hash = await bcrypt.hash(password, 10);
     await db.runAsync('UPDATE users SET password = ? WHERE id = ?', [hash, reset.user_id]);

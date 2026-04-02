@@ -193,7 +193,7 @@ router.patch('/integrations/:id', async (req, res) => {
     if (req.body.enabled !== undefined) { updates.push('enabled = ?'); params.push(req.body.enabled ? 1 : 0); }
 
     if (!updates.length) return res.status(400).json({ error: 'Nothing to update' });
-    updates.push("updated_at = datetime('now')");
+    updates.push("updated_at = NOW()");
     params.push(req.params.id);
 
     await db.runAsync(`UPDATE space_integrations SET ${updates.join(', ')} WHERE id = ?`, params);
@@ -316,7 +316,7 @@ router.patch('/payouts/:id/mark-paid', async (req, res) => {
   if (!row) return res.status(404).json({ error: 'Payout not found' });
   if (row.status === 'paid') return res.status(400).json({ error: 'Already marked as paid' });
   await db.runAsync(
-    "UPDATE payouts SET status = 'paid', paid_at = datetime('now'), note = ? WHERE id = ?",
+    "UPDATE payouts SET status = 'paid', paid_at = NOW(), note = ? WHERE id = ?",
     [req.body.note || '', req.params.id]
   );
   res.json({ message: 'Payout marked as paid' });

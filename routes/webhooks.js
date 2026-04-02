@@ -118,7 +118,7 @@ router.post('/paystack', async (req, res) => {
 
         // Update payment
         await db.runAsync(
-          `UPDATE payments SET status = 'success', provider_status = ?, metadata = ?, updated_at = datetime('now') WHERE id = ?`,
+          `UPDATE payments SET status = 'success', provider_status = ?, metadata = ?, updated_at = NOW() WHERE id = ?`,
           [event.data.status, JSON.stringify(event.data), payment.id]
         );
 
@@ -136,7 +136,7 @@ router.post('/paystack', async (req, res) => {
         const payment = await db.getAsync('SELECT * FROM payments WHERE provider_ref = ?', [ref]);
         if (!payment) break;
         await db.runAsync(
-          `UPDATE payments SET status = 'failed', provider_status = ?, updated_at = datetime('now') WHERE id = ?`,
+          `UPDATE payments SET status = 'failed', provider_status = ?, updated_at = NOW() WHERE id = ?`,
           [event.data.status || 'failed', payment.id]
         );
         await db.runAsync('UPDATE bookings SET status = ? WHERE id = ?', ['cancelled', payment.booking_id]);
@@ -149,7 +149,7 @@ router.post('/paystack', async (req, res) => {
         const payment = await db.getAsync('SELECT * FROM payments WHERE provider_ref = ?', [ref]);
         if (!payment) break;
         await db.runAsync(
-          `UPDATE payments SET status = 'refunded', updated_at = datetime('now') WHERE id = ?`,
+          `UPDATE payments SET status = 'refunded', updated_at = NOW() WHERE id = ?`,
           [payment.id]
         );
         await db.runAsync('UPDATE bookings SET status = ? WHERE id = ?', ['refunded', payment.booking_id]);
