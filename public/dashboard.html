@@ -183,8 +183,8 @@ body{padding-top:64px;}
     <div id="booking-summary" style="display:none;">
       <div class="booking-summary" id="booking-summary-box"></div>
       <div class="form-group">
-        <label class="form-label">Guests</label>
-        <input class="form-input" type="number" id="booking-guests" value="1" min="1" max="20"/>
+        <label class="form-label">Guests <span id="capacity-hint" style="color:var(--text-muted);font-weight:400;"></span></label>
+        <input class="form-input" type="number" id="booking-guests" value="1" min="1" max="20" onchange="updateGuestPrice()" oninput="updateGuestPrice()"/>
       </div>
       <div class="form-group">
         <label class="form-label">Note <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
@@ -210,7 +210,7 @@ body{padding-top:64px;}
 <script src="/js/app.js"></script>
 <script>
 let activeFilter='', activeArea='', searchTimer=null, mapInstance=null, mapMarkers={}, savedIds=new Set(), selectedRating=0;
-let currentBookingSpace=null, selectedStart=null, selectedEnd=null, bookedSlots=[];
+let currentBookingSpace=null, selectedStart=null, selectedEnd=null, bookedSlots=[], currentBookingPrice=null;
 
 async function init() {
   renderNav();
@@ -256,7 +256,10 @@ async function loadSpaces(params={}) {
         <div class="card-amenities">${s.amenities.slice(0,3).map(a=>`<span class="amenity-tag">${a}</span>`).join('')}${s.amenities.length>3?`<span class="amenity-tag">+${s.amenities.length-3}</span>`:''}</div>
         <div class="card-footer">
           <div class="card-price">${s.walkin_price?`<span style="text-decoration:line-through;color:var(--text-muted);font-size:12px;margin-right:4px;">${s.walkin_price}</span>`:''}<strong>${s.price||'Free'}</strong><span> ${s.price_unit||''}</span></div>
-          <button class="save-btn ${savedIds.has(s.id)?'saved':''}" onclick="toggleSave(event,${s.id})">${savedIds.has(s.id)?'♥':'♡'}</button>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button class="btn btn-amber btn-sm" onclick="event.stopPropagation();openSpace(${s.id})">Book</button>
+            <button class="save-btn ${savedIds.has(s.id)?'saved':''}" onclick="toggleSave(event,${s.id})" style="font-size:18px;min-width:36px;min-height:36px;">${savedIds.has(s.id)?'♥':'♡'}</button>
+          </div>
         </div>
       </div>
     </div>`).join('');
@@ -310,7 +313,10 @@ async function findNearMe() {
             <div class="card-amenities">${s.amenities.slice(0,3).map(a=>`<span class="amenity-tag">${a}</span>`).join('')}${s.amenities.length>3?`<span class="amenity-tag">+${s.amenities.length-3}</span>`:''}</div>
             <div class="card-footer">
               <div class="card-price">${s.walkin_price?`<span style="text-decoration:line-through;color:var(--text-muted);font-size:12px;margin-right:4px;">${s.walkin_price}</span>`:''}<strong>${s.price||'Free'}</strong><span> ${s.price_unit||''}</span></div>
-              <button class="save-btn ${savedIds.has(s.id)?'saved':''}" onclick="toggleSave(event,${s.id})">${savedIds.has(s.id)?'♥':'♡'}</button>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <button class="btn btn-amber btn-sm" onclick="event.stopPropagation();openSpace(${s.id})">Book</button>
+                <button class="save-btn ${savedIds.has(s.id)?'saved':''}" onclick="toggleSave(event,${s.id})" style="font-size:18px;min-width:36px;min-height:36px;">${savedIds.has(s.id)?'♥':'♡'}</button>
+              </div>
             </div>
           </div>
         </div>`).join('');
@@ -326,6 +332,8 @@ async function openSpace(id) {
   const loggedIn=Auth.loggedIn();
   const user=Auth.getUser();
   const isOwner = user && space.owner_id === user.id;
+  let hasBooked = false;
+  if (loggedIn) { try { const b = await apiFetch(`/bookings?space_id=${id}`); hasBooked = b.bookings && b.bookings.length > 0; } catch {} }
 
   document.getElementById('space-modal-body').innerHTML=`
     <div class="smodal-img" style="${!space.images||!space.images.length?'background:'+catGrad(space.category):''}" id="smodal-img-wrap">
@@ -341,15 +349,17 @@ async function openSpace(id) {
       <div class="modal-name">${space.name}</div>
       <div class="modal-loc">📍 ${space.address}${space.area ? ', '+space.area : ''}, ${space.city}</div>
       <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:1rem;">${space.description||''}</p>
+      ${space.capacity ? `<div style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);background:var(--parchment);padding:6px 12px;border-radius:20px;margin-bottom:1rem;">👥 Up to ${space.capacity} ${space.capacity===1?'person':'people'}</div>` : ''}
       <div class="modal-section">Amenities</div>
       <div class="modal-amenities">${space.amenities.map(a=>`<span class="modal-amenity">✓ ${a}</span>`).join('')||'<span style="font-size:13px;color:var(--text-muted)">Not listed</span>'}</div>
       <div class="modal-section">Opening hours</div>
       <div>${Object.entries(space.hours).map(([d,h])=>`<div class="modal-hours-row"><span>${d}</span><span>${h}</span></div>`).join('')||'<div style="font-size:13px;color:var(--text-muted)">Not listed</div>'}</div>
       ${reviews.length?`<div class="modal-section">Reviews (${reviews.length})</div><div>${reviews.slice(0,3).map(r=>`<div class="review-item"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;"><span style="font-size:13px;font-weight:500;">${r.user_name}</span><span style="color:var(--amber);font-size:12px;">${'★'.repeat(r.rating)}</span></div>${r.comment?`<div style="font-size:13px;color:var(--text-secondary)">${r.comment}</div>`:''}</div>`).join('')}</div>`:''}
-      ${loggedIn?`<div class="modal-section">Leave a review</div>
+      ${hasBooked?`<div class="modal-section">Leave a review</div>
         <div class="star-picker" id="stars-${space.id}">${[1,2,3,4,5].map(i=>`<span onclick="setRating(${i},'${space.id}')" id="star-${space.id}-${i}">★</span>`).join('')}</div>
         <textarea class="form-textarea" id="rev-comment-${space.id}" placeholder="Share your experience…" style="min-height:70px;margin-bottom:8px;"></textarea>
-        <button class="btn btn-outline btn-sm" onclick="submitReview(${space.id})">Submit review</button>`:''}
+        <button class="btn btn-outline btn-sm" onclick="submitReview(${space.id})">Submit review</button>`
+      :loggedIn?'<div style="font-size:12px;color:var(--text-muted);margin-top:1rem;">Book this space to leave a review.</div>':''}
       <div class="modal-footer">
         <div class="modal-price">${space.walkin_price?`<span style="text-decoration:line-through;color:var(--text-muted);font-weight:400;margin-right:6px;">${space.walkin_price}</span>`:''}<strong>${space.price||'Free'}</strong>${space.price_unit?`<span class="unit"> ${space.price_unit}</span>`:''} ${space.walkin_price?`<span style="font-size:11px;background:rgba(232,137,26,0.15);color:var(--amber);padding:2px 8px;border-radius:10px;margin-left:6px;">SpaceLogg Price</span>`:''}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -399,6 +409,11 @@ function openBookingModal(space) {
   document.getElementById('booking-summary').style.display='none';
   document.getElementById('confirm-booking-btn').style.display='none';
   document.getElementById('booking-error').style.display='none';
+  const cap = currentBookingSpace.capacity || 20;
+  const guestInput = document.getElementById('booking-guests');
+  guestInput.max = cap;
+  guestInput.value = 1;
+  document.getElementById('capacity-hint').textContent = `(max ${cap})`;
   document.getElementById('space-modal').classList.remove('open');
   document.getElementById('booking-modal').classList.add('open');
   renderWeek();
@@ -460,23 +475,51 @@ async function loadAvailability() {
   } catch(err){toast('Could not check availability','error');}
 }
 
+function calcPrice(space, slot) {
+  const hours = (parseInt(slot.end) - parseInt(slot.start));
+  const hourly = space.price_hourly ? parseInt(space.price_hourly.replace(/[^\d]/g,'')) : 0;
+  const daily = space.price ? parseInt(space.price.replace(/[^\d]/g,'')) : 0;
+  if (!daily && !hourly) return {amount:0, display:'Free'};
+  // Full day or half day
+  if (slot.label === 'Full day') return {amount:daily, display:space.price};
+  if (slot.label.startsWith('Half day')) return {amount:Math.round(daily*0.6), display:`₦${Math.round(daily*0.6).toLocaleString()}`};
+  // Hourly slots (2hr blocks)
+  if (hourly) return {amount:hourly*hours, display:`₦${(hourly*hours).toLocaleString()}`};
+  // Fallback: prorate daily rate (assuming 10hr day)
+  const perHour = Math.round(daily / 10);
+  const total = perHour * hours;
+  return {amount:total, display:`₦${total.toLocaleString()}`};
+}
+let selectedSlotIdx = null;
 function selectSlot(idx) {
+  selectedSlotIdx = idx;
   document.querySelectorAll('.time-slot').forEach(s=>s.classList.remove('selected'));
   document.querySelectorAll('.time-slot')[idx].classList.add('selected');
   const slot=TIME_SLOTS[idx];
   selectedStart=slot.start; selectedEnd=slot.end;
-  const date=document.getElementById('booking-date').value;
+  document.getElementById('booking-summary').style.display='block';
+  document.getElementById('confirm-booking-btn').style.display='flex';
+  updateGuestPrice();
+}
+function updateGuestPrice() {
+  if (selectedSlotIdx === null) return;
+  const slot = TIME_SLOTS[selectedSlotIdx];
+  const guests = Math.max(1, parseInt(document.getElementById('booking-guests').value) || 1);
+  const cap = currentBookingSpace.capacity || 20;
+  if (guests > cap) document.getElementById('booking-guests').value = cap;
+  const basePrice = calcPrice(currentBookingSpace, slot);
+  const totalAmount = basePrice.amount * Math.min(guests, cap);
+  const totalDisplay = totalAmount === 0 ? 'Free' : `₦${totalAmount.toLocaleString()}`;
+  currentBookingPrice = {amount: totalAmount, display: totalDisplay};
+  const date = document.getElementById('booking-date').value;
   document.getElementById('booking-summary-box').innerHTML=`
     <div class="booking-summary-row"><span>Space</span><span>${currentBookingSpace.name}</span></div>
     <div class="booking-summary-row"><span>Date</span><span>${new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric'})}</span></div>
     <div class="booking-summary-row"><span>Time</span><span>${slot.label} (${slot.start}–${slot.end})</span></div>
-    <div class="booking-summary-row"><span>Price</span><span>${currentBookingSpace.price||'Free'}${currentBookingSpace.price_unit||''}</span></div>`;
-  document.getElementById('booking-summary').style.display='block';
+    <div class="booking-summary-row"><span>Guests</span><span>${Math.min(guests, cap)}</span></div>
+    <div class="booking-summary-row"><span>Price</span><span>${basePrice.display} × ${Math.min(guests, cap)} = <strong>${totalDisplay}</strong></span></div>`;
   const btn = document.getElementById('confirm-booking-btn');
-  btn.style.display='flex';
-  const price = currentBookingSpace.price;
-  const isFree = !price || price.toLowerCase() === 'free';
-  btn.textContent = isFree ? 'Confirm booking →' : `Pay & Book (${price}) →`;
+  btn.textContent = totalAmount === 0 ? 'Confirm booking →' : `Pay & Book (${totalDisplay}) →`;
 }
 
 async function confirmBooking() {

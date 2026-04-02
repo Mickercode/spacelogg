@@ -126,10 +126,6 @@ body{padding-top:64px;background:var(--parchment);}
       </div>
       <div class="form-group"><label class="form-label">Address *</label><input class="form-input" name="address" required placeholder="Full street address"/></div>
       <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" name="description" placeholder="Describe the space…" style="min-height:80px;"></textarea></div>
-      <div class="f2">
-        <div class="form-group"><label class="form-label">Latitude</label><input class="form-input" name="lat" type="number" step="any" placeholder="e.g. 6.4541"/></div>
-        <div class="form-group"><label class="form-label">Longitude</label><input class="form-input" name="lng" type="number" step="any" placeholder="e.g. 3.3947"/></div>
-      </div>
       <div style="font-size:14px;font-weight:600;color:var(--charcoal);margin:1.5rem 0 0.75rem;">Pricing</div>
       <div class="f2">
         <div class="form-group"><label class="form-label">SpaceLogg price</label><input class="form-input" name="price" placeholder="e.g. ₦2,500"/></div>
@@ -312,7 +308,7 @@ function clearPhotoQueue(prefix) {
 function buildAmenities(){$('amt-grid').innerHTML=AMENITIES.map((a,i)=>`<span><input type="checkbox" class="amt-ck" id="am${i}" value="${a}"><label class="amt-lb" for="am${i}">${a}</label></span>`).join('');}
 $('add-space-form').addEventListener('submit',async function(e){
   e.preventDefault();const err=$('as-error'),ok=$('as-success');err.style.display='none';ok.style.display='none';
-  try{const fd=new FormData();['name','category','city','area','address','lat','lng','description','price','walkin_price','price_unit','price_hourly','price_monthly','capacity','wifi_speed','power_backup'].forEach(f=>{if(this[f]?.value)fd.append(f,this[f].value);});
+  try{const fd=new FormData();['name','category','city','area','address','description','price','walkin_price','price_unit','price_hourly','price_monthly','capacity','wifi_speed','power_backup'].forEach(f=>{if(this[f]?.value)fd.append(f,this[f].value);});
   fd.append('amenities',JSON.stringify(Array.from(document.querySelectorAll('#amt-grid input:checked')).map(c=>c.value)));
   fd.append('hours','{}');
   getQueueFiles('as').forEach(f=>fd.append('images',f));

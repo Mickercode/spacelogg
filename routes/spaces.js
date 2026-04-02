@@ -195,6 +195,10 @@ router.post('/:id/reviews', requireAuth, async (req, res) => {
     if (!rating||rating<1||rating>5) return res.status(400).json({error:'Rating must be 1–5'});
     const space = await db.getAsync('SELECT * FROM spaces WHERE id=? AND status=?',[req.params.id,'approved']);
     if (!space) return res.status(404).json({error:'Space not found'});
+    const hasBooked = await db.getAsync(
+      "SELECT id FROM bookings WHERE space_id = ? AND user_id = ? AND status IN ('confirmed','paid')",
+      [req.params.id, req.user.id]);
+    if (!hasBooked) return res.status(403).json({error:'You can only review spaces you have booked'});
     await db.runAsync(
       `INSERT INTO reviews (space_id,user_id,rating,comment) VALUES (?,?,?,?)
        ON CONFLICT(space_id,user_id) DO UPDATE SET rating=excluded.rating,comment=excluded.comment`,

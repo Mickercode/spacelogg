@@ -8,12 +8,15 @@ const { initializeTransaction, verifyTransaction, refundTransaction, parsePrice,
 const { completeBookingAfterPayment } = require('./webhooks');
 const router  = express.Router();
 
-// GET /api/bookings — user's bookings
+// GET /api/bookings — user's bookings (optional ?space_id= filter)
 router.get('/', requireAuth, async (req, res) => {
-  const bookings = await db.allAsync(`
-    SELECT b.*, s.name as space_name, s.address, s.category, s.images
+  let sql = `SELECT b.*, s.name as space_name, s.address, s.category, s.images
     FROM bookings b JOIN spaces s ON s.id = b.space_id
-    WHERE b.user_id = ? ORDER BY b.date DESC, b.start_time DESC`, [req.user.id]);
+    WHERE b.user_id = ?`;
+  const params = [req.user.id];
+  if (req.query.space_id) { sql += ' AND b.space_id = ?'; params.push(req.query.space_id); }
+  sql += ' ORDER BY b.date DESC, b.start_time DESC';
+  const bookings = await db.allAsync(sql, params);
   res.json({ bookings });
 });
 
