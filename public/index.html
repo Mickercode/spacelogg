@@ -389,6 +389,15 @@ function goSearch() {
 }
 async function init() {
   const p = new URLSearchParams(window.location.search);
+  if (p.get('verify')) {
+    try {
+      const r = await apiFetch('/auth/verify-email?token='+p.get('verify'));
+      history.replaceState({},'','/');
+      toast(r.message || 'Email verified!','success');
+      setTimeout(()=>window.location.href='/dashboard.html',1500);
+      return;
+    } catch(e) { history.replaceState({},'','/'); toast(e.message||'Verification failed','error'); }
+  }
   if (p.get('reset')) { resetToken=p.get('reset'); history.replaceState({},'','/'); showResetForm(); document.getElementById('auth-modal').classList.add('open'); }
   if (p.get('login')||p.get('register')) openAuthModal(p.get('register')?'register':'login');
   renderNav();
@@ -435,7 +444,7 @@ async function handleGoogleCredential(response) {
   } catch(err) { showErr(err.message); }
 }
 async function doLogin(){ try{ const{token,user}=await apiFetch('/auth/login',{method:'POST',body:JSON.stringify({email:document.getElementById('login-email').value,password:document.getElementById('login-pw').value})}); Auth.setToken(token); Auth.setUser(user); closeAuthModal(); renderNav(); toast('Welcome back, '+user.name.split(' ')[0]+'! 👋','success'); }catch(err){showErr(err.message);} }
-async function doRegister(){ try{ const{token,user}=await apiFetch('/auth/register',{method:'POST',body:JSON.stringify({name:document.getElementById('reg-name').value,email:document.getElementById('reg-email').value,password:document.getElementById('reg-pw').value})}); Auth.setToken(token); Auth.setUser(user); closeAuthModal(); renderNav(); toast('Welcome to SpaceLogg! 🎉','success'); }catch(err){showErr(err.message);} }
+async function doRegister(){ try{ const{token,user}=await apiFetch('/auth/register',{method:'POST',body:JSON.stringify({name:document.getElementById('reg-name').value,email:document.getElementById('reg-email').value,password:document.getElementById('reg-pw').value})}); Auth.setToken(token); Auth.setUser(user); closeAuthModal(); renderNav(); toast('Account created! Check your email to verify.','success'); setTimeout(()=>window.location.href='/dashboard.html',1200); }catch(err){showErr(err.message);} }
 async function doForgot(){ try{ await apiFetch('/auth/forgot-password',{method:'POST',body:JSON.stringify({email:document.getElementById('forgot-email').value})}); showOk('Reset link sent! Check your email.'); }catch(err){showErr(err.message);} }
 async function doReset(){ try{ const{token,user}=await apiFetch('/auth/reset-password',{method:'POST',body:JSON.stringify({token:resetToken,password:document.getElementById('reset-pw').value})}); Auth.setToken(token); Auth.setUser(user); resetToken=null; closeAuthModal(); renderNav(); toast('Password reset! Welcome back.','success'); }catch(err){showErr(err.message);} }
 init();

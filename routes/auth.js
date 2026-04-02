@@ -21,13 +21,37 @@ router.post('/register', async (req, res) => {
     const existing = await db.getAsync('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
     if (existing) return res.status(409).json({ error: 'Email already registered' });
     const hash = await bcrypt.hash(password, 10);
-    const { lastID } = await db.runAsync('INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [name.trim(), email.toLowerCase().trim(), hash]);
-    const user = await db.getAsync('SELECT id, name, email, role, created_at FROM users WHERE id = ?', [lastID]);
+    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const { lastID } = await db.runAsync('INSERT INTO users (name, email, password, verify_token) VALUES (?, ?, ?, ?)', [name.trim(), email.toLowerCase().trim(), hash, verifyToken]);
+    const user = await db.getAsync('SELECT id, name, email, role, email_verified, created_at FROM users WHERE id = ?', [lastID]);
     await db.runAsync(`INSERT INTO notifications (user_id, type, title, message) VALUES (?, 'welcome', ?, ?)`,
-      [user.id, 'Welcome to SpaceLogg! 🎉', `Hi ${user.name.split(' ')[0]}! Start exploring workspaces near you.`]);
-    sendEmail({ to: user.email, subject: 'Welcome to SpaceLogg!', html: welcomeEmail(user.name) }).catch(() => {});
+      [user.id, 'Welcome to SpaceLogg!', `Hi ${user.name.split(' ')[0]}! Please verify your email to get started.`]);
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    sendEmail({
+      to: user.email,
+      subject: 'Verify your SpaceLogg account',
+      html: emailTemplate({
+        title: `Welcome, ${user.name.split(' ')[0]}!`,
+        body: `<p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#6B6456;line-height:1.7;margin:0 0 16px;">Thanks for signing up for SpaceLogg. Please verify your email address to start discovering and booking workspaces.</p>`,
+        ctaText: 'Verify my email',
+        ctaUrl: `${appUrl}/?verify=${verifyToken}`
+      })
+    }).catch(() => {});
     res.status(201).json({ token: makeToken(user), user });
   } catch (err) { console.error(err); res.status(500).json({ error: 'Registration failed' }); }
+});
+
+// Verify email
+router.get('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ error: 'Token is required' });
+    const user = await db.getAsync('SELECT id, email_verified FROM users WHERE verify_token = ?', [token]);
+    if (!user) return res.status(400).json({ error: 'Invalid or expired verification link' });
+    if (user.email_verified) return res.json({ message: 'Email already verified' });
+    await db.runAsync('UPDATE users SET email_verified = 1, verify_token = NULL WHERE id = ?', [user.id]);
+    res.json({ message: 'Email verified successfully!' });
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Verification failed' }); }
 });
 
 router.post('/login', async (req, res) => {
@@ -44,7 +68,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/me', requireAuth, async (req, res) => {
-  const user = await db.getAsync('SELECT id, name, email, avatar, role, created_at FROM users WHERE id = ?', [req.user.id]);
+  const user = await db.getAsync('SELECT id, name, email, avatar, role, email_verified, created_at FROM users WHERE id = ?', [req.user.id]);
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json({ user });
 });
@@ -120,7 +144,7 @@ router.post('/google', async (req, res) => {
       const randomPw = crypto.randomBytes(32).toString('hex');
       const hash = await bcrypt.hash(randomPw, 10);
       const { lastID } = await db.runAsync(
-        'INSERT INTO users (name, email, password, avatar) VALUES (?, ?, ?, ?)',
+        'INSERT INTO users (name, email, password, avatar, email_verified) VALUES (?, ?, ?, ?, 1)',
         [name, email.toLowerCase(), hash, picture || '']
       );
       user = await db.getAsync('SELECT * FROM users WHERE id = ?', [lastID]);

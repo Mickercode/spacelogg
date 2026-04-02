@@ -60,6 +60,8 @@ async function initDB() {
         password TEXT NOT NULL,
         avatar TEXT,
         role TEXT NOT NULL DEFAULT 'user',
+        email_verified INTEGER NOT NULL DEFAULT 0,
+        verify_token TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
@@ -257,6 +259,15 @@ async function initDB() {
       );
     `);
 
+    // Safe migrations for existing tables
+    const migrations = [
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER NOT NULL DEFAULT 0",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_token TEXT",
+    ];
+    for (const m of migrations) {
+      await client.query(m).catch(() => {});
+    }
+
     // Indexes
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_spaces_category ON spaces(category);
@@ -310,7 +321,7 @@ async function initDB() {
           console.log(`✅ Promoted ${process.env.ADMIN_EMAIL} to admin`);
         } else {
           await client.query(
-            `INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, 'admin')`,
+            `INSERT INTO users (name, email, password, role, email_verified) VALUES ($1, $2, $3, 'admin', 1)`,
             [process.env.ADMIN_NAME || 'Admin', process.env.ADMIN_EMAIL.toLowerCase(), hash]
           );
           console.log(`✅ Admin account created: ${process.env.ADMIN_EMAIL}`);
