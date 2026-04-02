@@ -230,7 +230,7 @@ footer{background:var(--charcoal);color:var(--parchment);padding:3rem 2.5rem 2re
   .filter-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 1rem .5rem;gap:6px;}
   .filter-tabs::-webkit-scrollbar{display:none;}
   .filter-tab{white-space:nowrap;flex-shrink:0;min-height:36px;}
-  .spaces-list{padding:0 1rem 5rem;}
+  .spaces-list{padding:0 1rem 5rem;display:flex;flex-direction:column;gap:1rem;}
   .results-count{padding:0 1rem .5rem;}
 
   /* Modals — bottom sheet */
