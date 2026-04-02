@@ -9,148 +9,235 @@
 <link rel="stylesheet" href="/css/main.css"/>
 <link rel="stylesheet" href="/css/mobile-fixes.css"/>
 <style>
-body{padding-top:64px;}
-.page-wrap{max-width:720px;margin:0 auto;padding:4rem 2rem 5rem;}
-.page-title{font-family:'DM Serif Display',serif;font-size:clamp(32px,5vw,48px);color:var(--charcoal);margin-bottom:0.5rem;}
-.page-sub{font-size:16px;color:var(--text-muted);margin-bottom:3rem;line-height:1.7;}
-.page-section{margin-bottom:2.5rem;}
-.page-section h2{font-family:'DM Serif Display',serif;font-size:22px;color:var(--charcoal);margin-bottom:0.75rem;}
-.page-section p{font-size:15px;color:var(--text-secondary);line-height:1.75;margin:0 0 1rem;}
+body{margin:0;padding:0;background:var(--parchment);}
 
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:3rem;}
-.stat-box{background:var(--amber);border-radius:var(--radius);padding:1.25rem;text-align:center;}
-.stat-box .val{font-family:'DM Serif Display',serif;font-size:28px;color:var(--charcoal);}
-.stat-box .lbl{font-size:12px;color:rgba(28,26,22,0.7);margin-top:2px;}
+/* ── HERO ── */
+.ha-hero{background:var(--charcoal);color:#fff;padding:8rem 2rem 5rem;text-align:center;position:relative;overflow:hidden;}
+.ha-hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 50%,rgba(232,137,26,0.08) 0%,transparent 50%),radial-gradient(circle at 70% 80%,rgba(232,137,26,0.05) 0%,transparent 40%);pointer-events:none;}
+.ha-hero-inner{max-width:720px;margin:0 auto;position:relative;z-index:1;}
+.ha-badge{display:inline-block;padding:6px 16px;border-radius:20px;font-size:11px;letter-spacing:2px;text-transform:uppercase;border:1px solid rgba(232,137,26,0.4);color:var(--amber);margin-bottom:1.5rem;}
+.ha-hero h1{font-family:'DM Serif Display',serif;font-size:clamp(36px,6vw,64px);line-height:1.1;margin:0 0 1.25rem;}
+.ha-hero h1 em{font-style:italic;color:var(--amber);}
+.ha-hero p{font-size:18px;color:rgba(255,255,255,0.6);line-height:1.7;max-width:560px;margin:0 auto 2rem;}
+.ha-hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.ha-hero-btns .btn-amber{padding:14px 32px;font-size:16px;}
+.ha-hero-btns .btn-ghost{padding:14px 32px;font-size:16px;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.2);border-radius:var(--radius);background:none;cursor:pointer;transition:all 0.2s;}
+.ha-hero-btns .btn-ghost:hover{border-color:rgba(255,255,255,0.5);color:#fff;}
 
-.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-top:1rem;}
-.feat-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.5rem;}
-.feat-card h3{font-size:15px;font-weight:600;color:var(--charcoal);margin-bottom:0.25rem;}
-.feat-card p{font-size:13px;color:var(--text-muted);line-height:1.6;margin:0;}
+/* ── STATS BAR ── */
+.ha-stats{background:var(--amber);padding:2rem;display:grid;grid-template-columns:repeat(4,1fr);gap:0;text-align:center;}
+.ha-stat{padding:1rem 0;}
+.ha-stat:not(:last-child){border-right:1px solid rgba(28,26,22,0.15);}
+.ha-stat .val{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,42px);color:var(--charcoal);line-height:1;}
+.ha-stat .lbl{font-size:12px;color:rgba(28,26,22,0.6);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;}
 
-.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:1rem;}
-.step-card{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius);padding:1.5rem;}
-.step-num{font-family:'DM Serif Display',serif;font-size:36px;color:var(--amber);line-height:1;margin-bottom:0.5rem;}
-.step-card h3{font-size:15px;font-weight:600;color:var(--charcoal);margin-bottom:0.25rem;}
-.step-card p{font-size:13px;color:var(--text-muted);line-height:1.6;margin:0;}
+/* ── SECTIONS ── */
+.ha-section{max-width:960px;margin:0 auto;padding:5rem 2rem;}
+.ha-section-alt{background:#fff;}
+.ha-section h2{font-family:'DM Serif Display',serif;font-size:clamp(26px,4vw,36px);color:var(--charcoal);margin:0 0 0.5rem;text-align:center;}
+.ha-section .subtitle{font-size:16px;color:var(--text-muted);text-align:center;margin-bottom:3rem;line-height:1.6;}
 
-.check-list{list-style:none;padding:0;margin:1rem 0 0;}
-.check-list li{font-size:14px;color:var(--text-secondary);padding:6px 0;display:flex;align-items:center;gap:8px;}
-.check-list li::before{content:'\2713';color:var(--green);font-weight:bold;font-size:16px;}
+/* ── FEATURES ── */
+.ha-feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;}
+.ha-feat{background:var(--parchment);border-radius:var(--radius-lg);padding:2rem;transition:transform 0.2s;}
+.ha-feat:hover{transform:translateY(-4px);}
+.ha-feat-icon{width:48px;height:48px;background:var(--amber);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:1rem;}
+.ha-feat h3{font-size:16px;font-weight:600;color:var(--charcoal);margin:0 0 0.5rem;}
+.ha-feat p{font-size:14px;color:var(--text-muted);line-height:1.6;margin:0;}
 
-.pricing-box{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:2rem;text-align:center;margin-top:1rem;}
-.pricing-amount{font-family:'DM Serif Display',serif;font-size:48px;color:var(--charcoal);}
-.pricing-amount span{font-size:18px;color:var(--text-muted);}
-.pricing-detail{font-size:14px;color:var(--text-muted);margin:0.75rem 0 1.5rem;line-height:1.6;}
-.pricing-features{text-align:left;font-size:14px;color:var(--text-secondary);line-height:2.2;}
-.pricing-features .ck{color:var(--green);margin-right:8px;}
+/* ── STEPS ── */
+.ha-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;counter-reset:step;}
+.ha-step{text-align:center;position:relative;}
+.ha-step::before{counter-increment:step;content:counter(step);font-family:'DM Serif Display',serif;font-size:64px;color:var(--amber);opacity:0.2;line-height:1;display:block;margin-bottom:0.5rem;}
+.ha-step h3{font-size:16px;font-weight:600;color:var(--charcoal);margin:0 0 0.5rem;}
+.ha-step p{font-size:14px;color:var(--text-muted);line-height:1.6;margin:0;}
 
-.demo-box{background:#fff;border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:2rem;margin-top:1rem;}
-.demo-box input,.demo-box select{width:100%;padding:12px 16px;border-radius:var(--radius);border:0.5px solid var(--border);font-size:14px;outline:none;background:#fff;color:var(--charcoal);margin-bottom:12px;font-family:inherit;}
-.demo-box input:focus,.demo-box select:focus{border-color:var(--amber);}
-.demo-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+/* ── WHY ── */
+.ha-why-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;}
+.ha-why-list{list-style:none;padding:0;margin:0;}
+.ha-why-list li{padding:12px 0;display:flex;align-items:flex-start;gap:12px;font-size:15px;color:var(--text-secondary);line-height:1.6;border-bottom:0.5px solid var(--border);}
+.ha-why-list li:last-child{border-bottom:none;}
+.ha-why-list .ck{color:var(--amber);font-size:18px;font-weight:bold;flex-shrink:0;margin-top:2px;}
+.ha-why-box{background:var(--charcoal);border-radius:var(--radius-lg);padding:2.5rem;color:#fff;text-align:center;}
+.ha-why-box .big{font-family:'DM Serif Display',serif;font-size:72px;color:var(--amber);line-height:1;}
+.ha-why-box .tag{font-size:14px;color:rgba(255,255,255,0.5);margin-top:0.5rem;}
+.ha-why-box .sub{font-size:16px;margin-top:1.5rem;color:rgba(255,255,255,0.7);line-height:1.6;}
 
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:1.5rem;margin-bottom:2rem;}
+/* ── PRICING ── */
+.ha-pricing{background:var(--charcoal);border-radius:var(--radius-lg);padding:3rem;text-align:center;max-width:480px;margin:0 auto;}
+.ha-pricing .amount{font-family:'DM Serif Display',serif;font-size:64px;color:var(--amber);line-height:1;}
+.ha-pricing .unit{font-size:18px;color:rgba(255,255,255,0.5);}
+.ha-pricing .desc{font-size:15px;color:rgba(255,255,255,0.5);margin:1rem 0 2rem;line-height:1.6;}
+.ha-pricing-features{text-align:left;display:grid;gap:10px;margin-bottom:2rem;}
+.ha-pricing-features div{display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(255,255,255,0.75);}
+.ha-pricing-features .ck{color:var(--amber);font-size:16px;}
 
+/* ── DEMO ── */
+.ha-demo{max-width:560px;margin:0 auto;}
+.ha-demo-form{background:#fff;border-radius:var(--radius-lg);padding:2.5rem;box-shadow:0 4px 24px rgba(0,0,0,0.06);}
+.ha-demo-form input,.ha-demo-form select{width:100%;padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);font-size:14px;outline:none;background:#fff;color:var(--charcoal);margin-bottom:12px;font-family:inherit;transition:border-color 0.15s;}
+.ha-demo-form input:focus,.ha-demo-form select:focus{border-color:var(--amber);}
+.ha-demo-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── RESPONSIVE ── */
 @media(max-width:768px){
-  .stats-row{grid-template-columns:repeat(2,1fr);}
-  .steps-grid{grid-template-columns:1fr;}
-  .demo-2col{grid-template-columns:1fr;}
+  .ha-hero{padding:6rem 1.5rem 3.5rem;}
+  .ha-stats{grid-template-columns:repeat(2,1fr);}
+  .ha-stat:not(:last-child){border-right:none;}
+  .ha-stat:nth-child(1),.ha-stat:nth-child(2){border-bottom:1px solid rgba(28,26,22,0.15);}
+  .ha-feat-grid{grid-template-columns:1fr;}
+  .ha-steps{grid-template-columns:1fr;gap:1.5rem;}
+  .ha-why-grid{grid-template-columns:1fr;}
+  .ha-demo-2col{grid-template-columns:1fr;}
+  .ha-section{padding:3rem 1.5rem;}
 }
 </style>
 </head>
 <body>
-<nav>
+
+<!-- NAV -->
+<nav style="background:rgba(28,26,22,0.97);backdrop-filter:blur(12px);position:fixed;top:0;left:0;right:0;z-index:100;">
   <a href="/" class="nav-logo">
-    <div class="nav-logomark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" stroke="#1C1A16" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#1C1A16"/><path d="M12 15L12 22" stroke="#1C1A16" stroke-width="2" stroke-linecap="round"/><path d="M8 21Q12 18.5 16 21" stroke="#1C1A16" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
-    <div class="nav-wordmark">Space<span>Logg</span></div>
+    <div class="nav-logomark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="10" r="5" stroke="#F5EDD8" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#F5EDD8"/><path d="M12 15L12 22" stroke="#F5EDD8" stroke-width="2" stroke-linecap="round"/><path d="M8 21Q12 18.5 16 21" stroke="#F5EDD8" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div>
+    <div class="nav-wordmark" style="color:#fff;">Space<span>Logg</span></div>
   </a>
   <div class="nav-right">
-    <div class="nav-links"><a href="/dashboard.html">Explore</a><a href="/space-admin/landing.html" style="color:var(--amber);font-weight:500;">HostApp</a></div>
+    <div class="nav-links">
+      <a href="/dashboard.html" style="color:rgba(255,255,255,0.6);">Explore</a>
+      <a href="/space-admin/landing.html" style="color:var(--amber);font-weight:500;">HostApp</a>
+    </div>
+    <a href="/space-admin/login.html" class="btn btn-amber btn-sm">Sign in</a>
   </div>
 </nav>
 
-<div class="page-wrap">
-  <div class="section-eyebrow">HostApp</div>
-  <h1 class="page-title">Fill your seats. Not your spreadsheets.</h1>
-  <p class="page-sub">HostApp is SpaceLogg's free management platform for coworking spaces, cafes, libraries, and hotel lounges. Get discovered, accept bookings, and track revenue — all from one dashboard.</p>
-
-  <div class="hero-actions">
-    <a href="#demo" class="btn btn-amber">Book a demo &rarr;</a>
-    <a href="/space-admin/login.html" class="btn btn-outline">Already a host? Sign in</a>
-  </div>
-
-  <!-- Stats -->
-  <div class="stats-row">
-    <div class="stat-box"><div class="val">0%</div><div class="lbl">Platform fee</div></div>
-    <div class="stat-box"><div class="val">10%</div><div class="lbl">Per booking only</div></div>
-    <div class="stat-box"><div class="val">24hr</div><div class="lbl">Onboarding</div></div>
-    <div class="stat-box"><div class="val">90%</div><div class="lbl">You keep</div></div>
-  </div>
-
-  <!-- Features -->
-  <div class="page-section">
-    <h2>Everything you need to run your space</h2>
-    <p>No new software to learn. No setup fees. Just list, manage, and earn.</p>
-    <div class="feat-grid">
-      <div class="feat-card"><h3>Booking management</h3><p>See every booking in real-time. Accept, reject, or mark no-shows.</p></div>
-      <div class="feat-card"><h3>Revenue tracking</h3><p>Track total revenue, monthly earnings, and pending payouts.</p></div>
-      <div class="feat-card"><h3>Analytics</h3><p>Know your busiest days, top-performing spaces, and occupancy rates.</p></div>
-      <div class="feat-card"><h3>Space management</h3><p>Add spaces, set pricing, upload photos, manage amenities and capacity.</p></div>
-      <div class="feat-card"><h3>Availability control</h3><p>Block dates for maintenance or private events. Real-time availability.</p></div>
-      <div class="feat-card"><h3>Reviews &amp; reputation</h3><p>See every review left by guests. Build your reputation on SpaceLogg.</p></div>
+<!-- HERO -->
+<section class="ha-hero">
+  <div class="ha-hero-inner">
+    <div class="ha-badge">For workspace operators</div>
+    <h1>Fill your seats.<br/>Not your <em>spreadsheets.</em></h1>
+    <p>HostApp is SpaceLogg's free management platform. Get discovered, accept bookings, and track revenue — all from one dashboard.</p>
+    <div class="ha-hero-btns">
+      <a href="#demo" class="btn btn-amber">Book a free demo &rarr;</a>
+      <a href="/space-admin/login.html" class="btn-ghost">Already a host? Sign in</a>
     </div>
   </div>
+</section>
 
-  <!-- How it works --> 
-  <div class="page-section">
-    <h2>How it works</h2>
-    <div class="steps-grid">
-      <div class="step-card"><div class="step-num">1</div><h3>Book a demo</h3><p>We'll walk you through HostApp and set up your account. Takes 15 minutes.</p></div>
-      <div class="step-card"><div class="step-num">2</div><h3>List your spaces</h3><p>Add your desks, rooms, or lounges. Set pricing, photos, and amenities.</p></div>
-      <div class="step-card"><div class="step-num">3</div><h3>Start earning</h3><p>Bookings come in from SpaceLogg users. Payouts are automatic.</p></div>
+<!-- STATS -->
+<div class="ha-stats">
+  <div class="ha-stat"><div class="val">0%</div><div class="lbl">Platform fee</div></div>
+  <div class="ha-stat"><div class="val">10%</div><div class="lbl">Per booking</div></div>
+  <div class="ha-stat"><div class="val">24hr</div><div class="lbl">Onboarding</div></div>
+  <div class="ha-stat"><div class="val">90%</div><div class="lbl">You keep</div></div>
+</div>
+
+<!-- FEATURES -->
+<section class="ha-section">
+  <h2>Everything you need to run your space</h2>
+  <p class="subtitle">No new software to learn. No setup fees. Just list, manage, and earn.</p>
+  <div class="ha-feat-grid">
+    <div class="ha-feat">
+      <div class="ha-feat-icon">&#128197;</div>
+      <h3>Booking management</h3>
+      <p>See every booking in real-time. Accept, reject, or mark no-shows from your dashboard.</p>
+    </div>
+    <div class="ha-feat">
+      <div class="ha-feat-icon">&#128200;</div>
+      <h3>Revenue tracking</h3>
+      <p>Track total revenue, monthly earnings, pending payouts, and transaction history.</p>
+    </div>
+    <div class="ha-feat">
+      <div class="ha-feat-icon">&#128202;</div>
+      <h3>Smart analytics</h3>
+      <p>Know your busiest days, top-performing spaces, occupancy rates, and cancellation trends.</p>
+    </div>
+    <div class="ha-feat">
+      <div class="ha-feat-icon">&#127968;</div>
+      <h3>Space management</h3>
+      <p>Add spaces, set pricing, upload photos, manage amenities and capacity — all self-serve.</p>
+    </div>
+    <div class="ha-feat">
+      <div class="ha-feat-icon">&#128198;</div>
+      <h3>Availability control</h3>
+      <p>Block dates for maintenance or private events. Real-time availability synced across the platform.</p>
+    </div>
+    <div class="ha-feat">
+      <div class="ha-feat-icon">&#11088;</div>
+      <h3>Reviews &amp; reputation</h3>
+      <p>See every review left by guests. Build trust and climb the rankings on SpaceLogg.</p>
     </div>
   </div>
+</section>
 
-  <!-- Why HostApp -->
-  <div class="page-section">
-    <h2>Built for workspace operators who care about growth</h2>
-    <p>Whether you run a 5-seat cafe or a 200-desk coworking space, HostApp gives you the tools to fill your spaces and track every naira.</p>
-    <ul class="check-list">
-      <li>Set walk-in price vs SpaceLogg price — show users the savings</li>
-      <li>Dual pricing drives more bookings through your door</li>
-      <li>Automatic weekly payouts to your bank account</li>
-      <li>Real-time occupancy and revenue analytics</li>
-      <li>Block dates for private events or maintenance</li>
-      <li>Email notifications for every booking</li>
+<!-- HOW IT WORKS -->
+<section class="ha-section ha-section-alt">
+  <h2>Live in 3 steps</h2>
+  <p class="subtitle">From zero to bookings in less than a day.</p>
+  <div class="ha-steps">
+    <div class="ha-step">
+      <h3>Book a demo</h3>
+      <p>We walk you through HostApp and set up your account. Takes 15 minutes.</p>
+    </div>
+    <div class="ha-step">
+      <h3>List your spaces</h3>
+      <p>Add your desks, rooms, or lounges. Set pricing, photos, and amenities.</p>
+    </div>
+    <div class="ha-step">
+      <h3>Start earning</h3>
+      <p>Bookings come in from SpaceLogg users. Payouts hit your bank automatically.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHY HOSTAPP -->
+<section class="ha-section">
+  <h2>Built for operators who care about growth</h2>
+  <p class="subtitle">Whether you run a 5-seat cafe or a 200-desk coworking space.</p>
+  <div class="ha-why-grid">
+    <ul class="ha-why-list">
+      <li><span class="ck">&#10003;</span>Dual pricing — show walk-in vs SpaceLogg price to drive bookings</li>
+      <li><span class="ck">&#10003;</span>Automatic weekly payouts to your bank account</li>
+      <li><span class="ck">&#10003;</span>Real-time occupancy and revenue analytics</li>
+      <li><span class="ck">&#10003;</span>Block dates for private events or maintenance</li>
+      <li><span class="ck">&#10003;</span>Email notifications for every booking and cancellation</li>
+      <li><span class="ck">&#10003;</span>No lock-in — leave anytime, no questions asked</li>
     </ul>
-  </div>
-
-  <!-- Pricing -->
-  <div class="page-section">
-    <h2>Simple pricing</h2>
-    <p>No monthly fees. No setup costs. We only earn when you earn.</p>
-    <div class="pricing-box">
-      <div class="pricing-amount">10% <span>per booking</span></div>
-      <div class="pricing-detail">That's it. SpaceLogg takes a 10% commission on each completed booking. You keep 90%.</div>
-      <div class="pricing-features">
-        <span class="ck">&#10003;</span> Free to list your spaces<br/>
-        <span class="ck">&#10003;</span> Free dashboard access<br/>
-        <span class="ck">&#10003;</span> Automatic weekly payouts<br/>
-        <span class="ck">&#10003;</span> No lock-in — leave anytime<br/>
-        <span class="ck">&#10003;</span> Dual pricing support<br/>
-        <span class="ck">&#10003;</span> Real-time analytics and reports
-      </div>
-      <a href="#demo" class="btn btn-amber" style="width:100%;margin-top:1.5rem;">Get started &rarr;</a>
+    <div class="ha-why-box">
+      <div class="big">90%</div>
+      <div class="tag">Revenue you keep</div>
+      <div class="sub">We only take 10% per completed booking. No monthly fees, no hidden charges, no surprises.</div>
     </div>
   </div>
+</section>
 
-  <!-- Demo form -->
-  <div class="page-section" id="demo">
-    <h2>Ready to fill your seats?</h2>
-    <p>Book a 15-minute demo and we'll get your spaces live on SpaceLogg.</p>
-    <div class="demo-box">
+<!-- PRICING -->
+<section class="ha-section ha-section-alt">
+  <h2>Simple pricing</h2>
+  <p class="subtitle">We only earn when you earn. That's it.</p>
+  <div class="ha-pricing">
+    <div class="amount">10%</div>
+    <div class="unit">per completed booking</div>
+    <div class="desc">No monthly fees. No setup costs. No minimums. Cancel anytime.</div>
+    <div class="ha-pricing-features">
+      <div><span class="ck">&#10003;</span> Free to list your spaces</div>
+      <div><span class="ck">&#10003;</span> Free dashboard access forever</div>
+      <div><span class="ck">&#10003;</span> Automatic weekly payouts</div>
+      <div><span class="ck">&#10003;</span> Dual pricing support</div>
+      <div><span class="ck">&#10003;</span> Analytics and reports</div>
+      <div><span class="ck">&#10003;</span> Booking management tools</div>
+    </div>
+    <a href="#demo" class="btn btn-amber" style="width:100%;padding:16px;font-size:16px;">Get started free &rarr;</a>
+  </div>
+</section>
+
+<!-- DEMO FORM -->
+<section class="ha-section" id="demo">
+  <h2>Ready to fill your seats?</h2>
+  <p class="subtitle">Book a 15-minute demo. We'll get your spaces live on SpaceLogg.</p>
+  <div class="ha-demo">
+    <div class="ha-demo-form">
       <form id="demo-form">
-        <div class="demo-2col">
+        <div class="ha-demo-2col">
           <input placeholder="Your name" id="d-name" required/>
           <input placeholder="Email" type="email" id="d-email" required/>
         </div>
@@ -164,12 +251,12 @@ body{padding-top:64px;}
           <option value="other">Other</option>
         </select>
         <input placeholder="Phone number (optional)" id="d-phone"/>
-        <div id="demo-ok" style="display:none;padding:12px;border-radius:var(--radius);background:rgba(76,175,80,0.1);color:var(--green);font-size:14px;text-align:center;">Demo request received! We'll be in touch within 24 hours.</div>
-        <button type="submit" class="btn btn-amber" style="width:100%;padding:14px;">Book a free demo &rarr;</button>
+        <div id="demo-ok" style="display:none;padding:14px;border-radius:var(--radius);background:rgba(76,175,80,0.1);color:var(--green);font-size:14px;text-align:center;margin-bottom:12px;">Demo request received! We'll be in touch within 24 hours.</div>
+        <button type="submit" class="btn btn-amber" style="width:100%;padding:16px;font-size:16px;">Book a free demo &rarr;</button>
       </form>
     </div>
   </div>
-</div>
+</section>
 
 <footer>
   <div><div class="footer-brand">Space<span>Logg</span></div><div class="footer-tagline">Find your space. Do your work.</div></div>
