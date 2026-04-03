@@ -257,12 +257,47 @@ async function initDB() {
         reason TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS offers (
+        id SERIAL PRIMARY KEY,
+        space_id INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+        owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        discount_percent INTEGER DEFAULT 0,
+        active INTEGER NOT NULL DEFAULT 1,
+        code TEXT,
+        deadline TIMESTAMPTZ,
+        bundle_buy INTEGER DEFAULT 0,
+        bundle_free INTEGER DEFAULT 0,
+        hh_start_time TEXT,
+        hh_end_time TEXT,
+        hh_days TEXT DEFAULT '[]',
+        max_uses INTEGER DEFAULT 0,
+        current_uses INTEGER DEFAULT 0,
+        valid_from TIMESTAMPTZ DEFAULT NOW(),
+        valid_until TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS offer_redemptions (
+        id SERIAL PRIMARY KEY,
+        offer_id INTEGER NOT NULL REFERENCES offers(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+        discount_amount INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
     `);
 
     // Safe migrations for existing tables
     const migrations = [
       "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified INTEGER NOT NULL DEFAULT 0",
       "ALTER TABLE users ADD COLUMN IF NOT EXISTS verify_token TEXT",
+      "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS offer_id INTEGER REFERENCES offers(id)",
+      "ALTER TABLE bookings ADD COLUMN IF NOT EXISTS discount_amount INTEGER DEFAULT 0",
     ];
     for (const m of migrations) {
       await client.query(m).catch(() => {});
@@ -287,6 +322,11 @@ async function initDB() {
       CREATE INDEX IF NOT EXISTS idx_wallet_user ON wallet(user_id);
       CREATE INDEX IF NOT EXISTS idx_wallet_tx_user ON wallet_transactions(user_id);
       CREATE INDEX IF NOT EXISTS idx_recently_viewed ON recently_viewed(user_id);
+      CREATE INDEX IF NOT EXISTS idx_offers_space ON offers(space_id);
+      CREATE INDEX IF NOT EXISTS idx_offers_owner ON offers(owner_id);
+      CREATE INDEX IF NOT EXISTS idx_offers_code ON offers(code);
+      CREATE INDEX IF NOT EXISTS idx_offer_redemptions_offer ON offer_redemptions(offer_id);
+      CREATE INDEX IF NOT EXISTS idx_offer_redemptions_user ON offer_redemptions(user_id, offer_id);
     `);
 
     // Seed spaces if empty

@@ -191,6 +191,17 @@ body{padding-top:64px;}
         <textarea class="form-textarea" id="booking-note" placeholder="Any special requirements…" style="min-height:60px;"></textarea>
       </div>
     </div>
+    <!-- Promo code -->
+    <div id="promo-section" style="display:none;margin-top:8px;">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="document.getElementById('promo-input-wrap').style.display=document.getElementById('promo-input-wrap').style.display==='none'?'flex':'none'">🏷️ Have a promo code?</div>
+      <div id="promo-input-wrap" style="display:none;gap:8px;align-items:center;">
+        <input class="form-input" id="promo-code" placeholder="Enter code" style="flex:1;margin:0;text-transform:uppercase;"/>
+        <button type="button" class="btn btn-outline btn-sm" onclick="applyPromo()">Apply</button>
+      </div>
+      <div id="promo-result" style="display:none;font-size:13px;margin-top:6px;padding:8px 12px;border-radius:var(--radius);"></div>
+    </div>
+    <!-- Auto offer banner -->
+    <div id="auto-offer-banner" style="display:none;background:rgba(232,137,26,0.08);border:1px solid rgba(232,137,26,0.2);border-radius:var(--radius);padding:10px 14px;margin-top:8px;font-size:13px;color:var(--amber);"></div>
     <div id="booking-error" class="alert alert-error"></div>
     <button class="btn btn-amber btn-full" id="confirm-booking-btn" onclick="confirmBooking()" style="display:none;">Confirm booking →</button>
   </div>
@@ -210,16 +221,19 @@ body{padding-top:64px;}
 <script src="/js/app.js"></script>
 <script>
 let activeFilter='', activeArea='', searchTimer=null, mapInstance=null, mapMarkers={}, savedIds=new Set(), selectedRating=0;
-let currentBookingSpace=null, selectedStart=null, selectedEnd=null, bookedSlots=[], currentBookingPrice=null;
+let currentBookingSpace=null, selectedStart=null, selectedEnd=null, bookedSlots=[], currentBookingPrice=null, currentOffer=null;
 
 async function init() {
   renderNav();
   await loadSavedIds();
   await loadAreas();
-  const q = new URLSearchParams(window.location.search).get('q');
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
   if (q) document.getElementById('search').value = q;
   await loadSpaces(q ? {q} : {});
   initMap();
+  const openId = params.get('open');
+  if (openId) { setTimeout(() => openSpace(parseInt(openId)), 300); }
 }
 
 async function loadAreas() {
@@ -350,6 +364,7 @@ async function openSpace(id) {
       <div class="modal-loc">📍 ${space.address}${space.area ? ', '+space.area : ''}, ${space.city}</div>
       <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:1rem;">${space.description||''}</p>
       ${space.capacity ? `<div style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);background:var(--parchment);padding:6px 12px;border-radius:20px;margin-bottom:1rem;">👥 Up to ${space.capacity} ${space.capacity===1?'person':'people'}</div>` : ''}
+      <div id="space-offers-${space.id}"></div>
       <div class="modal-section">Amenities</div>
       <div class="modal-amenities">${space.amenities.map(a=>`<span class="modal-amenity">✓ ${a}</span>`).join('')||'<span style="font-size:13px;color:var(--text-muted)">Not listed</span>'}</div>
       <div class="modal-section">Opening hours</div>
@@ -371,6 +386,24 @@ async function openSpace(id) {
     </div>`;
   document.getElementById('space-modal').classList.add('open');
   document.body.style.overflow='hidden';
+
+  // Load offers for this space
+  try {
+    const {offers} = await apiFetch(`/offers/space/${space.id}`);
+    const container = document.getElementById(`space-offers-${space.id}`);
+    if (offers && offers.length && container) {
+      container.innerHTML = offers.map(o => {
+        let label = '';
+        if (o.type === 'discount_code') label = `Have a promo code? Enter it at checkout.`;
+        else if (o.type === 'time_based') label = `${o.title} — ${o.discount_percent}% off!`;
+        else if (o.type === 'first_time') label = `First time here? Get ${o.discount_percent}% off!`;
+        else if (o.type === 'happy_hour') label = `Happy hour: ${o.discount_percent}% off (${o.hh_start_time}–${o.hh_end_time})`;
+        else if (o.type === 'bundle') label = `Book ${o.bundle_buy} days, get ${o.bundle_free} free!`;
+        else label = o.title;
+        return `<div style="background:rgba(232,137,26,0.08);border:1px solid rgba(232,137,26,0.2);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px;font-size:13px;color:var(--amber);display:flex;align-items:center;gap:8px;">🏷️ ${label}</div>`;
+      }).join('');
+    }
+  } catch {}
 }
 function closeSpaceModal(){document.getElementById('space-modal').classList.remove('open');document.body.style.overflow='';}
 
@@ -501,7 +534,7 @@ function selectSlot(idx) {
   document.getElementById('confirm-booking-btn').style.display='flex';
   updateGuestPrice();
 }
-function updateGuestPrice() {
+async function updateGuestPrice() {
   if (selectedSlotIdx === null) return;
   const slot = TIME_SLOTS[selectedSlotIdx];
   const guests = Math.max(1, parseInt(document.getElementById('booking-guests').value) || 1);
@@ -510,16 +543,80 @@ function updateGuestPrice() {
   const basePrice = calcPrice(currentBookingSpace, slot);
   const totalAmount = basePrice.amount * Math.min(guests, cap);
   const totalDisplay = totalAmount === 0 ? 'Free' : `₦${totalAmount.toLocaleString()}`;
-  currentBookingPrice = {amount: totalAmount, display: totalDisplay};
   const date = document.getElementById('booking-date').value;
-  document.getElementById('booking-summary-box').innerHTML=`
+
+  // Show promo section
+  document.getElementById('promo-section').style.display = totalAmount > 0 ? 'block' : 'none';
+
+  // Auto-detect offers
+  let discountAmount = 0, offerLabel = '';
+  currentOffer = null;
+  if (Auth.loggedIn() && totalAmount > 0) {
+    try {
+      const r = await apiFetch('/offers/validate', {method:'POST', body:JSON.stringify({
+        space_id: currentBookingSpace.id, date, start_time: slot.start, end_time: slot.end,
+        base_amount: totalAmount
+      })});
+      if (r.valid) {
+        currentOffer = {id: r.offer_id, discount: r.discount_amount};
+        discountAmount = r.discount_amount;
+        offerLabel = `🏷️ ${r.offer_title} (-${r.discount_percent||Math.round(r.discount_amount/totalAmount*100)}%)`;
+      }
+    } catch {}
+  }
+
+  const finalAmount = Math.max(0, totalAmount - discountAmount);
+  const finalDisplay = finalAmount === 0 ? 'Free' : `₦${finalAmount.toLocaleString()}`;
+  currentBookingPrice = {amount: finalAmount, display: finalDisplay, baseAmount: totalAmount};
+
+  let summaryHtml = `
     <div class="booking-summary-row"><span>Space</span><span>${currentBookingSpace.name}</span></div>
     <div class="booking-summary-row"><span>Date</span><span>${new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric'})}</span></div>
     <div class="booking-summary-row"><span>Time</span><span>${slot.label} (${slot.start}–${slot.end})</span></div>
     <div class="booking-summary-row"><span>Guests</span><span>${Math.min(guests, cap)}</span></div>
-    <div class="booking-summary-row"><span>Price</span><span>${basePrice.display} × ${Math.min(guests, cap)} = <strong>${totalDisplay}</strong></span></div>`;
+    <div class="booking-summary-row"><span>Subtotal</span><span>${basePrice.display} × ${Math.min(guests, cap)} = ${totalDisplay}</span></div>`;
+  if (discountAmount > 0) {
+    summaryHtml += `<div class="booking-summary-row" style="color:var(--amber);"><span>Discount</span><span>-₦${discountAmount.toLocaleString()}</span></div>
+    <div class="booking-summary-row"><span><strong>Total</strong></span><span><strong>${finalDisplay}</strong></span></div>`;
+  }
+  document.getElementById('booking-summary-box').innerHTML = summaryHtml;
+
+  // Auto offer banner
+  const banner = document.getElementById('auto-offer-banner');
+  if (offerLabel) { banner.textContent = offerLabel; banner.style.display = 'block'; }
+  else { banner.style.display = 'none'; }
+
   const btn = document.getElementById('confirm-booking-btn');
-  btn.textContent = totalAmount === 0 ? 'Confirm booking →' : `Pay & Book (${totalDisplay}) →`;
+  btn.textContent = finalAmount === 0 ? 'Confirm booking →' : `Pay & Book (${finalDisplay}) →`;
+}
+
+async function applyPromo() {
+  const code = document.getElementById('promo-code').value.trim();
+  const result = document.getElementById('promo-result');
+  if (!code) { result.style.display = 'block'; result.style.background = 'rgba(244,67,54,0.08)'; result.style.color = '#D32F2F'; result.textContent = 'Enter a code'; return; }
+  if (!currentBookingPrice) return;
+  const slot = TIME_SLOTS[selectedSlotIdx];
+  const date = document.getElementById('booking-date').value;
+  try {
+    const r = await apiFetch('/offers/validate', {method:'POST', body:JSON.stringify({
+      space_id: currentBookingSpace.id, code, date, start_time: slot.start, end_time: slot.end,
+      base_amount: currentBookingPrice.baseAmount || currentBookingPrice.amount
+    })});
+    if (r.valid) {
+      currentOffer = {id: r.offer_id, discount: r.discount_amount, code};
+      result.style.display = 'block'; result.style.background = 'rgba(76,175,80,0.08)'; result.style.color = '#4CAF50';
+      result.textContent = `${r.offer_title} applied! -₦${r.discount_amount.toLocaleString()}`;
+      // Recalculate with promo
+      const finalAmount = Math.max(0, (currentBookingPrice.baseAmount||currentBookingPrice.amount) - r.discount_amount);
+      const finalDisplay = finalAmount === 0 ? 'Free' : `₦${finalAmount.toLocaleString()}`;
+      currentBookingPrice = {amount: finalAmount, display: finalDisplay, baseAmount: currentBookingPrice.baseAmount||currentBookingPrice.amount};
+      document.getElementById('confirm-booking-btn').textContent = finalAmount === 0 ? 'Confirm booking →' : `Pay & Book (${finalDisplay}) →`;
+      document.getElementById('auto-offer-banner').style.display = 'none';
+    } else {
+      result.style.display = 'block'; result.style.background = 'rgba(244,67,54,0.08)'; result.style.color = '#D32F2F';
+      result.textContent = r.reason || 'Invalid code';
+    }
+  } catch (e) { result.style.display = 'block'; result.style.background = 'rgba(244,67,54,0.08)'; result.style.color = '#D32F2F'; result.textContent = 'Could not validate code'; }
 }
 
 async function confirmBooking() {
@@ -531,7 +628,9 @@ async function confirmBooking() {
   const origText=btn.textContent;
   btn.textContent='Processing…'; btn.disabled=true;
   try {
-    const data=await apiFetch('/bookings',{method:'POST',body:JSON.stringify({space_id:currentBookingSpace.id,date,start_time:selectedStart,end_time:selectedEnd,guests:Number(guests),note})});
+    const bookingBody = {space_id:currentBookingSpace.id,date,start_time:selectedStart,end_time:selectedEnd,guests:Number(guests),note};
+    if (currentOffer) { bookingBody.offer_id = currentOffer.id; if (currentOffer.code) bookingBody.code = currentOffer.code; }
+    const data=await apiFetch('/bookings',{method:'POST',body:JSON.stringify(bookingBody)});
     if (data.payment_url) {
       // Redirect to Paystack checkout
       btn.textContent='Redirecting to payment…';

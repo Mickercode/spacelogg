@@ -28,6 +28,7 @@ app.use('/api/bookings',      require('./routes/bookings'));
 app.use('/api/wallet',        require('./routes/wallet'));
 app.use('/api/owner',         require('./routes/owner'));
 app.use('/api/webhooks',      require('./routes/webhooks'));
+app.use('/api/offers',        require('./routes/offers'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', version: '1.0.0' }));
 

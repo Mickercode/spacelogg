@@ -86,6 +86,7 @@ body{padding-top:64px;background:var(--parchment);}
     <button class="tab-btn" onclick="sw('add-space',this)">+ Add Space</button>
     <button class="tab-btn" onclick="sw('availability',this)">Availability</button>
     <button class="tab-btn" onclick="sw('analytics',this)">Analytics</button>
+    <button class="tab-btn" onclick="sw('offers',this)">Offers</button>
     <button class="tab-btn" onclick="sw('reviews',this)">Reviews</button>
     <button class="tab-btn" onclick="sw('profile',this)">Settings</button>
   </div>
@@ -189,6 +190,86 @@ body{padding-top:64px;background:var(--parchment);}
   </div>
 
   <!-- REVIEWS -->
+  <!-- OFFERS -->
+  <div class="tab-pane" id="tab-offers">
+    <div class="pnl">
+      <div class="ph"><span class="pt">Your offers</span><button class="btn btn-amber btn-sm" onclick="showOfferForm()">+ Create offer</button></div>
+      <div style="overflow-x:auto;"><table class="ot"><thead><tr><th>Title</th><th>Space</th><th>Type</th><th>Discount</th><th>Uses</th><th>Status</th><th>Actions</th></tr></thead><tbody id="of-body"></tbody></table></div>
+      <div id="of-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No offers yet. Create one to attract more bookings.</div>
+    </div>
+    <!-- Create/Edit Offer Form -->
+    <div class="pnl" id="offer-form-panel" style="display:none;">
+      <div class="ph"><span class="pt" id="offer-form-title">Create offer</span><button class="btn btn-outline btn-sm" onclick="hideOfferForm()">Cancel</button></div>
+      <div class="fs"><form id="offer-form">
+        <input type="hidden" id="of-id"/>
+        <div class="f2">
+          <div class="form-group"><label class="form-label">Space *</label><select class="form-select" id="of-space" required></select></div>
+          <div class="form-group"><label class="form-label">Offer type *</label>
+            <select class="form-select" id="of-type" required onchange="onOfferTypeChange()">
+              <option value="">Select type…</option>
+              <option value="discount_code">Promo code</option>
+              <option value="time_based">Limited time deal</option>
+              <option value="bundle">Bundle (buy X get Y free)</option>
+              <option value="first_time">First-time visitor</option>
+              <option value="happy_hour">Happy hour</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="of-title" required placeholder="e.g. Welcome 20% off!"/></div>
+        <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="of-desc" placeholder="Short description for users"/></div>
+
+        <!-- Type-specific fields -->
+        <div id="of-fields-discount_code" class="of-fields" style="display:none;">
+          <div class="f2">
+            <div class="form-group"><label class="form-label">Promo code *</label><input class="form-input" id="of-code" placeholder="e.g. FIRST50" style="text-transform:uppercase;"/></div>
+            <div class="form-group"><label class="form-label">Discount %</label><input class="form-input" id="of-pct-code" type="number" min="1" max="100" placeholder="e.g. 20"/></div>
+          </div>
+        </div>
+        <div id="of-fields-time_based" class="of-fields" style="display:none;">
+          <div class="f2">
+            <div class="form-group"><label class="form-label">Book before (deadline)</label><input class="form-input" id="of-deadline" type="datetime-local"/></div>
+            <div class="form-group"><label class="form-label">Discount %</label><input class="form-input" id="of-pct-time" type="number" min="1" max="100" placeholder="e.g. 15"/></div>
+          </div>
+        </div>
+        <div id="of-fields-bundle" class="of-fields" style="display:none;">
+          <div class="f2">
+            <div class="form-group"><label class="form-label">Book X days</label><input class="form-input" id="of-buy" type="number" min="1" placeholder="e.g. 5"/></div>
+            <div class="form-group"><label class="form-label">Get Y free</label><input class="form-input" id="of-free" type="number" min="1" placeholder="e.g. 1"/></div>
+          </div>
+        </div>
+        <div id="of-fields-first_time" class="of-fields" style="display:none;">
+          <div class="form-group"><label class="form-label">Discount %</label><input class="form-input" id="of-pct-first" type="number" min="1" max="100" placeholder="e.g. 10"/></div>
+        </div>
+        <div id="of-fields-happy_hour" class="of-fields" style="display:none;">
+          <div class="f2">
+            <div class="form-group"><label class="form-label">Start time</label><input class="form-input" id="of-hh-start" type="time"/></div>
+            <div class="form-group"><label class="form-label">End time</label><input class="form-input" id="of-hh-end" type="time"/></div>
+          </div>
+          <div class="form-group"><label class="form-label">Days</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <label style="font-size:13px;cursor:pointer;"><input type="checkbox" class="of-hh-day" value="1"/> Mon</label>
+              <label style="font-size:13px;cursor:pointer;"><input type="checkbox" class="of-hh-day" value="2"/> Tue</label>
+              <label style="font-size:13px;cursor:pointer;"><input type="checkbox" class="of-hh-day" value="3"/> Wed</label>
+              <label style="font-size:13px;cursor:pointer;"><input type="checkbox" class="of-hh-day" value="4"/> Thu</label>
+              <label style="font-size:13px;cursor:pointer;"><input type="checkbox" class="of-hh-day" value="5"/> Fri</label>
+              <label style="font-size:13px;cursor:pointer;"><input type="checkbox" class="of-hh-day" value="6"/> Sat</label>
+              <label style="font-size:13px;cursor:pointer;"><input type="checkbox" class="of-hh-day" value="0"/> Sun</label>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Discount %</label><input class="form-input" id="of-pct-hh" type="number" min="1" max="100" placeholder="e.g. 25"/></div>
+        </div>
+
+        <div class="f2" style="margin-top:1rem;">
+          <div class="form-group"><label class="form-label">Max uses (0 = unlimited)</label><input class="form-input" id="of-max" type="number" min="0" value="0"/></div>
+          <div class="form-group"><label class="form-label">Valid until (optional)</label><input class="form-input" id="of-until" type="datetime-local"/></div>
+        </div>
+        <div class="alert alert-error" id="of-error" style="display:none;"></div>
+        <div class="alert alert-success" id="of-success" style="display:none;"></div>
+        <button type="submit" class="btn btn-amber">Save offer</button>
+      </form></div>
+    </div>
+  </div>
+
   <div class="tab-pane" id="tab-reviews">
     <div class="pnl"><div class="ph"><span class="pt">Reviews</span></div><div id="rv-list"></div>
     <div id="rv-empty" style="display:none;padding:2rem;text-align:center;color:var(--text-muted);">No reviews yet.</div></div>
@@ -245,7 +326,7 @@ function sw(tab,el){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   $('tab-'+tab).classList.add('active');el.classList.add('active');
   if(tab==='bookings')loadBookings();if(tab==='spaces')loadSpaces();if(tab==='availability')loadBlocks();
-  if(tab==='analytics')loadAnalytics();if(tab==='reviews')loadReviews();if(tab==='profile')loadProfile();
+  if(tab==='analytics')loadAnalytics();if(tab==='offers')loadOffers();if(tab==='reviews')loadReviews();if(tab==='profile')loadProfile();
 }
 
 // ── TODAY ──
@@ -267,7 +348,7 @@ async function markNoShow(id){if(!confirm('Mark as no-show?'))return;try{await F
 
 // ── SPACES ──
 async function loadSpaces(){try{const{spaces}=await F('/owner/spaces');const baseUrl=(window.location.origin||'https://www.spacelogg.com');$('sp-body').innerHTML=spaces.map(s=>`<tr><td style="font-weight:500;color:var(--charcoal);">${s.name}</td><td>${s.category}</td><td>${s.area||s.city}</td><td>${s.price||'Free'} ${s.price_unit||''}</td><td>${s.capacity||1}</td><td>★ ${s.rating||'—'} (${s.review_count||0})</td><td><span class="status-badge status-${s.status==='approved'?'approved':s.status==='unavailable'?'rejected':'pending'}">${s.status}</span></td><td><div style="display:flex;gap:4px;flex-wrap:wrap;"><button class="btn btn-outline btn-sm" onclick="copySpaceLink(${s.id},'${s.name.replace(/'/g,"\\'")}')" title="Copy shareable link">Share</button><button class="btn btn-outline btn-sm" onclick="toggleSpace(${s.id},'${s.status}')">${s.status==='approved'?'Pause':'Activate'}</button><button class="btn btn-danger btn-sm" onclick="deleteSpace(${s.id},'${s.name}')">Delete</button></div></td></tr>`).join('');}catch{}}
-function copySpaceLink(id,name){const url=`${window.location.origin||'https://www.spacelogg.com'}/dashboard.html?open=${id}`;navigator.clipboard.writeText(url).then(()=>toast(`Link copied for "${name}"`,'success')).catch(()=>{prompt('Copy this link:',url);});}
+function copySpaceLink(id,name){const url=`https://www.spacelogg.com/dashboard.html?open=${id}`;navigator.clipboard.writeText(url).then(()=>toast(`Link copied for "${name}"`,'success')).catch(()=>{prompt('Copy this link:',url);});}
 async function toggleSpace(id,st){try{await F(`/owner/spaces/${id}/toggle`,{method:'PATCH'});toast(st==='approved'?'Space paused':'Space activated','success');loadSpaces();loadSpaceSelectors();}catch(e){toast(e.message,'error');}}
 async function deleteSpace(id,name){if(!confirm(`Delete "${name}" permanently?`))return;try{await F(`/owner/spaces/${id}`,{method:'DELETE'});toast('Deleted','success');loadSpaces();loadSpaceSelectors();}catch(e){toast(e.message,'error');}}
 
@@ -328,6 +409,87 @@ const maxD=Math.max(...a.busiestDays.map(d=>d.count),1);$('an-days').innerHTML=a
 const maxS=Math.max(...a.perSpace.map(s=>s.bookings),1);$('an-spaces').innerHTML=a.perSpace.map(s=>`<div class="bar-wrap" style="margin-bottom:6px;"><span class="bar-label" style="min-width:120px;font-size:13px;">${s.name}</span><div class="bar" style="width:${(s.bookings/maxS)*100}%"></div><span class="bar-val">${s.bookings} bookings · ${fmtM(s.revenue)}</span></div>`).join('')||'<div style="color:var(--text-muted);font-size:13px;">No data yet.</div>';
 const maxT=Math.max(...a.monthlyTrend.map(m=>m.bookings),1);$('an-trend').innerHTML=a.monthlyTrend.map(m=>`<div class="bar-wrap" style="margin-bottom:6px;"><span class="bar-label" style="min-width:60px;">${m.month}</span><div class="bar" style="width:${(m.bookings/maxT)*100}%"></div><span class="bar-val">${m.bookings}</span></div>`).join('')||'<div style="color:var(--text-muted);font-size:13px;">No trend data yet.</div>';
 }catch{}}
+
+// ── OFFERS ──
+const offerTypeLabels={discount_code:'Promo Code',time_based:'Limited Time',bundle:'Bundle',first_time:'First-Time',happy_hour:'Happy Hour'};
+async function loadOffers(){
+  try{
+    const{offers}=await F('/offers/my');
+    const tb=$('of-body'),em=$('of-empty');
+    if(!offers||!offers.length){tb.innerHTML='';em.style.display='block';return;}
+    em.style.display='none';
+    tb.innerHTML=offers.map(o=>{
+      const disc=o.type==='bundle'?`Buy ${o.bundle_buy} get ${o.bundle_free} free`:`${o.discount_percent}% off`;
+      return `<tr>
+        <td style="font-weight:500;color:var(--charcoal);">${o.title}${o.code?` <span style="font-size:11px;background:var(--parchment);padding:2px 6px;border-radius:4px;">${o.code}</span>`:''}</td>
+        <td>${o.space_name}</td>
+        <td><span style="font-size:11px;background:rgba(232,137,26,0.1);color:var(--amber);padding:3px 8px;border-radius:10px;">${offerTypeLabels[o.type]||o.type}</span></td>
+        <td>${disc}</td>
+        <td>${o.current_uses}${o.max_uses?' / '+o.max_uses:''}</td>
+        <td><span class="status-badge status-${o.active?'approved':'pending'}">${o.active?'Active':'Paused'}</span></td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="toggleOffer(${o.id})">${o.active?'Pause':'Activate'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteOffer(${o.id},'${o.title.replace(/'/g,"\\'")}')">Delete</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }catch(e){console.error('Offers error:',e);}
+}
+function showOfferForm(editOffer){
+  $('offer-form-panel').style.display='block';
+  $('offer-form-title').textContent=editOffer?'Edit offer':'Create offer';
+  $('of-id').value=editOffer?editOffer.id:'';
+  $('of-space').innerHTML=allSpaces.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  if(editOffer){
+    $('of-space').value=editOffer.space_id;
+    $('of-type').value=editOffer.type;
+    $('of-title').value=editOffer.title;
+    $('of-desc').value=editOffer.description||'';
+    $('of-max').value=editOffer.max_uses||0;
+    $('of-until').value=editOffer.valid_until?editOffer.valid_until.slice(0,16):'';
+    onOfferTypeChange();
+    if(editOffer.code)$('of-code').value=editOffer.code;
+    if(editOffer.type==='discount_code')$('of-pct-code').value=editOffer.discount_percent;
+    if(editOffer.type==='time_based'){$('of-pct-time').value=editOffer.discount_percent;$('of-deadline').value=editOffer.deadline?editOffer.deadline.slice(0,16):'';}
+    if(editOffer.type==='bundle'){$('of-buy').value=editOffer.bundle_buy;$('of-free').value=editOffer.bundle_free;}
+    if(editOffer.type==='first_time')$('of-pct-first').value=editOffer.discount_percent;
+    if(editOffer.type==='happy_hour'){$('of-pct-hh').value=editOffer.discount_percent;$('of-hh-start').value=editOffer.hh_start_time||'';$('of-hh-end').value=editOffer.hh_end_time||'';const days=JSON.parse(editOffer.hh_days||'[]');document.querySelectorAll('.of-hh-day').forEach(c=>c.checked=days.includes(Number(c.value)));}
+  } else {
+    $('offer-form').reset();
+    onOfferTypeChange();
+  }
+}
+function hideOfferForm(){$('offer-form-panel').style.display='none';}
+function onOfferTypeChange(){
+  document.querySelectorAll('.of-fields').forEach(f=>f.style.display='none');
+  const t=$('of-type').value;
+  if(t){const el=document.getElementById('of-fields-'+t);if(el)el.style.display='block';}
+}
+$('offer-form').addEventListener('submit',async function(e){
+  e.preventDefault();
+  const err=$('of-error'),ok=$('of-success');err.style.display='none';ok.style.display='none';
+  const type=$('of-type').value;
+  const body={
+    space_id:Number($('of-space').value),type,
+    title:$('of-title').value,description:$('of-desc').value,
+    max_uses:Number($('of-max').value)||0,
+    valid_until:$('of-until').value||null
+  };
+  if(type==='discount_code'){body.code=$('of-code').value;body.discount_percent=Number($('of-pct-code').value);}
+  if(type==='time_based'){body.deadline=$('of-deadline').value||null;body.discount_percent=Number($('of-pct-time').value);}
+  if(type==='bundle'){body.bundle_buy=Number($('of-buy').value);body.bundle_free=Number($('of-free').value);}
+  if(type==='first_time'){body.discount_percent=Number($('of-pct-first').value);}
+  if(type==='happy_hour'){body.hh_start_time=$('of-hh-start').value;body.hh_end_time=$('of-hh-end').value;body.hh_days=JSON.stringify(Array.from(document.querySelectorAll('.of-hh-day:checked')).map(c=>Number(c.value)));body.discount_percent=Number($('of-pct-hh').value);}
+  try{
+    const id=$('of-id').value;
+    if(id){await F(`/offers/${id}`,{method:'PATCH',body:JSON.stringify(body)});}
+    else{await F('/offers',{method:'POST',body:JSON.stringify(body)});}
+    ok.style.display='block';ok.textContent=id?'Offer updated!':'Offer created!';
+    loadOffers();setTimeout(hideOfferForm,1500);
+  }catch(e){err.style.display='block';err.textContent=e.message;}
+});
+async function toggleOffer(id){try{await F(`/offers/${id}/toggle`,{method:'PATCH'});toast('Offer toggled','success');loadOffers();}catch(e){toast(e.message,'error');}}
+async function deleteOffer(id,name){if(!confirm(`Delete offer "${name}"?`))return;try{await F(`/offers/${id}`,{method:'DELETE'});toast('Offer deleted','success');loadOffers();}catch(e){toast(e.message,'error');}}
 
 // ── REVIEWS ──
 async function loadReviews(){try{const{reviews}=await F('/owner/reviews');const l=$('rv-list'),em=$('rv-empty');if(!reviews||!reviews.length){l.innerHTML='';em.style.display='block';return;}em.style.display='none';l.innerHTML=reviews.map(r=>{const rt=Number(r.rating)||0;return`<div style="padding:1rem 1.5rem;border-bottom:0.5px solid var(--border);"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><div style="font-weight:500;font-size:14px;color:var(--charcoal);">${r.user_name||'Anonymous'}</div><div style="color:var(--amber);">${'★'.repeat(rt)}${'☆'.repeat(5-rt)}</div></div><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">${r.space_name||''} · ${r.created_at?new Date(r.created_at).toLocaleDateString():''}</div>${r.comment?`<div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${r.comment}</div>`:''}</div>`;}).join('');}catch(e){console.error('Reviews error:',e);$('rv-list').innerHTML='';$('rv-empty').style.display='block';}}
