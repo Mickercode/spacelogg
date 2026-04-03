@@ -90,45 +90,6 @@ body{padding-top:64px;}
 /* Edit space modal */
 .edit-modal{max-width:560px;}
 
-/* === Premium subtle animations === */
-
-/* Space cards — smooth hover lift */
-.space-card{transition:transform 0.25s ease, box-shadow 0.25s ease;}
-.space-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.08);}
-.space-card:active{transform:translateY(-1px);}
-
-/* Modal open/close — slide-up entrance */
-.modal-overlay .modal{transform:translateY(20px);opacity:0;transition:transform 0.3s ease, opacity 0.3s ease;}
-.modal-overlay.open .modal{transform:translateY(0);opacity:1;}
-
-/* Buttons — subtle scale on hover */
-.btn{transition:all 0.2s ease;}
-.btn:hover{transform:translateY(-1px);}
-.btn:active{transform:translateY(0);}
-
-/* Toast notifications — slide-in animation */
-@keyframes toastSlideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
-@keyframes toastSlideOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(100%);opacity:0;}}
-.toast{animation:toastSlideIn 0.35s ease forwards;}
-.toast.hide{animation:toastSlideOut 0.3s ease forwards;}
-
-/* Time slots — smooth color transition on select */
-.time-slot{transition:all 0.2s ease;}
-
-/* Filter tabs — smooth underline/active transition */
-.filter-tab{transition:all 0.2s ease;}
-
-/* Save button heart — subtle pulse */
-@keyframes heartPulse{0%{transform:scale(1);}50%{transform:scale(1.2);}100%{transform:scale(1);}}
-.save-btn.saved{animation:heartPulse 0.3s ease;}
-
-/* Week day selector — smooth transition */
-.week-day{transition:all 0.2s ease;}
-
-/* Search bar focus glow */
-.search-bar{transition:box-shadow 0.2s ease;}
-.search-bar:focus-within{box-shadow:0 2px 12px rgba(232,137,26,0.12);}
-
 @media(max-width:900px){
   .dash-layout{grid-template-columns:1fr;height:auto;}
   .dash-map{position:relative;top:0;height:40vh;}

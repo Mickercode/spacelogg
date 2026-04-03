@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="scroll-behavior:smooth;">
+<html lang="en">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>HostApp — SpaceLogg</title>
@@ -7,7 +7,6 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/branding/spacelogg-favicon-32.png"/>
 <link rel="icon" type="image/svg+xml" href="/branding/spacelogg-icon.svg"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-<link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet"/>
 <style>
 :root{--charcoal:#1C1A16;--amber:#E8891A;--parchment:#F5EDD8;--parchment-light:#FAF6ED;--text:#3D3A34;--text-muted:#9C8F78;--radius:8px;--radius-lg:16px;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -127,11 +126,6 @@ img{max-width:100%;display:block;}
   .ha-s{padding:4rem 1.5rem;}
 }
 
-/* ANIMATION ENHANCEMENTS */
-.ha-frow-img{transition:transform 0.3s ease;}
-.ha-frow-img:hover{transform:translateY(-4px);}
-.btn-cta{transition:all 0.2s ease;}
-.btn-cta:hover{transform:scale(1.02);}
 </style>
 </head>
 <body>
@@ -149,14 +143,14 @@ img{max-width:100%;display:block;}
 <!-- HERO -->
 <section class="ha-hero">
   <div class="ha-hero-text">
-    <h1 data-aos="fade-in">Fill your seats.<br/>Not your <em>spreadsheets.</em></h1>
-    <p data-aos="fade-up" data-aos-delay="100">HostApp is SpaceLogg's free management platform for workspace operators. Get discovered by thousands of remote workers, accept bookings, and track every naira — from one dashboard.</p>
-    <div class="ha-hero-btns" data-aos="fade-up" data-aos-delay="200">
+    <h1>Fill your seats.<br/>Not your <em>spreadsheets.</em></h1>
+    <p>HostApp is SpaceLogg's free management platform for workspace operators. Get discovered by thousands of remote workers, accept bookings, and track every naira — from one dashboard.</p>
+    <div class="ha-hero-btns">
       <a href="#demo" class="btn-cta btn-fill btn-lg">Book a free demo &rarr;</a>
       <a href="/space-admin/login.html" class="btn-cta btn-outline-dark btn-lg">Sign in</a>
     </div>
   </div>
-  <div class="ha-hero-img" data-aos="fade-up" data-aos-delay="300">
+  <div class="ha-hero-img">
     <img src="https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?w=800&q=80" alt="Modern coworking space" loading="eager"/>
   </div>
 </section>
@@ -164,10 +158,10 @@ img{max-width:100%;display:block;}
 <!-- STATS -->
 <div class="ha-stats">
   <div class="ha-stats-inner">
-    <div class="ha-stat" data-aos="fade-up" data-aos-delay="0"><div class="val">0%</div><div class="lbl">Platform fee</div></div>
-    <div class="ha-stat" data-aos="fade-up" data-aos-delay="100"><div class="val">10%</div><div class="lbl">Per booking only</div></div>
-    <div class="ha-stat" data-aos="fade-up" data-aos-delay="200"><div class="val">24hr</div><div class="lbl">Onboarding</div></div>
-    <div class="ha-stat" data-aos="fade-up" data-aos-delay="300"><div class="val">90%</div><div class="lbl">Revenue you keep</div></div>
+    <div class="ha-stat"><div class="val">0%</div><div class="lbl">Platform fee</div></div>
+    <div class="ha-stat"><div class="val">10%</div><div class="lbl">Per booking only</div></div>
+    <div class="ha-stat"><div class="val">24hr</div><div class="lbl">Onboarding</div></div>
+    <div class="ha-stat"><div class="val">90%</div><div class="lbl">Revenue you keep</div></div>
   </div>
 </div>
 
@@ -176,10 +170,10 @@ img{max-width:100%;display:block;}
   <div class="ha-s-inner">
 
     <div class="ha-frow">
-      <div class="ha-frow-img" data-aos="fade-right">
+      <div class="ha-frow-img">
         <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" alt="Booking management dashboard" loading="lazy"/>
       </div>
-      <div class="ha-frow-text" data-aos="fade-up" data-aos-delay="100">
+      <div class="ha-frow-text">
         <div class="eyebrow">Bookings</div>
         <h3>Every booking, one dashboard</h3>
         <p>See incoming, confirmed, and completed bookings in real-time. Accept or reject with one click. Never miss a guest again.</p>
@@ -192,10 +186,10 @@ img{max-width:100%;display:block;}
     </div>
 
     <div class="ha-frow reverse">
-      <div class="ha-frow-img" data-aos="fade-left">
+      <div class="ha-frow-img">
         <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&q=80" alt="Revenue analytics" loading="lazy"/>
       </div>
-      <div class="ha-frow-text" data-aos="fade-up" data-aos-delay="100">
+      <div class="ha-frow-text">
         <div class="eyebrow">Revenue</div>
         <h3>Track every naira</h3>
         <p>Total revenue, monthly earnings, pending payouts — all at a glance. Know exactly what's coming in and when it hits your bank.</p>
@@ -208,10 +202,10 @@ img{max-width:100%;display:block;}
     </div>
 
     <div class="ha-frow">
-      <div class="ha-frow-img" data-aos="fade-right">
+      <div class="ha-frow-img">
         <img src="https://images.unsplash.com/photo-1600508774634-4e11d34730e2?w=800&q=80" alt="Coworking space interior" loading="lazy"/>
       </div>
-      <div class="ha-frow-text" data-aos="fade-up" data-aos-delay="100">
+      <div class="ha-frow-text">
         <div class="eyebrow">Spaces</div>
         <h3>Your spaces, your rules</h3>
         <p>Add desks, rooms, or lounges. Set pricing, upload photos, manage amenities and capacity. Block dates when you need to.</p>
@@ -232,17 +226,17 @@ img{max-width:100%;display:block;}
     <h2>Live in 3 steps</h2>
     <p class="sub">From zero to bookings in less than a day.</p>
     <div class="ha-steps">
-      <div class="ha-step" data-aos="fade-up" data-aos-delay="0">
+      <div class="ha-step">
         <div class="ha-step-num">1</div>
         <h3>Book a demo</h3>
         <p>We walk you through HostApp and set up your account. Takes 15 minutes.</p>
       </div>
-      <div class="ha-step" data-aos="fade-up" data-aos-delay="100">
+      <div class="ha-step">
         <div class="ha-step-num">2</div>
         <h3>List your spaces</h3>
         <p>Add your desks, rooms, or lounges. Set pricing, photos, amenities, and hours.</p>
       </div>
-      <div class="ha-step" data-aos="fade-up" data-aos-delay="200">
+      <div class="ha-step">
         <div class="ha-step-num">3</div>
         <h3>Start earning</h3>
         <p>Bookings come in from SpaceLogg users. Payouts hit your bank automatically.</p>
@@ -254,7 +248,7 @@ img{max-width:100%;display:block;}
 <!-- SOCIAL PROOF -->
 <section class="ha-s center">
   <div class="ha-s-inner">
-    <div class="ha-quote" data-aos="zoom-in" data-aos-duration="600">
+    <div class="ha-quote">
       <blockquote>"We used to manage bookings on WhatsApp and Excel. HostApp gave us one place for everything — and we've seen 40% more bookings since listing."</blockquote>
       <cite>— Space operator, Lagos</cite>
     </div>
@@ -267,13 +261,13 @@ img{max-width:100%;display:block;}
     <h2>Simple, honest pricing</h2>
     <p class="sub">We only earn when you earn. No surprises.</p>
     <div class="ha-pricing-wrap">
-      <div class="ha-pricing-card" data-aos="fade-up">
+      <div class="ha-pricing-card">
         <div class="amount">10%</div>
         <div class="unit">per completed booking</div>
         <div class="desc">No monthly fees. No setup costs. No minimums. No lock-in. Cancel anytime — we'll miss you, but we won't charge you.</div>
         <a href="#demo" class="btn-cta btn-fill btn-lg" style="width:100%;">Get started free &rarr;</a>
       </div>
-      <ul class="ha-pricing-list" data-aos="fade-up" data-aos-delay="100">
+      <ul class="ha-pricing-list">
         <li>Free to list unlimited spaces</li>
         <li>Free dashboard access forever</li>
         <li>Automatic weekly bank payouts</li>
@@ -291,11 +285,11 @@ img{max-width:100%;display:block;}
 <section class="ha-s" id="demo">
   <div class="ha-s-inner">
     <div class="ha-demo-grid">
-      <div class="ha-demo-text" data-aos="fade-up">
+      <div class="ha-demo-text">
         <h2>Ready to fill your seats?</h2>
         <p>Book a 15-minute demo. We'll walk you through HostApp, answer your questions, and get your spaces live on SpaceLogg — usually within 24 hours.</p>
       </div>
-      <div class="ha-demo-form" data-aos="fade-up" data-aos-delay="100">
+      <div class="ha-demo-form">
         <form id="demo-form">
           <div class="ha-demo-2col">
             <input placeholder="Your name" id="d-name" required/>
@@ -352,7 +346,5 @@ document.getElementById('demo-form').addEventListener('submit', async function(e
   this.reset();
 });
 </script>
-<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-<script>AOS.init({ duration: 800, once: true, offset: 80 });</script>
 </body>
 </html>
