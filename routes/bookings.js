@@ -32,7 +32,7 @@ router.get('/availability/:spaceId', async (req, res) => {
 // POST /api/bookings — create booking (with payment if not free)
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { space_id, date, start_time, end_time, guests, note } = req.body;
+    const { space_id, date, start_time, end_time, guests, note, offer_id, code } = req.body;
     if (!space_id || !date || !start_time || !end_time)
       return res.status(400).json({ error: 'space_id, date, start_time and end_time are required' });
 
@@ -47,10 +47,51 @@ router.post('/', requireAuth, async (req, res) => {
     if (conflict) return res.status(409).json({ error: 'This time slot is already booked' });
 
     // Parse price
-    const { amountKobo, currency } = parsePrice(space.price);
+    let { amountKobo, currency } = parsePrice(space.price);
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
 
-    // FREE SPACE — confirm immediately (old flow)
+    // Apply offer/promo code discount
+    let appliedOffer = null, discountKobo = 0;
+    if (amountKobo > 0 && (offer_id || code)) {
+      let offer = null;
+      if (code) {
+        offer = await db.getAsync(
+          `SELECT * FROM offers WHERE space_id = ? AND code = ? AND type = 'discount_code'
+           AND active = 1 AND (valid_from IS NULL OR valid_from <= NOW())
+           AND (valid_until IS NULL OR valid_until >= NOW())
+           AND (max_uses = 0 OR current_uses < max_uses)`,
+          [space_id, code.toUpperCase()]);
+      } else if (offer_id) {
+        offer = await db.getAsync(
+          `SELECT * FROM offers WHERE id = ? AND space_id = ? AND active = 1
+           AND (valid_from IS NULL OR valid_from <= NOW())
+           AND (valid_until IS NULL OR valid_until >= NOW())
+           AND (max_uses = 0 OR current_uses < max_uses)`,
+          [offer_id, space_id]);
+      }
+      if (offer) {
+        if (offer.type === 'bundle') {
+          const count = await db.getAsync(
+            "SELECT COUNT(*) as c FROM bookings WHERE user_id = ? AND space_id = ? AND status IN ('confirmed','paid')",
+            [req.user.id, space_id]);
+          const totalCycle = offer.bundle_buy + offer.bundle_free;
+          if (((count.c % totalCycle) + 1) > offer.bundle_buy) discountKobo = amountKobo;
+        } else if (offer.type === 'first_time') {
+          const prev = await db.getAsync(
+            "SELECT id FROM bookings WHERE user_id = ? AND space_id = ? AND status IN ('confirmed','paid') LIMIT 1",
+            [req.user.id, space_id]);
+          if (!prev) discountKobo = Math.round(amountKobo * (offer.discount_percent / 100));
+        } else {
+          discountKobo = Math.round(amountKobo * (offer.discount_percent / 100));
+        }
+        if (discountKobo > 0) {
+          appliedOffer = offer;
+          amountKobo = Math.max(0, amountKobo - discountKobo);
+        }
+      }
+    }
+
+    // FREE SPACE or fully discounted — confirm immediately
     if (amountKobo === 0) {
       const connector = await getConnector(space_id);
       const result = await connector.createBooking({
@@ -91,11 +132,21 @@ router.post('/', requireAuth, async (req, res) => {
 
     // PAID SPACE — create pending booking, return Paystack checkout URL
     const { lastID } = await db.runAsync(
-      `INSERT INTO bookings (space_id, user_id, date, start_time, end_time, guests, note, status, total_price, amount_value, currency)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_payment', ?, ?, ?)`,
+      `INSERT INTO bookings (space_id, user_id, date, start_time, end_time, guests, note, status, total_price, amount_value, currency, offer_id, discount_amount)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_payment', ?, ?, ?, ?, ?)`,
       [space_id, req.user.id, date, start_time, end_time, guests || 1, note || '',
-       space.price || '', amountKobo, currency]
+       space.price || '', amountKobo, currency,
+       appliedOffer ? appliedOffer.id : null, discountKobo]
     );
+
+    // Record offer redemption
+    if (appliedOffer) {
+      await db.runAsync(
+        'INSERT INTO offer_redemptions (offer_id, user_id, booking_id, discount_amount) VALUES (?, ?, ?, ?)',
+        [appliedOffer.id, req.user.id, lastID, discountKobo]);
+      await db.runAsync(
+        'UPDATE offers SET current_uses = current_uses + 1 WHERE id = ?', [appliedOffer.id]);
+    }
 
     const booking = await db.getAsync(`
       SELECT b.*, s.name as space_name, s.address, s.category

@@ -1,9 +1,13 @@
 const express = require('express');
+const axios = require('axios');
 const db = require('../db/database');
 const { requireAuth, requireOwner } = require('../middleware/auth');
 const { upload, uploadFiles } = require('../utils/cloudinary');
 const { Notify } = require('../utils/notify');
 const router = express.Router();
+
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+const COMMISSION_PERCENT = parseInt(process.env.COMMISSION_PERCENT) || 10;
 
 router.use(requireAuth, requireOwner);
 
@@ -74,6 +78,53 @@ router.patch('/profile', upload.single('logo'), async (req, res) => {
     await db.runAsync("INSERT INTO owner_profiles (user_id) VALUES (?) ON CONFLICT(user_id) DO NOTHING", [req.user.id]);
     await db.runAsync(`UPDATE owner_profiles SET ${updates.join(', ')} WHERE user_id = ?`, params);
     const profile = await db.getAsync('SELECT * FROM owner_profiles WHERE user_id = ?', [req.user.id]);
+
+    // Auto-create/update Paystack subaccount when bank details are complete
+    if (PAYSTACK_SECRET && profile.bank_name && profile.account_number && profile.account_name) {
+      try {
+        // Resolve bank code from bank name
+        const banksRes = await axios.get('https://api.paystack.co/bank', {
+          headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` }
+        });
+        const bank = banksRes.data.data.find(b =>
+          b.name.toLowerCase().includes(profile.bank_name.toLowerCase()) ||
+          profile.bank_name.toLowerCase().includes(b.name.toLowerCase())
+        );
+
+        if (bank) {
+          if (profile.paystack_subaccount_id) {
+            // Update existing subaccount
+            await axios.put(`https://api.paystack.co/subaccount/${profile.paystack_subaccount_id}`, {
+              business_name: profile.business_name || profile.account_name,
+              bank_code: bank.code,
+              account_number: profile.account_number,
+              percentage_charge: COMMISSION_PERCENT
+            }, { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } });
+          } else {
+            // Create new subaccount
+            const subRes = await axios.post('https://api.paystack.co/subaccount', {
+              business_name: profile.business_name || profile.account_name,
+              bank_code: bank.code,
+              account_number: profile.account_number,
+              percentage_charge: COMMISSION_PERCENT,
+              settlement_bank: bank.code,
+              primary_contact_email: req.user.email
+            }, { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } });
+
+            if (subRes.data.status && subRes.data.data.subaccount_code) {
+              await db.runAsync(
+                'UPDATE owner_profiles SET paystack_subaccount_id = ? WHERE user_id = ?',
+                [subRes.data.data.subaccount_code, req.user.id]);
+              profile.paystack_subaccount_id = subRes.data.data.subaccount_code;
+            }
+          }
+        }
+      } catch (subErr) {
+        console.error('Paystack subaccount error:', subErr.response?.data || subErr.message);
+        // Don't fail the profile update — just log the error
+      }
+    }
+
     res.json({ profile, message: 'Profile updated' });
   } catch (err) { console.error(err); res.status(500).json({ error: 'Update failed' }); }
 });
